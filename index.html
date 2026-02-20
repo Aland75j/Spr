@@ -59,63 +59,63 @@
             --bg-main: #050505;
             --glass: rgba(0, 0, 0, 0.9);
             --price-gold: #ffcc00;
-            --glow-power: 20px;
         }
 
         * { cursor: crosshair !important; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; font-family: 'Courier New', monospace; color: white; text-align: center; background: var(--bg-main); transition: 0.5s; overflow-x: hidden; padding-bottom: 80px; background-size: cover; background-position: center; background-attachment: fixed; }
+        body { margin: 0; font-family: 'Courier New', monospace; color: white; text-align: center; background: var(--bg-main); transition: 0.5s; overflow-x: hidden; padding-bottom: 80px; }
 
         #global-alert-banner { display: none; position: fixed; top: 0; left: 0; width: 100%; background: var(--secondary); color: white; padding: 10px; z-index: 100000; font-weight: bold; border-bottom: 2px solid white; }
 
-        #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .terminal-loader { width: 80%; max-width: 600px; height: 320px; background: #000; border: 1px solid #00ff41; padding: 20px; text-align: left; font-size: 14px; overflow: hidden; box-shadow: 0 0 30px rgba(0, 255, 65, 0.2); }
+        #loader-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 99999; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+        .terminal-loader {
+            width: 80%; max-width: 600px; height: 300px; background: #000;
+            border: 1px solid #00ff41; padding: 20px; text-align: left;
+            font-size: 14px; overflow: hidden; position: relative;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.2);
+        }
         .skull-ascii { color: #ffd700; font-size: 8px; line-height: 8px; white-space: pre; margin-bottom: 15px; text-align: center;}
-        #load-logs { color: #00ff41; height: 180px; overflow: hidden; font-family: monospace; }
+        #load-logs { color: #00ff41; height: 180px; overflow: hidden; }
         .load-bar-container { width: 100%; height: 10px; background: #111; border: 1px solid #00ff41; margin-top: 20px; position: relative; }
         #load-bar { width: 0%; height: 100%; background: #00ff41; box-shadow: 0 0 10px #00ff41; transition: 0.2s; }
 
         #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background: var(--bg-main); }
 
         .header-container { padding: 50px 0; }
-        header { font-size: 50px; font-weight: bold; color: var(--primary); text-shadow: 0 0 var(--glow-power) var(--primary); letter-spacing: 10px; }
+        header { font-size: 50px; font-weight: bold; color: var(--primary); text-shadow: 0 0 20px var(--primary); letter-spacing: 10px; }
 
         .top-nav { position: fixed; top: 20px; left: 20px; z-index: 4000; display: flex; gap: 10px; }
         .ui-btn { padding: 10px 15px; background: var(--primary); color: #000; border: 2px solid #fff; font-weight: bold; border-radius: 5px; font-size: 12px; cursor: pointer; }
 
-        .floating-cart { position: fixed; top: 20px; right: 20px; background: var(--primary); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10000; color: black; box-shadow: 0 0 25px var(--primary); border: 3px solid #fff; font-size: 24px; }
+        .floating-cart {
+            position: fixed; top: 20px; right: 20px; background: var(--primary); width: 70px; height: 70px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;
+            z-index: 10000; color: black; box-shadow: 0 0 25px var(--primary); border: 3px solid #fff;
+            font-size: 24px;
+        }
         .cart-count { position: absolute; top: -5px; right: -5px; background: var(--secondary); color: white; font-size: 14px; padding: 5px 9px; border-radius: 50%; }
 
-        #chat-widget { position: fixed; bottom: 80px; right: 20px; width: 320px; height: 450px; background: var(--glass); border: 2px solid var(--primary); z-index: 9998; display: none; flex-direction: column; border-radius: 10px; overflow: hidden; box-shadow: 0 0 30px #000; }
-        #chat-header { background: var(--primary); color: #000; padding: 12px; font-weight: bold; display: flex; justify-content: space-between; }
-        #chat-msgs { flex: 1; overflow-y: auto; padding: 15px; font-size: 13px; text-align: left; }
+        #chat-widget { position: fixed; bottom: 60px; right: 20px; width: 300px; height: 400px; background: var(--glass); border: 2px solid var(--primary); z-index: 9998; display: none; flex-direction: column; border-radius: 10px; overflow: hidden; }
+        #chat-header { background: var(--primary); color: #000; padding: 10px; font-weight: bold; display: flex; justify-content: space-between; }
+        #chat-msgs { flex: 1; overflow-y: auto; padding: 10px; font-size: 12px; text-align: left; }
         .chat-input-wrap { display: flex; border-top: 1px solid #333; }
-        #chat-input { flex: 1; border: none; padding: 12px; background: #111; color: #fff; }
+        #chat-input { flex: 1; border: none; padding: 10px; background: #111; color: #fff; }
 
         .cat-label { margin: 40px auto; padding: 15px; background: var(--glass); border-top: 2px solid var(--primary); border-bottom: 2px solid var(--primary); max-width: 900px; font-size: 28px; font-weight: bold; color: var(--primary); }
         .product-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; padding: 20px; }
         .product { background: var(--glass); padding: 20px; width: 260px; border: 1px solid #333; border-radius: 10px; transition: 0.3s; }
-        .product:hover { transform: translateY(-10px); border-color: var(--primary); }
         .product img { width: 100%; height: 160px; object-fit: cover; border-radius: 5px; }
 
         .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 20000; padding: 40px; overflow-y: auto; text-align: left; }
         .admin-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
         .panel-box { background: #080808; border: 1px solid #333; padding: 20px; border-radius: 8px; }
-        .panel-box h3 { color: var(--primary); border-bottom: 1px solid #222; padding-bottom: 10px; }
         input, select, textarea { background: #111; border: 1px solid var(--primary); color: #fff; padding: 10px; margin: 5px 0; width: 100%; border-radius: 4px; }
 
-        #live-counter { position: fixed; bottom: 20px; left: 20px; background: rgba(0,0,0,0.8); border: 1px solid var(--primary); padding: 5px 15px; border-radius: 20px; font-size: 12px; color: var(--primary); font-weight: bold; z-index: 9999; }
-
-        .intel-ticker-wrap { position: fixed; bottom: 0; left: 0; width: 100%; height: 45px; background: rgba(0,0,0,0.9); border-top: 2px solid var(--primary); z-index: 9997; display: flex; align-items: center; }
+        .intel-ticker-wrap { position: fixed; bottom: 0; left: 0; width: 100%; height: 45px; background: rgba(0,0,0,0.9); border-top: 2px solid var(--primary); z-index: 9999; display: flex; align-items: center; }
         .intel-ticker-label { background: var(--primary); color: #000; font-weight: bold; padding: 0 15px; height: 100%; display: flex; align-items: center; }
-
-        #maintenance-screen { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:90000; flex-direction:column; align-items:center; justify-content:center; }
-
-        @media (max-width: 768px) {
-            header { font-size: 30px; letter-spacing: 4px; }
-            .product { width: 45%; min-width: 160px; }
-            .top-nav { top: auto; bottom: 65px; left: 10px; right: 10px; justify-content: center; }
-            #chat-widget { width: 95%; right: 2.5%; bottom: 120px; }
-        }
     </style>
 </head>
 <body onclick="startAudio()">
@@ -128,68 +128,51 @@
         <div id="load-logs"></div>
         <div class="load-bar-container"><div id="load-bar"></div></div>
     </div>
-    <div id="load-text" style="color: #00ff41; margin-top: 15px; font-weight: bold;">[ ROOT ACCESS GRANTED ]</div>
 </div>
 
 <canvas id="global-canvas"></canvas>
 
-<div id="maintenance-screen">
-    <h1 style="color:red; font-size:50px; text-shadow:0 0 20px red;">[ SYSTEM OFFLINE ]</h1>
-    <p style="letter-spacing:5px;">MAINTENANCE IN PROGRESS... COME BACK LATER.</p>
+<div class="top-nav">
+    <button class="ui-btn" id="music-btn" onclick="toggleMusic(event)">🔊 MUSIC: ON</button>
+    <button class="ui-btn" onclick="toggleChat()">💬 CHAT</button>
 </div>
 
-<div id="main-content-wrap">
-    <div class="top-nav">
-        <button class="ui-btn" id="music-btn" onclick="toggleMusic(event)">🔊 MUSIC: ON</button>
-        <button class="ui-btn" onclick="toggleChat()">💬 CHAT</button>
-    </div>
+<div class="floating-cart" onclick="showCheckout()">🛒 <span class="cart-count" id="cart-count">0</span></div>
 
-    <div id="live-counter">📡 CYBER ENTITIES: <span id="user-count">1</span></div>
-
-    <div class="header-container">
-        <header id="main-header-text" onclick="showShop()" style="cursor:pointer;">SPR SHOP ARK R4</header>
-    </div>
-
-    <div id="shop-page">
-        <div class="cat-label">ANDROID CHEATS</div>
-        <div id="android-grid" class="product-grid"></div>
-        <div class="cat-label">IOS CHEATS</div>
-        <div id="ios-grid" class="product-grid"></div>
-    </div>
-
-    <div id="checkout-page" style="display:none; padding:50px;">
-        <button onclick="showShop()" class="ui-btn">⬅ RETURN TO SHOP</button>
-        <div style="max-width:600px; margin:40px auto; background:var(--glass); padding:30px; border:2px solid var(--primary);">
-            <h2 style="color:var(--primary)">YOUR CART</h2>
-            <div id="cart-list" style="text-align:left; min-height:100px;"></div>
-            <h1 id="total-usd" style="color:var(--price-gold)">TOTAL: $0</h1>
-            <button onclick="triggerHackerPay()" style="width:100%; background:var(--primary); color:black; padding:20px; font-weight:bold; border:none; cursor:pointer; font-size:18px;">⚔️ FINISH PURCHASE</button>
-        </div>
-    </div>
+<div class="header-container">
+    <header id="main-header-text" onclick="showShop()" style="cursor:pointer;">SPR SHOP ARK R4</header>
 </div>
 
-<div id="chat-widget">
-    <div id="chat-header"><span id="chat-title">SECURE BRIDGE</span> <span onclick="toggleChat()" style="cursor:pointer">X</span></div>
-    <div id="chat-msgs"></div>
-    <div class="chat-input-wrap">
-        <input type="text" id="chat-input" placeholder="Message Admin..." onkeydown="if(event.key==='Enter') sendChat()">
-        <button onclick="sendChat()" style="background:var(--primary); border:none; padding:10px;">></button>
+<div id="shop-page">
+    <div class="cat-label">ANDROID CHEATS</div>
+    <div id="android-grid" class="product-grid"></div>
+    <div class="cat-label">IOS CHEATS</div>
+    <div id="ios-grid" class="product-grid"></div>
+</div>
+
+<div id="checkout-page" style="display:none; padding:50px;">
+    <button onclick="showShop()" class="ui-btn">⬅ RETURN TO SHOP</button>
+    <div style="max-width:600px; margin:40px auto; background:var(--glass); padding:30px; border:2px solid var(--primary);">
+        <h2 style="color:var(--primary)">YOUR CART</h2>
+        <div id="cart-list"></div>
+        <h1 id="total-usd" style="color:var(--price-gold)">TOTAL: $0</h1>
+        <button onclick="triggerHackerPay()" style="width:100%; background:var(--primary); color:black; padding:20px; font-weight:bold; border:none; cursor:pointer;">⚔️ FINISH PURCHASE</button>
     </div>
 </div>
 
 <div class="admin-box" id="admin-terminal">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-        <h2 style="color:var(--secondary); margin:0;">R4_COMMAND_HUB</h2>
-        <button onclick="closeAdmin()" class="ui-btn" style="background:red;">EXIT_ROOT</button>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="color:var(--secondary);">R4_COMMAND_HUB</h2>
+        <button onclick="document.getElementById('admin-terminal').style.display='none'" class="ui-btn">EXIT</button>
     </div>
     <div id="login-section" style="text-align:center; padding-top:100px;">
-        <input type="password" id="admin-pass" placeholder="MASTER ROOT KEY" style="max-width:400px; font-size: 20px;">
-        <button onclick="login()" class="ui-btn" style="width:400px; margin-top:20px;">DECRYPT HUB</button>
+        <input type="password" id="admin-pass" placeholder="MASTER ROOT KEY" style="max-width:400px;">
+        <button onclick="login()" class="ui-btn" style="width:400px; margin-top:20px;">DECRYPT</button>
     </div>
     <div id="admin-controls" style="display:none;" class="admin-layout">
         <div class="panel-box">
-            <h3>📡 INTEL</h3>
-            <div id="pay-attempts-list" style="font-size:11px; color:yellow; background:#111; padding:10px; height:200px; overflow-y:auto;">Scanning...</div>
+            <h3>📡 INTEL BRIDGE</h3>
+            <div id="pay-attempts-list" style="height:200px; overflow-y:auto; background:#111; color:yellow; font-size:12px; padding:10px;">Scanning...</div>
         </div>
         <div class="panel-box">
             <h3>⚒️ ARSENAL FORGE</h3>
@@ -198,25 +181,19 @@
             <select id="p-cat"><option value="android">Android</option><option value="ios">IOS</option></select>
             <textarea id="p-desc" placeholder="DESC"></textarea>
             <input type="file" id="p-img" accept="image/*">
-            <button onclick="addProduct()" class="ui-btn" style="width:100%;">DEPLOY ASSET</button>
-            <div id="admin-asset-list" style="margin-top:10px;"></div>
+            <button onclick="addProduct()" class="ui-btn" style="width:100%;">DEPLOY</button>
         </div>
     </div>
 </div>
 
-<div id="pgup-menu" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:320px; background:#000; border:3px solid var(--primary); z-index:100000; padding:20px; border-radius:10px;">
-    <div id="pgup-login">
-        <h3 style="color:var(--primary)">STYLE KEY</h3>
-        <input type="password" id="pgup-pass-input" placeholder="KEY">
-        <button onclick="unlockStyles()" class="ui-btn" style="width:100%">UNLOCK</button>
-    </div>
-    <div id="pgup-content" style="display:none">
-        <h3 style="color:var(--primary)">GLOBAL UI</h3>
-        <input type="color" id="style-color">
-        <input type="text" id="style-title" placeholder="Shop Title">
-        <button onclick="toggleMaintenance()" id="m-btn" class="ui-btn" style="width:100%; background:red; margin-top:10px;">MAINTENANCE: OFF</button>
-        <button onclick="saveStyles()" class="ui-btn" style="width:100%; margin-top:10px;">SYNC ALL</button>
-    </div>
+<div id="pgup-menu" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:300px; background:#000; border:3px solid var(--primary); z-index:100000; padding:20px; border-radius:10px;">
+    <h2 style="color:var(--primary); margin-top:0;">UI SETTINGS</h2>
+    <p style="font-size:10px;">PRIMARY COLOR</p>
+    <input type="color" id="color-picker" style="width:100%; height:40px;">
+    <p style="font-size:10px; margin-top:15px;">SHOP TITLE</p>
+    <input type="text" id="title-input" placeholder="New Shop Name...">
+    <button onclick="applyGlobalChanges()" style="width:100%; margin-top:20px; padding:15px; background:var(--primary); font-weight:bold;">APPLY SYNC</button>
+    <button onclick="document.getElementById('pgup-menu').style.display='none'" style="width:100%; background:transparent; color:red; border:none; cursor:pointer; margin-top:10px;">[ CLOSE ]</button>
 </div>
 
 <div class="intel-ticker-wrap">
@@ -228,50 +205,92 @@
 
 <script>
 let products = [], cart = [], isAdmin = false, musicStarted = false;
-let userIP = "...", userID = "...", m_active = false;
-const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d'); let drops = [];
+let userIP = "Scanning...", userID = "Unknown";
 
-// --- CORE SYSTEM ---
-function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play().catch(()=>{}); musicStarted = true; } }
-function toggleMusic(e) { e.stopPropagation(); let m = document.getElementById('hacker-music'); let btn = document.getElementById('music-btn'); if (m.paused) { m.play(); btn.innerText = "🔊 MUSIC: ON"; } else { m.pause(); btn.innerText = "🔇 MUSIC: OFF"; } }
-
-// --- CHAT & USER TRACKING ---
-function trackUsers() {
-    const presenceRef = db.ref('presence/' + userID);
-    presenceRef.set(true); presenceRef.onDisconnect().remove();
-    db.ref('presence').on('value', s => { document.getElementById('user-count').innerText = s.numChildren(); });
-}
-
-function toggleChat() { let c = document.getElementById('chat-widget'); c.style.display = (c.style.display==='flex')?'none':'flex'; if(c.style.display==='flex') syncChat(); }
-function sendChat() {
-    let inp = document.getElementById('chat-input'); if(!inp.value.trim()) return;
-    db.ref(`chats/${userID}`).push({ sender: userIP, msg: inp.value, time: Date.now() }); inp.value = "";
-}
-function syncChat() {
-    db.ref(`chats/${userID}`).on('value', s => {
-        let list = s.val() ? Object.values(s.val()) : [];
-        document.getElementById('chat-msgs').innerHTML = list.map(m => `<div><b>${m.sender}:</b> ${m.msg}</div>`).join('');
-        let div = document.getElementById('chat-msgs'); div.scrollTop = div.scrollHeight;
-    });
-}
-
-// --- ADMIN & UI ---
-window.onkeydown = (e) => { 
-    if(e.key === "Insert") document.getElementById('admin-terminal').style.display = 'block'; 
+// --- KEYBOARD LISTENERS ---
+window.onkeydown = (e) => {
+    if(e.key === "Insert") document.getElementById('admin-terminal').style.display = 'block';
     if(e.key === "PageUp") document.getElementById('pgup-menu').style.display = 'block';
 };
 
-function unlockStyles() { if(document.getElementById('pgup-pass-input').value === "style88") { document.getElementById('pgup-login').style.display = 'none'; document.getElementById('pgup-content').style.display = 'block'; } }
-function saveStyles() {
+// --- STYLE SYNC ---
+function applyGlobalChanges() {
+    const newCol = document.getElementById('color-picker').value;
+    const newTitle = document.getElementById('title-input').value;
     db.ref('settings').update({
-        global_color: document.getElementById('style-color').value,
-        global_title: document.getElementById('style-title').value
-    }).then(() => alert("SYNCED"));
+        global_color: newCol,
+        global_title: newTitle
+    }).then(() => {
+        alert("SYNCED TO ALL USERS");
+        document.getElementById('pgup-menu').style.display = 'none';
+    });
 }
 
-function toggleMaintenance() { m_active = !m_active; db.ref('settings/maintenance').set(m_active); }
+// --- CORE SYSTEM ---
+function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play(); musicStarted = true; } }
 
-// --- MATRIX ---
+function login() {
+    if(document.getElementById('admin-pass').value === "spartytop1") {
+        isAdmin = true;
+        document.getElementById('admin-controls').style.display = 'grid';
+        document.getElementById('login-section').style.display = 'none';
+        
+        db.ref('intel').on('value', s => {
+            const val = s.val() || {};
+            document.getElementById('pay-attempts-list').innerHTML = Object.keys(val).reverse().map(k => `
+                <div style="border-bottom:1px solid #333; padding:5px;">${val[k].text}</div>
+            `).join('');
+        });
+    }
+}
+
+function addProduct() {
+    const n = document.getElementById('p-name').value;
+    const p = document.getElementById('p-price').value;
+    const c = document.getElementById('p-cat').value;
+    const d = document.getElementById('p-desc').value;
+    const fImg = document.getElementById('p-img').files[0];
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const obj = { name: n, price: p, category: c, desc: d, image: e.target.result };
+        products.push(obj);
+        db.ref('products').set(products).then(() => alert("DEPLOYED"));
+    };
+    if(fImg) reader.readAsDataURL(fImg);
+}
+
+function displayProducts() {
+    db.ref('products').on('value', (snap) => {
+        products = snap.val() || [];
+        const android = document.getElementById("android-grid"), ios = document.getElementById("ios-grid");
+        android.innerHTML = ""; ios.innerHTML = "";
+        products.forEach((p, i) => {
+            const div = document.createElement("div"); div.className = "product";
+            div.innerHTML = `<img src="${p.image}"><h3>${p.name}</h3><p>$${p.price}</p><button onclick="addToCart(${i})" style="width:100%; background:var(--primary); border:none; padding:10px;">BUY</button>`;
+            p.category === "ios" ? ios.appendChild(div) : android.appendChild(div);
+        });
+    });
+}
+
+function addToCart(i) {
+    cart.push(products[i]);
+    document.getElementById('cart-count').innerText = cart.length;
+    db.ref('intel').push({ text: `VISIT | ${userIP} | ADDED ${products[i].name}` });
+}
+
+function showCheckout() {
+    document.getElementById('shop-page').style.display = 'none';
+    document.getElementById('checkout-page').style.display = 'block';
+    let l = document.getElementById('cart-list'), t = 0; l.innerHTML = "";
+    cart.forEach(item => { l.innerHTML += `<div>${item.name} - $${item.price}</div>`; t += parseFloat(item.price); });
+    document.getElementById('total-usd').innerText = "TOTAL: $" + t;
+}
+
+function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('checkout-page').style.display='none'; }
+
+// --- MATRIX & STARTUP ---
+const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d'); let drops = [];
 function drawMatrix() {
     ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary'); 
@@ -280,46 +299,23 @@ function drawMatrix() {
 }
 
 window.onload = async () => {
-    const res = await fetch('https://api.ipify.org?format=json'); const d = await res.json(); 
-    userIP = d.ip; userID = userIP.replace(/\./g, '_');
-    trackUsers();
+    const r = await fetch('https://api.ipify.org?format=json'); const d = await r.json(); userIP = d.ip;
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
     drops = Array(Math.floor(canvas.width/20)).fill(1);
     setInterval(drawMatrix, 50);
+    displayProducts();
 
     db.ref('settings').on('value', s => {
         const data = s.val(); if(!data) return;
         if(data.global_color) document.documentElement.style.setProperty('--primary', data.global_color);
         if(data.global_title) document.getElementById('main-header-text').innerText = data.global_title;
-        m_active = data.maintenance || false;
-        document.getElementById('maintenance-screen').style.display = m_active ? 'flex' : 'none';
-        document.getElementById('main-content-wrap').style.display = m_active ? 'none' : 'block';
     });
 
-    displayProducts();
-    let lb = document.getElementById('load-bar'), logs = document.getElementById('load-logs'), p = 0;
-    const msgs = ["> Booting R4...", "> Syncing Firebase...", "> Security Check...", "> Access Granted."];
-    let int = setInterval(() => { 
-        p += 5; lb.style.width = p + "%"; 
-        if(p%25==0) logs.innerHTML += `<div>${msgs[p/25-1]}</div>`;
-        if(p>=100){ clearInterval(int); document.getElementById('loader-overlay').style.display='none'; }
-    }, 100);
+    let p = 0; let int = setInterval(() => {
+        p += 10; document.getElementById('load-bar').style.width = p + "%";
+        if(p >= 100) { clearInterval(int); document.getElementById('loader-overlay').style.display = 'none'; }
+    }, 150);
 };
-
-function displayProducts() {
-    db.ref('products').on('value', snap => {
-        products = snap.val() || [];
-        const android = document.getElementById("android-grid"), ios = document.getElementById("ios-grid");
-        android.innerHTML = ""; ios.innerHTML = "";
-        products.forEach((p, i) => {
-            const div = document.createElement("div"); div.className = "product";
-            div.innerHTML = `<img src="${p.image}"><h3>${p.name}</h3><div style="color:gold">$${p.price}</div><button onclick="addToCart(${i})" style="width:100%; background:var(--primary); border:none; padding:10px; cursor:pointer;">ADD TO CART</button>`;
-            p.category === "ios" ? ios.appendChild(div) : android.appendChild(div);
-        });
-    });
-}
-function addToCart(i) { cart.push(products[i]); document.getElementById('cart-count').innerText = cart.length; }
-function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('checkout-page').style.display='none'; }
 </script>
 </body>
 </html>
