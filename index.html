@@ -147,21 +147,37 @@
         .product:hover { transform: scale(1.03); border-color: var(--primary); box-shadow: 0 0 20px var(--primary); }
         .product img { width: 100%; height: 160px; object-fit: cover; border: 1px solid #222; }
 
-        /* Page 3 Styles */
+        /* Page 3 Styles - Gold Upgrade */
         #auth-overlay {
             display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
-            background:var(--bg-main); z-index:99999; flex-direction:column; 
+            background: radial-gradient(circle at center, #1a1400 0%, #02050a 100%);
+            z-index:99999; flex-direction:column; 
             align-items:center; justify-content:center;
-            background-image: radial-gradient(var(--matrix) 1px, transparent 1px);
-            background-size: 40px 40px;
+            overflow: hidden;
         }
         .payment-box {
-            width: 90%; max-width: 500px; background: rgba(0,0,0,0.8); 
-            border: 1px solid var(--primary); padding: 40px; text-align: center; 
-            position: relative; box-shadow: 0 0 50px rgba(0, 212, 255, 0.2);
+            width: 90%; max-width: 500px; background: rgba(0,0,0,0.9); 
+            border: 1px solid var(--price-gold); padding: 40px; text-align: center; 
+            position: relative; box-shadow: 0 0 60px rgba(255, 215, 0, 0.2);
+            z-index: 2;
         }
-        @keyframes scanline { 0% { top: 0%; } 100% { top: 100%; } }
-        .scan-effect { position:absolute; top:0; left:0; width:100%; height:2px; background:var(--primary); box-shadow: 0 0 20px var(--primary); animation: scanline 3s linear infinite; opacity: 0.5; }
+        @keyframes scanlineGold { 0% { top: -10%; } 100% { top: 110%; } }
+        .scan-effect-gold { 
+            position:absolute; top:0; left:0; width:100%; height:4px; 
+            background: var(--price-gold); 
+            box-shadow: 0 0 30px var(--price-gold); 
+            animation: scanlineGold 4s linear infinite; 
+            opacity: 0.6; 
+            z-index: 3;
+            pointer-events: none;
+        }
+        .gold-bg-glow {
+            position: absolute; width: 200%; height: 200%;
+            background: conic-gradient(from 0deg at 50% 50%, transparent, rgba(255, 215, 0, 0.05), transparent);
+            animation: rotateGold 10s linear infinite;
+            z-index: 1;
+        }
+        @keyframes rotateGold { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
         .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 20000; padding: 40px; overflow-y: auto; text-align: left; border: 5px solid var(--secondary); }
         .panel-box { background: #080808; border: 1px solid #333; padding: 20px; margin-bottom: 20px; border-left: 4px solid var(--secondary); }
@@ -204,13 +220,14 @@
 <canvas id="global-canvas"></canvas>
 
 <div id="auth-overlay">
-    <div class="scan-effect"></div>
+    <div class="gold-bg-glow"></div>
     <div class="payment-box">
-        <div style="color:var(--primary); font-size: 10px; position: absolute; top: 10px; left: 15px; letter-spacing: 2px;">SECURE_GATEWAY_V4.0</div>
-        <h1 style="color:var(--primary); letter-spacing: 8px; margin-bottom: 5px; text-shadow: 0 0 15px var(--primary);">PAYMENT</h1>
-        <p id="payment-status-text" style="color:var(--secondary); font-size: 11px; margin-bottom: 30px; letter-spacing: 2px;">>>> WAITING FOR UPLINK...</p>
+        <div class="scan-effect-gold"></div>
+        <div style="color:var(--price-gold); font-size: 10px; position: absolute; top: 10px; left: 15px; letter-spacing: 2px;">GOLD_GATEWAY_ENCRYPTED</div>
+        <h1 style="color:var(--price-gold); letter-spacing: 8px; margin-bottom: 5px; text-shadow: 0 0 15px var(--price-gold);">PAY NOW</h1>
+        <p id="payment-status-text" style="color:var(--secondary); font-size: 11px; margin-bottom: 30px; letter-spacing: 2px;">>>> SYNCING WITH BANKING CLOUD...</p>
         
-        <div id="paypal-button-container" style="min-height: 150px; border: 1px dashed #333; padding: 15px; background: rgba(255,255,255,0.02);"></div>
+        <div id="paypal-button-container" style="min-height: 150px; border: 1px dashed #444; padding: 15px; background: rgba(255, 215, 0, 0.02);"></div>
         
         <div style="margin-top: 30px;">
             <button onclick="document.getElementById('auth-overlay').style.display='none'" class="ui-btn" style="border-color:#ff4444; color:#ff4444; width:100%;">ABORT TRANSACTION</button>
@@ -248,7 +265,7 @@
         <input type="text" id="apply-coupon" placeholder="COUPON_CODE">
         <button onclick="applyCoupon()" class="ui-btn" style="width:100%; margin-top:10px;">VALIDATE CODE</button>
         <h1 id="total-usd" style="color:var(--price-gold)">TOTAL: $0</h1>
-        <button onclick="triggerHackerPay()" style="width:100%; background:var(--primary); color:black; padding:20px; font-weight:bold; border:none; cursor:pointer; font-size:18px; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%);">⚔️ FINISH PURCHASE</button>
+        <button onclick="triggerHackerPay()" style="width:100%; background:var(--price-gold); color:black; padding:20px; font-weight:bold; border:none; cursor:pointer; font-size:18px; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%);">⚔️ PAY NOW</button>
     </div>
 </div>
 
@@ -437,11 +454,8 @@ function renderCart() {
     document.getElementById('total-usd').innerText = "TOTAL: $" + final.toFixed(2);
 }
 
-// --- UPDATED TRIGGER HACKER PAY (PAGE 3 TRANSITION) ---
 function triggerHackerPay() {
     if(cart.length === 0) return alert("INVENTORY EMPTY");
-    
-    // Switch to Page 3 (Secure Checkout)
     document.getElementById('auth-overlay').style.display = 'flex';
     document.getElementById('paypal-button-container').innerHTML = '';
     document.getElementById('payment-status-text').innerText = ">>> ESTABLISHING ENCRYPTED CONNECTION...";
