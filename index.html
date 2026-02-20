@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MAXIOM R4 | RE-STABILIZED</title>
+    <title>MAXIOM R4 | ELITE MANIFEST</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -53,94 +53,140 @@
         :root {
             --primary: #00d4ff; 
             --secondary: #00ff41; 
-            --matrix: rgba(0, 212, 255, 0.15);
             --bg-main: #02050a;
-            --glass: rgba(0, 5, 15, 0.9);
+            --glass: rgba(0, 15, 30, 0.85);
             --price-gold: #ffd700;
+            --cyber-border: 1px solid rgba(0, 212, 255, 0.3);
         }
-        * { cursor: crosshair !important; box-sizing: border-box; }
-        body { margin: 0; font-family: 'Courier New', monospace; color: white; text-align: center; background: var(--bg-main); overflow-x: hidden; padding-bottom: 80px; }
+        * { cursor: crosshair !important; box-sizing: border-box; font-family: 'Courier New', monospace; }
+        body { margin: 0; color: white; text-align: center; background: var(--bg-main); overflow-x: hidden; padding-bottom: 80px; }
+        
+        header { font-size: 50px; font-weight: bold; color: var(--primary); text-shadow: 0 0 15px var(--primary); letter-spacing: 10px; padding: 40px 0; cursor: pointer; }
+        #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; opacity: 0.4; }
 
-        header { font-size: 50px; font-weight: bold; color: var(--primary); text-shadow: 0 0 15px var(--primary); letter-spacing: 10px; padding: 40px 0; }
-        #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; opacity: 0.5; }
+        /* Checkout Page Redesign */
+        #checkout-page { display:none; padding: 20px; }
+        .manifest-container {
+            max-width: 700px; margin: 40px auto; background: var(--glass); 
+            backdrop-filter: blur(10px); border: 1px solid var(--primary);
+            position: relative; padding: 40px; box-shadow: 0 0 40px rgba(0, 212, 255, 0.1);
+        }
+        .manifest-header { 
+            border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 30px; 
+            text-align: left; display: flex; justify-content: space-between; align-items: flex-end;
+        }
+        .manifest-item {
+            background: rgba(255, 255, 255, 0.03); border: var(--cyber-border);
+            margin-bottom: 15px; padding: 15px; display: flex; justify-content: space-between;
+            align-items: center; position: relative; overflow: hidden;
+        }
+        .item-status { font-size: 10px; color: var(--secondary); letter-spacing: 2px; }
+        .item-name { font-size: 18px; font-weight: bold; color: white; }
+        .remove-trigger { color: #ff4444; border: 1px solid #ff4444; padding: 5px 10px; font-size: 10px; cursor: pointer; transition: 0.3s; }
+        .remove-trigger:hover { background: #ff4444; color: white; }
 
-        /* Product Grid */
-        .cat-label { margin: 40px auto; padding: 15px; background: rgba(0, 212, 255, 0.1); border-left: 5px solid var(--primary); max-width: 900px; font-size: 28px; font-weight: bold; color: var(--primary); }
+        .total-readout {
+            background: rgba(0,0,0,0.5); border: 2px solid var(--price-gold);
+            padding: 20px; margin: 30px 0; text-align: right;
+        }
+        .total-readout h1 { margin: 0; color: var(--price-gold); font-size: 32px; text-shadow: 0 0 10px var(--price-gold); }
+
+        .pay-btn-elite {
+            width: 100%; background: var(--price-gold); color: black; padding: 25px;
+            font-size: 24px; font-weight: bold; border: none; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 5px; transition: 0.4s;
+            clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%);
+        }
+        .pay-btn-elite:hover { transform: scale(1.02); filter: brightness(1.2); box-shadow: 0 0 30px var(--price-gold); }
+
+        /* Shop Elements */
         .product-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; padding: 20px; }
-        .product { background: var(--glass); padding: 15px; width: 270px; border: 1px solid #111; border-top: 3px solid var(--primary); transition: 0.3s; position: relative; }
-        .product:hover { transform: scale(1.03); border-color: var(--primary); box-shadow: 0 0 20px var(--primary); }
+        .product { background: var(--glass); padding: 15px; width: 270px; border: 1px solid #111; border-top: 3px solid var(--primary); transition: 0.3s; }
+        .product:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 0 20px var(--primary); }
         .product img { width: 100%; height: 160px; object-fit: cover; }
 
-        /* Page 3 Styles - Gold Upgrade */
+        .ui-btn { padding: 12px 25px; background: transparent; color: var(--primary); border: 1px solid var(--primary); font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .ui-btn:hover { background: var(--primary); color: black; }
+
+        /* Page 3 Gold Gateway */
         #auth-overlay {
             display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
             background: radial-gradient(circle at center, #1a1400 0%, #02050a 100%);
             z-index:99999; flex-direction:column; align-items:center; justify-content:center;
         }
-        .payment-box { width: 90%; max-width: 500px; background: rgba(0,0,0,0.9); border: 1px solid var(--price-gold); padding: 40px; text-align: center; box-shadow: 0 0 50px rgba(255, 215, 0, 0.2); position: relative; }
-        .scan-effect-gold { position:absolute; top:0; left:0; width:100%; height:4px; background: var(--price-gold); box-shadow: 0 0 30px var(--price-gold); animation: scanlineGold 4s linear infinite; opacity: 0.6; }
-        @keyframes scanlineGold { 0% { top: -10%; } 100% { top: 110%; } }
+        .payment-box { width: 90%; max-width: 480px; background: rgba(0,0,0,0.95); border: 1px solid var(--price-gold); padding: 40px; position: relative; box-shadow: 0 0 50px rgba(255, 215, 0, 0.2); }
 
         /* Admin Terminal */
         .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 20000; padding: 40px; overflow-y: auto; text-align: left; border: 5px solid var(--secondary); }
-        .panel-box { background: #080808; border: 1px solid #333; padding: 20px; margin-bottom: 20px; }
         input, select, textarea { background: #000; border: 1px solid var(--primary); color: var(--primary); padding: 12px; margin: 5px 0; width: 100%; }
         
-        .ui-btn { padding: 10px 20px; background: rgba(0,0,0,0.5); color: var(--primary); border: 1px solid var(--primary); font-weight: bold; cursor: pointer; }
-        .floating-cart { position: fixed; top: 20px; right: 20px; background: var(--glass); width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10000; border: 1px solid var(--primary); }
+        .floating-cart { position: fixed; top: 20px; right: 20px; background: var(--glass); width: 65px; height: 65px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10000; border: 1px solid var(--primary); box-shadow: 0 0 15px var(--primary); }
     </style>
 </head>
-<body onclick="startAudio()" onmousemove="updateMouse(event)">
+<body onclick="startAudio()">
 
 <canvas id="global-canvas"></canvas>
 
 <div id="loader-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:99999; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-    <div style="border:1px solid var(--primary); padding:20px; width:300px;">
-        <div id="load-logs" style="color:var(--secondary); font-size:10px; height:80px; overflow:hidden;"></div>
-        <div style="width:100%; height:4px; background:#111; margin-top:10px;"><div id="load-bar" style="width:0%; height:100%; background:var(--primary);"></div></div>
+    <div style="border:1px solid var(--primary); padding:25px; width:320px;">
+        <div id="load-logs" style="color:var(--secondary); font-size:11px; height:100px; overflow:hidden; text-align: left;"></div>
+        <div style="width:100%; height:4px; background:#111; margin-top:15px;"><div id="load-bar" style="width:0%; height:100%; background:var(--primary);"></div></div>
     </div>
 </div>
 
-<div class="floating-cart" onclick="showCheckout()">🛒 <span id="cart-count">0</span></div>
+<div class="floating-cart" onclick="showCheckout()">🛒 <span id="cart-count" style="margin-left:5px; font-weight:bold;">0</span></div>
 
-<header onclick="showShop()" style="cursor:pointer;">SPR SHOP ARK R4</header>
+<header onclick="showShop()">SPR SHOP ARK R4</header>
 
 <div id="shop-page">
-    <div class="cat-label">ANDROID CHEATS</div>
     <div id="android-grid" class="product-grid"></div>
-    <div class="cat-label">IOS CHEATS</div>
     <div id="ios-grid" class="product-grid"></div>
 </div>
 
-<div id="checkout-page" style="display:none; padding:50px;">
-    <div style="max-width:600px; margin:auto; background:var(--glass); padding:30px; border:2px solid var(--primary);">
-        <h2 style="color:var(--primary)">YOUR CART</h2>
-        <div id="cart-list" style="text-align:left; min-height:100px;"></div>
-        <input type="text" id="apply-coupon" placeholder="COUPON_CODE" style="margin-top:20px;">
-        <button onclick="applyCoupon()" class="ui-btn" style="width:100%; margin-top:10px;">VALIDATE CODE</button>
-        <h1 id="total-usd" style="color:var(--price-gold)">TOTAL: $0</h1>
-        <button onclick="triggerHackerPay()" style="width:100%; background:var(--price-gold); color:black; padding:20px; font-weight:bold; border:none; cursor:pointer; font-size:22px;">⚔️ PAY NOW</button>
-        <button onclick="showShop()" class="ui-btn" style="width:100%; margin-top:10px; border-color:gray; color:gray;">BACK TO SHOP</button>
+<div id="checkout-page">
+    <div class="manifest-container">
+        <div class="manifest-header">
+            <div>
+                <div style="color:var(--primary); font-size:12px; letter-spacing:3px;">SYSTEM.ORDER_MANIFEST</div>
+                <h2 style="margin:0; letter-spacing:2px;">SECURE INVENTORY</h2>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:10px; color:gray;">SESSION_ID: #44921</div>
+                <div id="current-date" style="font-size:10px; color:gray;"></div>
+            </div>
+        </div>
+
+        <div id="cart-list">
+            </div>
+
+        <div style="margin-top:20px; text-align:left;">
+            <label style="color:var(--primary); font-size:10px; letter-spacing:2px;">APPLY VOUCHER CODE:</label>
+            <div style="display:flex; gap:10px; margin-top:5px;">
+                <input type="text" id="apply-coupon" placeholder="ENTER_CODE" style="flex:1; margin:0;">
+                <button onclick="applyCoupon()" class="ui-btn">AUTHENTICATE</button>
+            </div>
+        </div>
+
+        <div class="total-readout">
+            <span style="font-size:12px; color:white; letter-spacing:2px;">FINAL UPLINK COST:</span>
+            <h1 id="total-usd">TOTAL: $0.00</h1>
+        </div>
+
+        <button onclick="triggerHackerPay()" class="pay-btn-elite">⚔️ INITIALIZE PAYMENT</button>
+        
+        <div style="margin-top:20px;">
+            <span onclick="showShop()" style="color:gray; text-decoration:underline; font-size:12px; cursor:pointer;">[ RETURN_TO_TERMINAL ]</span>
+        </div>
     </div>
 </div>
 
 <div id="auth-overlay">
     <div class="payment-box">
-        <div class="scan-effect-gold"></div>
-        <h1 style="color:var(--price-gold); letter-spacing: 5px;">SECURE UPLINK</h1>
-        <p id="payment-status-text" style="color:var(--secondary);">>>> WAITING FOR AUTHORIZATION...</p>
+        <div style="position:absolute; top:0; left:0; width:100%; height:4px; background:var(--price-gold); box-shadow:0 0 20px var(--price-gold);"></div>
+        <h1 style="color:var(--price-gold); letter-spacing: 10px; margin-bottom:5px;">PAY NOW</h1>
+        <p id="payment-status-text" style="color:var(--secondary); font-size:12px; margin-bottom:30px;">>>> ESTABLISHING ENCRYPTED UPLINK...</p>
         <div id="paypal-button-container"></div>
-        <button onclick="document.getElementById('auth-overlay').style.display='none'" class="ui-btn" style="margin-top:20px; width:100%; border-color:red; color:red;">ABORT</button>
-    </div>
-</div>
-
-<div id="info-page" style="display:none; padding:50px;">
-    <div style="max-width: 800px; margin: auto; background: var(--glass); border: 2px solid var(--primary); padding: 30px;">
-        <img id="info-img" style="width:100%;">
-        <h1 id="info-title" style="color:var(--primary)"></h1>
-        <p id="info-desc" style="font-size:18px;"></p>
-        <div id="info-btns"></div>
-        <button onclick="showShop()" class="ui-btn" style="margin-top:20px;">BACK</button>
+        <button onclick="document.getElementById('auth-overlay').style.display='none'" class="ui-btn" style="margin-top:30px; width:100%; border-color:red; color:red;">TERMINATE SESSION</button>
     </div>
 </div>
 
@@ -154,9 +200,8 @@
         <button onclick="login()" class="ui-btn" style="display:block; margin:20px auto; width:400px;">DECRYPT</button>
     </div>
     <div id="admin-controls" style="display:none;">
-        <div class="panel-box">
-            <h3>ASSET FORGE</h3>
-            <input type="hidden" id="edit-index" value="-1">
+        <div class="panel-box" style="border:1px solid #222; padding:20px; margin-bottom:20px;">
+            <h3 style="color:var(--primary)">ASSET FORGE</h3>
             <input type="text" id="p-name" placeholder="NAME">
             <input type="number" id="p-price" placeholder="PRICE">
             <input type="text" id="p-yt" placeholder="YT ID">
@@ -166,8 +211,8 @@
             <input type="file" id="p-file">
             <button onclick="addProduct()" class="ui-btn" style="width:100%;">DEPLOY ASSET</button>
         </div>
-        <div class="panel-box">
-            <h3>GATEWAY CONFIG</h3>
+        <div class="panel-box" style="border:1px solid #222; padding:20px;">
+            <h3 style="color:var(--primary)">GATEWAY CONFIG</h3>
             <input type="text" id="pp-id-input" placeholder="PAYPAL ID">
             <button onclick="savePPID()" class="ui-btn" style="width:100%;">UPDATE PAYPAL</button>
         </div>
@@ -178,9 +223,8 @@
 
 <script>
 let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicStarted = false;
-let mouse = { x: 0, y: 0 };
 
-// Core Display
+// Display Shop Items
 function displayProducts() {
     db.ref('products').on('value', (snap) => {
         products = snap.val() || [];
@@ -191,9 +235,9 @@ function displayProducts() {
             if(!p) return;
             const div = document.createElement("div"); div.className = "product";
             div.innerHTML = `
-                <img src="${p.image || ''}" onclick="showInfo(${i})">
-                <h3>${p.name}</h3>
-                <div style="color:var(--price-gold)">$${p.price}</div>
+                <img src="${p.image || ''}">
+                <h3 style="color:var(--primary)">${p.name}</h3>
+                <div style="color:var(--price-gold); font-size:20px; font-weight:bold;">$${p.price}</div>
                 <button onclick="addToCart(${i})" class="ui-btn" style="width:100%; margin-top:10px;">ADD TO CART</button>
             `;
             p.category === "ios" ? ios.appendChild(div) : android.appendChild(div);
@@ -201,37 +245,55 @@ function displayProducts() {
     });
 }
 
-// Cart Logic
+// Cart Management
 function addToCart(i) { cart.push(products[i]); updateCartCount(); }
 function updateCartCount() { document.getElementById('cart-count').innerText = cart.length; }
-function showCheckout() { document.getElementById('shop-page').style.display='none'; document.getElementById('checkout-page').style.display='block'; renderCart(); }
-function renderCart() {
-    let l=document.getElementById('cart-list'), t=0; l.innerHTML = "";
-    cart.forEach((item, index) => {
-        l.innerHTML += `<div style="padding:10px; border-bottom:1px solid #222; display:flex; justify-content:space-between;">
-            <span>${item.name} - $${item.price}</span>
-            <button onclick="cart.splice(${index},1); renderCart(); updateCartCount();" style="color:red; background:none; border:none;">[X]</button>
-        </div>`;
-        t += parseFloat(item.price);
-    });
-    document.getElementById('total-usd').innerText = "TOTAL: $" + (t - (t * (discount/100))).toFixed(2);
+function showCheckout() { 
+    document.getElementById('shop-page').style.display='none'; 
+    document.getElementById('checkout-page').style.display='block'; 
+    renderCart(); 
 }
 
-// THE NEW PAGE 3 TRIGGER
+function renderCart() {
+    let list = document.getElementById('cart-list'), total = 0;
+    list.innerHTML = "";
+    if(cart.length === 0) {
+        list.innerHTML = "<div style='color:gray; padding:20px;'>MANIFEST_EMPTY: No items selected.</div>";
+    }
+    cart.forEach((item, index) => {
+        list.innerHTML += `
+            <div class="manifest-item">
+                <div style="text-align:left;">
+                    <div class="item-status">✓ [ STATUS: READY ]</div>
+                    <div class="item-name">${item.name}</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <div style="color:var(--price-gold); font-weight:bold;">$${item.price}</div>
+                    <div class="remove-trigger" onclick="cart.splice(${index},1); renderCart(); updateCartCount();">DELETE</div>
+                </div>
+            </div>
+        `;
+        total += parseFloat(item.price);
+    });
+    let finalValue = (total - (total * (discount/100))).toFixed(2);
+    document.getElementById('total-usd').innerText = "TOTAL: $" + finalValue;
+}
+
+// Same logic, new Page 3 look
 function triggerHackerPay() {
-    if(cart.length === 0) return alert("CART EMPTY");
+    if(cart.length === 0) return alert("MANIFEST ERROR: Inventory Empty.");
     document.getElementById('auth-overlay').style.display = 'flex';
     document.getElementById('paypal-button-container').innerHTML = '';
     
-    let t=0; cart.forEach(i=>t+=parseFloat(i.price));
-    let final = (t - (t * (discount/100))).toFixed(2);
+    let total=0; cart.forEach(i=>total+=parseFloat(i.price));
+    let final = (total - (total * (discount/100))).toFixed(2);
     
     paypal.Buttons({
         style: { shape: 'rect', color: 'gold', layout: 'vertical' },
         createOrder: (data, actions) => actions.order.create({ purchase_units: [{ amount: { value: final } }] }),
         onApprove: (data, actions) => actions.order.capture().then(det => {
             cart.forEach(item => { if(item.delivery) { const a=document.createElement('a'); a.href=item.delivery.data; a.download=item.delivery.name; a.click(); } });
-            alert("SUCCESSFUL UPLINK"); location.reload();
+            alert("TRANSACTION VERIFIED. FILES DELIVERED."); location.reload();
         })
     }).render('#paypal-button-container');
 }
@@ -252,57 +314,54 @@ function addProduct() {
     const read = (file) => file ? new Promise(res => { const r=new FileReader(); r.onload=e=>res({data:e.target.result, name:file.name}); r.readAsDataURL(file); }) : null;
     Promise.all([read(fImg), read(fFile)]).then(vals => {
         products.push({ name:n, price:p, yt:y, category:c, desc:d, image: vals[0] ? vals[0].data : "", delivery: vals[1] || null });
-        db.ref('products').set(products).then(() => alert("DEPLOYED"));
+        db.ref('products').set(products).then(() => alert("DEATH_STAR_DEPLOYED"));
     });
 }
-function savePPID() { db.ref('settings/paypal_id').set(document.getElementById('pp-id-input').value).then(()=>alert("UPDATED")); }
+function savePPID() { db.ref('settings/paypal_id').set(document.getElementById('pp-id-input').value).then(()=>alert("UPLINK_STABLE")); }
 
-// UI Support Functions
-function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('checkout-page').style.display='none'; document.getElementById('info-page').style.display='none'; }
-function showInfo(i) {
-    const p = products[i];
-    document.getElementById('shop-page').style.display = 'none';
-    document.getElementById('info-page').style.display = 'block';
-    document.getElementById('info-img').src = p.image || '';
-    document.getElementById('info-title').innerText = p.name;
-    document.getElementById('info-desc').innerText = p.desc;
-    document.getElementById('info-btns').innerHTML = `<button class="ui-btn" onclick="addToCart(${i})">ADD TO CART</button>`;
+// UI Support
+function showShop() { 
+    document.getElementById('shop-page').style.display='block'; 
+    document.getElementById('checkout-page').style.display='none'; 
 }
 function applyCoupon() {
-    const c = document.getElementById('apply-coupon').value.toUpperCase();
-    db.ref('coupons/'+c).once('value', s => { if(s.exists()){ discount=s.val(); renderCart(); alert("DISCOUNT OK"); } else alert("INVALID"); });
+    const code = document.getElementById('apply-coupon').value.toUpperCase();
+    db.ref('coupons/'+code).once('value', s => { 
+        if(s.exists()){ discount=s.val(); renderCart(); alert("AUTHENTICATED: " + discount + "% OFF"); } 
+        else alert("ACCESS_DENIED: Invalid Code"); 
+    });
 }
 
-// Particle Background Logic
+// Background Grid
 const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d'); let dots = [];
-function initDots() { dots = []; for(let i=0; i<80; i++) dots.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*1, vy: (Math.random()-0.5)*1 }); }
+function initDots() { dots = []; for(let i=0; i<85; i++) dots.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.8, vy: (Math.random()-0.5)*0.8 }); }
 function drawGrid() {
     ctx.clearRect(0,0,canvas.width, canvas.height);
     dots.forEach((d, i) => {
         d.x += d.vx; d.y += d.vy;
         if(d.x<0 || d.x>canvas.width) d.vx *= -1; if(d.y<0 || d.y>canvas.height) d.vy *= -1;
-        ctx.fillStyle = "rgba(0, 212, 255, 0.5)"; ctx.beginPath(); ctx.arc(d.x, d.y, 2, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "rgba(0, 212, 255, 0.4)"; ctx.beginPath(); ctx.arc(d.x, d.y, 2, 0, Math.PI*2); ctx.fill();
         for(let j=i+1; j<dots.length; j++) {
             let dist = Math.hypot(d.x-dots[j].x, d.y-dots[j].y);
-            if(dist < 100) { ctx.strokeStyle = "rgba(0, 212, 255, 0.1)"; ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(dots[j].x, dots[j].y); ctx.stroke(); }
+            if(dist < 110) { ctx.strokeStyle = "rgba(0, 212, 255, 0.08)"; ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(dots[j].x, dots[j].y); ctx.stroke(); }
         }
     });
     requestAnimationFrame(drawGrid);
 }
-function updateMouse(e) { mouse.x = e.clientX; mouse.y = e.clientY; }
 
 window.onload = () => {
+    document.getElementById('current-date').innerText = new Date().toLocaleDateString();
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
     initDots(); drawGrid(); displayProducts();
     let lb = document.getElementById('load-bar'), p = 0;
     let logBox = document.getElementById('load-logs');
-    const logs = ["> BOOTING...", "> BYPASSING...", "> ENCRYPTING...", "> ACCESS_GRANTED"];
+    const logs = ["> INJECTING...", "> BYPASSING_FIREWALL...", "> SESSION_ENCRYPTED...", "> ACCESS_GRANTED"];
     let logIdx = 0;
     let int = setInterval(() => { 
         p += 5; lb.style.width = p + "%"; 
         if(p%25==0) { logBox.innerHTML += `<div>${logs[logIdx]}</div>`; logIdx++; }
         if(p>=100) { clearInterval(int); document.getElementById('loader-overlay').style.display='none'; }
-    }, 50);
+    }, 40);
 };
 function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play(); musicStarted = true; } }
 </script>
