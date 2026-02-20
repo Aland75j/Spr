@@ -53,8 +53,8 @@
 
     <style>
         :root {
-            --primary: #00d4ff; /* Main VIP Blue */
-            --secondary: #00ff41; /* Secondary Hacker Green */
+            --primary: #00d4ff; 
+            --secondary: #00ff41; 
             --matrix: rgba(0, 212, 255, 0.15);
             --bg-main: #02050a;
             --glass: rgba(0, 5, 15, 0.9);
@@ -82,7 +82,6 @@
             background-size: 25px 25px;
         }
 
-        /* Glitch Header Animation */
         header { 
             font-size: 50px; font-weight: bold; color: var(--primary); 
             text-shadow: 0 0 15px var(--primary); letter-spacing: 10px; 
@@ -148,6 +147,22 @@
         .product:hover { transform: scale(1.03); border-color: var(--primary); box-shadow: 0 0 20px var(--primary); }
         .product img { width: 100%; height: 160px; object-fit: cover; border: 1px solid #222; }
 
+        /* Page 3 Styles */
+        #auth-overlay {
+            display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+            background:var(--bg-main); z-index:99999; flex-direction:column; 
+            align-items:center; justify-content:center;
+            background-image: radial-gradient(var(--matrix) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .payment-box {
+            width: 90%; max-width: 500px; background: rgba(0,0,0,0.8); 
+            border: 1px solid var(--primary); padding: 40px; text-align: center; 
+            position: relative; box-shadow: 0 0 50px rgba(0, 212, 255, 0.2);
+        }
+        @keyframes scanline { 0% { top: 0%; } 100% { top: 100%; } }
+        .scan-effect { position:absolute; top:0; left:0; width:100%; height:2px; background:var(--primary); box-shadow: 0 0 20px var(--primary); animation: scanline 3s linear infinite; opacity: 0.5; }
+
         .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 20000; padding: 40px; overflow-y: auto; text-align: left; border: 5px solid var(--secondary); }
         .panel-box { background: #080808; border: 1px solid #333; padding: 20px; margin-bottom: 20px; border-left: 4px solid var(--secondary); }
         
@@ -189,9 +204,18 @@
 <canvas id="global-canvas"></canvas>
 
 <div id="auth-overlay">
-    <h1 style="color:var(--primary); letter-spacing: 5px;">AUTHORIZING TRANSACTION</h1>
-    <div id="paypal-button-container" style="width: 100%; max-width: 400px; margin: 20px; border: 2px solid var(--primary); padding: 10px;"></div>
-    <button onclick="document.getElementById('auth-overlay').style.display='none'" class="ui-btn" style="border-color:red; color:red;">CANCEL SESSION</button>
+    <div class="scan-effect"></div>
+    <div class="payment-box">
+        <div style="color:var(--primary); font-size: 10px; position: absolute; top: 10px; left: 15px; letter-spacing: 2px;">SECURE_GATEWAY_V4.0</div>
+        <h1 style="color:var(--primary); letter-spacing: 8px; margin-bottom: 5px; text-shadow: 0 0 15px var(--primary);">PAYMENT</h1>
+        <p id="payment-status-text" style="color:var(--secondary); font-size: 11px; margin-bottom: 30px; letter-spacing: 2px;">>>> WAITING FOR UPLINK...</p>
+        
+        <div id="paypal-button-container" style="min-height: 150px; border: 1px dashed #333; padding: 15px; background: rgba(255,255,255,0.02);"></div>
+        
+        <div style="margin-top: 30px;">
+            <button onclick="document.getElementById('auth-overlay').style.display='none'" class="ui-btn" style="border-color:#ff4444; color:#ff4444; width:100%;">ABORT TRANSACTION</button>
+        </div>
+    </div>
 </div>
 
 <div class="top-nav">
@@ -224,7 +248,7 @@
         <input type="text" id="apply-coupon" placeholder="COUPON_CODE">
         <button onclick="applyCoupon()" class="ui-btn" style="width:100%; margin-top:10px;">VALIDATE CODE</button>
         <h1 id="total-usd" style="color:var(--price-gold)">TOTAL: $0</h1>
-        <button onclick="triggerHackerPay()" style="width:100%; background:var(--primary); color:black; padding:20px; font-weight:bold; border:none; cursor:pointer; font-size:18px;">⚔️ FINISH PURCHASE</button>
+        <button onclick="triggerHackerPay()" style="width:100%; background:var(--primary); color:black; padding:20px; font-weight:bold; border:none; cursor:pointer; font-size:18px; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%);">⚔️ FINISH PURCHASE</button>
     </div>
 </div>
 
@@ -282,7 +306,7 @@
             <div id="admin-asset-list" style="max-height:300px; overflow-y:auto; border:1px solid #222; background:#000; padding:5px;"></div>
         </div>
 
-        <div class="panel-box" style="border: 1px solid var(--secondary);">
+        <div class="panel-box">
             <h3 style="color:var(--secondary);">🛡️ ACCESS CONTROL</h3>
             <input type="text" id="ban-ip-input" placeholder="IP ADDRESS">
             <button onclick="banClientIP()" class="ui-btn" style="width:100%; border-color:red; color:red;">BLOCK ACCESS</button>
@@ -413,19 +437,45 @@ function renderCart() {
     document.getElementById('total-usd').innerText = "TOTAL: $" + final.toFixed(2);
 }
 
+// --- UPDATED TRIGGER HACKER PAY (PAGE 3 TRANSITION) ---
 function triggerHackerPay() {
     if(cart.length === 0) return alert("INVENTORY EMPTY");
+    
+    // Switch to Page 3 (Secure Checkout)
     document.getElementById('auth-overlay').style.display = 'flex';
     document.getElementById('paypal-button-container').innerHTML = '';
+    document.getElementById('payment-status-text').innerText = ">>> ESTABLISHING ENCRYPTED CONNECTION...";
+    document.getElementById('payment-status-text').style.color = "var(--secondary)";
+    
     let t=0; cart.forEach(i=>t+=parseFloat(i.price));
     let final = (t - (t * (discount/100))).toFixed(2);
+    
     paypal.Buttons({
-        createOrder: (data, actions) => actions.order.create({ purchase_units: [{ amount: { value: final } }] }),
-        onApprove: (data, actions) => actions.order.capture().then(det => {
-            cart.forEach(item => { if(item.delivery) { const a = document.createElement('a'); a.href = item.delivery.data; a.download = item.delivery.name; document.body.appendChild(a); a.click(); document.body.removeChild(a); } });
-            alert("SUCCESS.");
-            cart = []; updateCartCount(); location.reload();
-        })
+        style: { shape: 'rect', color: 'blue', layout: 'vertical', label: 'pay' },
+        createOrder: (data, actions) => {
+            document.getElementById('payment-status-text').innerText = ">>> GENERATING HANDSHAKE...";
+            return actions.order.create({ purchase_units: [{ amount: { value: final } }] });
+        },
+        onApprove: (data, actions) => {
+            document.getElementById('payment-status-text').innerText = ">>> DECRYPTING ASSETS...";
+            return actions.order.capture().then(det => {
+                cart.forEach(item => { 
+                    if(item.delivery) { 
+                        const a = document.createElement('a'); 
+                        a.href = item.delivery.data; 
+                        a.download = item.delivery.name; 
+                        document.body.appendChild(a); a.click(); 
+                        document.body.removeChild(a); 
+                    } 
+                });
+                alert("TRANSACTION VERIFIED. ASSETS DELIVERED.");
+                cart = []; updateCartCount(); location.reload();
+            });
+        },
+        onError: (err) => {
+            document.getElementById('payment-status-text').innerText = ">>> CONNECTION REFUSED.";
+            document.getElementById('payment-status-text').style.color = "red";
+        }
     }).render('#paypal-button-container');
 }
 
@@ -458,7 +508,7 @@ function setBroadcast() {
     db.ref('settings/broadcast').set(msg).then(() => {
         alert("BROADCAST LIVE");
         if(msg === "") return;
-        setTimeout(() => { db.ref('settings/broadcast').set(""); }, 60000); // Clears after 1 min
+        setTimeout(() => { db.ref('settings/broadcast').set(""); }, 60000);
     });
 }
 
