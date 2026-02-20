@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MAXIOM R4 | STABLE BEAST</title>
+    <title>MAXIOM R4 | BEAST EDITION</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -19,24 +19,36 @@
             appId: "1:221473460329:web:21a278a86cfdcff8b1d2f8",
             measurementId: "G-82WFV6S568"
         };
+        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        let userIP = "unknown";
 
-        // IP Protection
-        (async function() {
-            try {
-                const r = await fetch('https://api.ipify.org?format=json');
-                const d = await r.json();
-                db.ref('banned_ips').on('value', (snap) => {
-                    if((snap.val() || []).includes(d.ip)) {
-                        document.body.innerHTML = "<div style='background:black;color:red;height:100vh;display:flex;align-items:center;justify-content:center;font-family:monospace;'><h1>ACCESS_DENIED_BY_ADMIN</h1></div>";
-                    }
-                });
-            } catch(e) {}
+        (function() {
+            const checkBans = async () => {
+                try {
+                    const r = await fetch('https://api.ipify.org?format=json');
+                    const d = await r.json();
+                    userIP = d.ip;
+                    const dbSafeIP = userIP.replace(/\./g, '_');
+                    
+                    db.ref('banned_ips').on('value', (snap) => {
+                        const list = snap.val() || [];
+                        if(list.includes(userIP)) {
+                            window.stop();
+                            document.documentElement.innerHTML = "";
+                            alert("IP TERMINATED BY SYSTEM ADMIN");
+                            window.location.href = "about:blank";
+                        }
+                    });
+                } catch(e) { console.log("Shield Active"); }
+            };
+            checkBans();
 
             db.ref('settings/paypal_id').once('value', (snap) => {
+                const savedID = snap.val() || "test";
                 const script = document.createElement('script');
-                script.src = `https://www.paypal.com/sdk/js?client-id=${snap.val() || "test"}&currency=USD`;
+                script.src = `https://www.paypal.com/sdk/js?client-id=${savedID}&currency=USD`;
                 document.head.appendChild(script);
             });
         })();
@@ -46,344 +58,445 @@
         :root {
             --primary: #ffd700;
             --secondary: #ff0000;
-            --bg-main: #020202;
-            --glass: rgba(0, 0, 0, 0.95);
+            --matrix: rgba(0, 255, 65, 0.6);
+            --bg-main: #050505;
+            --glass: rgba(0, 0, 0, 0.9);
+            --price-gold: #ffcc00;
         }
-        .blue-theme { --primary: #00d4ff; --secondary: #0044ff; --bg-main: #000510; }
+        .blue-theme { --primary: #00d4ff; --secondary: #0044ff; --matrix: rgba(0, 212, 255, 0.6); --bg-main: #000510; }
 
-        * { cursor: crosshair !important; box-sizing: border-box; }
-        body { margin: 0; font-family: 'Courier New', monospace; color: white; background: var(--bg-main); transition: 0.5s; overflow-x: hidden; }
+        * { cursor: crosshair !important; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; font-family: 'Courier New', monospace; color: white; text-align: center; background: var(--bg-main); transition: 0.5s; overflow-x: hidden; padding-bottom: 80px; }
 
-        /* [FIX] Layout Layers */
-        #global-canvas { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
-        
+        #global-alert-banner { display: none; position: fixed; top: 0; left: 0; width: 100%; background: var(--secondary); color: white; padding: 10px; z-index: 100000; font-weight: bold; border-bottom: 2px solid white; }
+
         #loader-overlay {
-            position: fixed; inset: 0; background: #000; z-index: 99999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 99999; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
         }
-
-        header { padding: 40px 0; font-size: clamp(24px, 8vw, 50px); color: var(--primary); text-shadow: 0 0 20px var(--primary); letter-spacing: 5px; font-weight: bold; }
-
-        /* [FIX] Product Grid Logic */
-        .product-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
-            gap: 25px; 
-            padding: 20px; 
-            max-width: 1400px; 
-            margin: auto; 
+        .terminal-loader {
+            width: 80%; max-width: 600px; height: 300px; background: #000;
+            border: 1px solid #00ff41; padding: 20px; text-align: left;
+            font-size: 14px; overflow: hidden; position: relative;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.2);
         }
+        .skull-ascii { color: #ffd700; font-size: 8px; line-height: 8px; white-space: pre; margin-bottom: 15px; text-align: center;}
+        #load-logs { color: #00ff41; height: 180px; overflow: hidden; }
+        .load-bar-container { width: 100%; height: 10px; background: #111; border: 1px solid #00ff41; margin-top: 20px; position: relative; }
+        #load-bar { width: 0%; height: 100%; background: #00ff41; box-shadow: 0 0 10px #00ff41; transition: 0.2s; }
 
-        .product { 
-            background: var(--glass); 
-            border: 1px solid #222; 
-            padding: 15px; 
-            border-radius: 12px; 
-            transition: 0.3s ease; 
-            position: relative;
+        #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background: var(--bg-main); }
+
+        .header-container { padding: 50px 0; }
+        header { font-size: 50px; font-weight: bold; color: var(--primary); text-shadow: 0 0 20px var(--primary); letter-spacing: 10px; }
+
+        .top-nav { position: fixed; top: 20px; left: 20px; z-index: 4000; display: flex; gap: 10px; }
+        .ui-btn { padding: 10px 15px; background: var(--primary); color: #000; border: 2px solid #fff; font-weight: bold; border-radius: 5px; font-size: 12px; cursor: pointer; }
+
+        .floating-cart {
+            position: fixed; top: 20px; right: 20px; background: var(--primary); width: 70px; height: 70px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;
+            z-index: 10000; color: black; box-shadow: 0 0 25px var(--primary); border: 3px solid #fff;
+            font-size: 24px;
         }
-        .product:hover { transform: translateY(-8px); border-color: var(--primary); box-shadow: 0 0 15px var(--primary); }
-        .product img { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; cursor: pointer; }
+        .cart-count { position: absolute; top: -5px; right: -5px; background: var(--secondary); color: white; font-size: 14px; padding: 5px 9px; border-radius: 50%; }
 
-        /* Navigation */
-        .floating-nav { position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; gap: 10px; }
-        .cart-trigger { 
-            width: 60px; height: 60px; background: var(--primary); border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; color: black; 
-            font-size: 24px; font-weight: bold; border: 3px solid white; box-shadow: 0 0 15px var(--primary);
-        }
+        .cat-label { margin: 40px auto; padding: 15px; background: var(--glass); border-top: 2px solid var(--primary); border-bottom: 2px solid var(--primary); max-width: 900px; font-size: 28px; font-weight: bold; color: var(--primary); }
+        .product-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; padding: 20px; }
+        .product { background: var(--glass); padding: 20px; width: 260px; border: 1px solid #333; border-radius: 10px; transition: 0.3s; }
+        .product:hover { transform: translateY(-10px); border-color: var(--primary); }
+        .product img { width: 100%; height: 160px; object-fit: cover; border-radius: 5px; }
 
-        /* UI Overlays */
-        .admin-box { display: none; position: fixed; inset: 0; background: #000; z-index: 20000; padding: 20px; overflow-y: auto; }
-        .panel { background: #0a0a0a; border: 1px solid #333; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        /* Admin Controls */
+        .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 20000; padding: 40px; overflow-y: auto; text-align: left; }
+        .admin-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .panel-box { background: #080808; border: 1px solid #333; padding: 20px; border-radius: 8px; }
+        .panel-box h3 { color: var(--primary); margin-top: 0; border-bottom: 1px solid #222; padding-bottom: 10px; }
+        input, select, textarea { background: #111; border: 1px solid var(--primary); color: #fff; padding: 10px; margin: 5px 0; width: 100%; border-radius: 4px; }
+
+        /* Chat UI */
+        #chat-widget { position: fixed; bottom: 80px; right: 20px; z-index: 9999; }
+        #chat-trigger { width: 60px; height: 60px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; border: 2px solid white; box-shadow: 0 0 15px var(--primary); }
+        #chat-window { display: none; position: absolute; bottom: 70px; right: 0; width: 300px; height: 400px; background: #000; border: 2px solid var(--primary); border-radius: 10px; flex-direction: column; overflow: hidden; box-shadow: 0 0 30px rgba(0,0,0,1); }
+        #chat-header { background: var(--primary); color: #000; padding: 10px; font-weight: bold; text-align: center; }
+        #chat-messages { flex: 1; padding: 10px; overflow-y: auto; font-size: 13px; text-align: left; background: #050505; }
+        .msg { margin-bottom: 8px; padding: 8px 12px; border-radius: 5px; max-width: 85%; word-wrap: break-word; }
+        .msg-user { background: #222; align-self: flex-start; border-left: 3px solid var(--primary); color: #fff; }
+        .msg-admin { background: var(--primary); color: #000; align-self: flex-end; font-weight: bold; }
+        .chat-session-item { padding: 12px; border-bottom: 1px solid #222; cursor: pointer; color: lime; font-size: 12px; transition: 0.2s; }
+        .chat-session-item:hover { background: #111; padding-left: 20px; }
+
+        #auth-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 60000; flex-direction: column; align-items: center; justify-content: center; }
+
+        .intel-ticker-wrap { position: fixed; bottom: 0; left: 0; width: 100%; height: 45px; background: rgba(0,0,0,0.9); border-top: 2px solid var(--primary); z-index: 9999; display: flex; align-items: center; }
+        .intel-ticker-label { background: var(--primary); color: #000; font-weight: bold; padding: 0 15px; height: 100%; display: flex; align-items: center; }
         
-        input, select, textarea { width: 100%; background: #000; border: 1px solid var(--primary); color: white; padding: 12px; margin: 8px 0; border-radius: 5px; }
-        .ui-btn { padding: 12px 20px; background: var(--primary); color: black; border: none; font-weight: bold; border-radius: 5px; cursor: pointer; }
-        .ui-btn:hover { filter: brightness(1.2); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
 
-        #alert-banner { display: none; position: fixed; top: 0; width: 100%; background: var(--secondary); padding: 10px; z-index: 100001; text-align: center; font-weight: bold; }
-        
-        @media (max-width: 600px) {
-            .product-grid { grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
-            .product { padding: 8px; }
-            .product img { height: 120px; }
-            header { padding: 20px 0; }
+        @media (max-width: 768px) {
+            header { font-size: 30px; letter-spacing: 4px; padding: 20px 0; }
+            .product { width: 45%; min-width: 160px; padding: 10px; }
+            .top-nav { top: auto; bottom: 65px; left: 10px; right: 10px; justify-content: center; }
+            .floating-cart { width: 55px; height: 55px; top: 10px; right: 10px; }
         }
     </style>
 </head>
-<body onclick="initSystem()">
+<body onclick="startAudio()">
 
-<div id="alert-banner"></div>
+<div id="global-alert-banner"></div>
 
 <div id="loader-overlay">
-    <div style="color: var(--primary); font-family: monospace; white-space: pre; line-height: 10px; font-size: 8px;">
-        (SYSTEM INITIALIZING...)
+    <div class="terminal-loader">
+        <div class="skull-ascii">
+        .-'''-.
+       / _   _ \
+      | ( ' ) |
+      |(_ o _)|
+       '.(_).-'
+        /   \
+       |     |
+        \___/
+        </div>
+        <div id="load-logs"></div>
+        <div class="load-bar-container"><div id="load-bar"></div></div>
     </div>
-    <div style="width: 250px; height: 2px; background: #222; margin-top: 20px; position: relative;">
-        <div id="load-bar" style="width: 0%; height: 100%; background: var(--primary); box-shadow: 0 0 10px var(--primary); transition: 0.1s;"></div>
-    </div>
+    <div id="load-text" style="color: #00ff41; margin-top: 15px; font-weight: bold;">[ ROOT ACCESS GRANTED ]</div>
 </div>
 
 <canvas id="global-canvas"></canvas>
 
-<div class="floating-nav">
-    <button class="ui-btn" onclick="toggleTheme()">🌀</button>
-    <div class="cart-trigger" onclick="showPage('checkout-page')">
-        🛒 <span id="cart-count" style="position:absolute; top:-5px; right:-5px; background:red; color:white; font-size:12px; padding:3px 7px; border-radius:50%;">0</span>
-    </div>
+<div id="auth-overlay">
+    <h1 style="color:var(--primary); letter-spacing: 5px;">AUTHORIZING TRANSACTION</h1>
+    <div id="paypal-button-container" style="width: 100%; max-width: 400px; margin: 20px;"></div>
+    <button onclick="document.getElementById('auth-overlay').style.display='none'" class="ui-btn" style="background:red; color:white;">CANCEL SESSION</button>
 </div>
 
-<header onclick="showPage('shop-page')">SPR SHOP ARK R4</header>
+<div class="top-nav">
+    <button class="ui-btn" id="music-btn" onclick="toggleMusic(event)">🔊 MUSIC: ON</button>
+    <button class="ui-btn" onclick="toggleTheme()">🌀 MODE</button>
+</div>
 
-<div id="shop-page" class="page">
-    <div style="color:var(--primary); font-weight:bold; margin: 20px;">[ ANDROID MODULES ]</div>
+<div class="floating-cart" onclick="showCheckout()">
+    🛒 <span class="cart-count" id="cart-count">0</span>
+</div>
+
+<div class="header-container">
+    <header onclick="showShop()" style="cursor:pointer;">SPR SHOP ARK R4</header>
+</div>
+
+<div id="shop-page">
+    <div class="cat-label">ANDROID CHEATS</div>
     <div id="android-grid" class="product-grid"></div>
-    <div style="color:var(--primary); font-weight:bold; margin: 40px 20px 20px 20px;">[ IOS MODULES ]</div>
+    <div class="cat-label">IOS CHEATS</div>
     <div id="ios-grid" class="product-grid"></div>
 </div>
 
-<div id="info-page" class="page" style="display:none; padding: 20px;">
-    <div style="max-width: 800px; margin: auto; background: var(--glass); border: 2px solid var(--primary); padding: 25px; border-radius: 15px;">
-        <img id="info-img" style="width:100%; max-height: 400px; object-fit: contain; border-radius: 10px;">
+<div id="checkout-page" style="display:none; padding:50px;">
+    <button onclick="showShop()" class="ui-btn">⬅ RETURN TO SHOP</button>
+    <div style="max-width:600px; margin:40px auto; background:var(--glass); padding:30px; border:2px solid var(--primary);">
+        <h2 style="color:var(--primary)">YOUR CART</h2>
+        <div id="cart-list" style="text-align:left; min-height:100px;"></div>
+        <button onclick="clearCart()" class="ui-btn" style="background:red; color:white; margin-bottom:10px;">EMPTY CART</button>
+        <hr style="border:1px solid #222;">
+        <input type="text" id="apply-coupon" placeholder="COUPON_CODE">
+        <button onclick="applyCoupon()" class="ui-btn" style="width:100%; margin-top:10px;">VALIDATE CODE</button>
+        <h1 id="total-usd" style="color:var(--price-gold)">TOTAL: $0</h1>
+        <button onclick="triggerHackerPay()" style="width:100%; background:var(--primary); color:black; padding:20px; font-weight:bold; border:none; cursor:pointer; font-size:18px;">⚔️ FINISH PURCHASE</button>
+    </div>
+</div>
+
+<div id="info-page" style="display:none; padding:50px;">
+    <button onclick="showShop()" class="ui-btn">⬅ BACK</button>
+    <div style="max-width: 800px; margin: 40px auto; background: var(--glass); border: 2px solid var(--primary); padding: 30px; border-radius: 15px;">
+        <img id="info-img" style="width:100%; border-radius:10px; margin-bottom:20px; object-fit: contain;">
         <h1 id="info-title" style="color:var(--primary)"></h1>
-        <h2 id="info-price" style="color:var(--primary)"></h2>
-        <p id="info-desc" style="line-height: 1.6;"></p>
-        <div id="info-actions"></div>
-        <br>
-        <button class="ui-btn" style="background:gray;" onclick="showPage('shop-page')">BACK TO SHOP</button>
+        <h2 id="info-price" style="color:var(--price-gold)"></h2>
+        <p id="info-desc" style="line-height:1.6; font-size:18px;"></p>
+        <div id="info-btns" style="display:flex; flex-direction: column; gap:10px; justify-content:center;"></div>
     </div>
 </div>
 
-<div id="checkout-page" class="page" style="display:none; padding: 20px;">
-    <div style="max-width: 600px; margin: auto; background: var(--glass); border: 1px solid var(--primary); padding: 30px; border-radius: 10px;">
-        <h2 style="color:var(--primary)">ORDER MANIFEST</h2>
-        <div id="cart-list" style="text-align: left; margin: 20px 0;"></div>
-        <input type="text" id="coupon-code" placeholder="ENTER COUPON">
-        <button class="ui-btn" style="width: 100%;" onclick="applyDiscount()">APPLY CODE</button>
-        <h1 id="total-display" style="margin: 30px 0;">TOTAL: $0</h1>
-        <div id="paypal-btn-area"></div>
-        <button class="ui-btn" style="width: 100%; background: red; margin-top: 10px;" onclick="clearCart()">WIPE CART</button>
-    </div>
-</div>
-
-<div class="admin-box" id="admin-panel">
-    <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-        <h2 style="color: red;">R4_CORE_ACCESS</h2>
-        <button class="ui-btn" style="background: red;" onclick="closeAdmin()">LOGOUT</button>
+<div class="admin-box" id="admin-terminal">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h2 style="color:var(--secondary); margin:0;">R4_COMMAND_HUB</h2>
+        <button onclick="closeAdmin()" class="ui-btn" style="background:red;">EXIT_ROOT</button>
     </div>
 
-    <div id="admin-login" style="text-align: center; margin-top: 100px;">
-        <input type="password" id="admin-key" placeholder="ROOT KEY" style="max-width: 300px;">
-        <button class="ui-btn" style="width: 300px; display: block; margin: 10px auto;" onclick="tryLogin()">DECRYPT HUB</button>
+    <div id="login-section" style="text-align:center; padding-top:100px;">
+        <input type="password" id="admin-pass" placeholder="MASTER ROOT KEY" style="max-width:400px; font-size: 20px;">
+        <button onclick="login()" class="ui-btn" style="width:400px; margin-top:20px; display:block; margin-left:auto; margin-right:auto;">DECRYPT HUB</button>
     </div>
 
-    <div id="admin-ui" style="display: none;">
-        <div class="panel">
-            <h3>⚒️ ARSENAL FORGE</h3>
-            <input type="hidden" id="edit-id" value="-1">
-            <input type="text" id="p-name" placeholder="Name">
-            <input type="number" id="p-price" placeholder="Price">
-            <input type="text" id="p-yt" placeholder="YouTube ID">
-            <select id="p-cat"><option value="android">Android</option><option value="ios">IOS</option></select>
-            <textarea id="p-desc" placeholder="Description"></textarea>
-            <label>Image:</label><input type="file" id="p-img">
-            <label>Delivery File:</label><input type="file" id="p-file">
-            <button class="ui-btn" id="forge-btn" onclick="saveProduct()">DEPLOY ASSET</button>
-            <button class="ui-btn" id="cancel-edit" style="background:gray; display:none;" onclick="resetForge()">CANCEL</button>
+    <div id="admin-controls" style="display:none;" class="admin-layout">
+        <div class="panel-box">
+            <h3>💬 COMMS_HUB (SUPPORT)</h3>
+            <div id="admin-chat-sessions" style="max-height:150px; overflow-y:auto; border:1px solid #333; margin-bottom:10px;">
+                <div style="padding:10px; color:#555;">No active sessions...</div>
+            </div>
+            <div id="admin-chat-view" style="display:none; border-top:1px solid var(--primary); padding-top:10px;">
+                <h4 id="active-chat-user" style="color:var(--primary); margin:0 0 10px 0; font-size:12px;"></h4>
+                <div id="admin-chat-messages" style="height:150px; overflow-y:auto; background:#000; padding:10px; font-size:11px; display:flex; flex-direction:column; border:1px solid #222;"></div>
+                <div style="display:flex; gap:5px; margin-top:5px;">
+                    <input type="text" id="admin-chat-input" placeholder="Type reply..." style="font-size:12px;">
+                    <button onclick="sendAdminReply()" class="ui-btn">SEND</button>
+                </div>
+            </div>
         </div>
-        <div id="admin-asset-list"></div>
+
+        <div class="panel-box">
+            <h3>📡 LIVE INTEL</h3>
+            <div id="pay-attempts-list" style="font-size:11px; color:yellow; background:#111; padding:10px; height:150px; overflow-y:auto; border:1px solid #333;">Scanning...</div>
+            <h3 style="margin-top:20px;">📢 BROADCAST</h3>
+            <input type="text" id="bc-input" placeholder="ALERT MESSAGE">
+            <button onclick="setBroadcast()" class="ui-btn" style="width:100%; background:orange; color:black;">SEND SYSTEM ALERT</button>
+        </div>
+
+        <div class="panel-box">
+            <h3>⚒️ ARSENAL FORGE</h3>
+            <input type="hidden" id="edit-index" value="-1">
+            <input type="text" id="p-name" placeholder="PRODUCT NAME">
+            <input type="number" id="p-price" placeholder="PRICE">
+            <input type="text" id="p-yt" placeholder="YOUTUBE VIDEO ID">
+            <select id="p-cat"><option value="android">Android</option><option value="ios">IOS</option></select>
+            <textarea id="p-desc" placeholder="PRODUCT DESCRIPTION" style="height:60px;"></textarea>
+            <input type="file" id="p-img" accept="image/*">
+            <input type="file" id="p-file">
+            <button id="forge-btn" onclick="addProduct()" class="ui-btn" style="width:100%; margin-top:10px;">DEPLOY ASSET</button>
+            <div id="admin-asset-list" style="max-height:150px; overflow-y:auto; border:1px solid #333; background:#000; margin-top:10px;"></div>
+        </div>
     </div>
 </div>
 
-<audio id="bg-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
-<audio id="click-sound" src="https://www.myinstants.com/media/sounds/sword-slash.mp3"></audio>
+<div id="chat-widget">
+    <div id="chat-window">
+        <div id="chat-header">OPERATOR SUPPORT</div>
+        <div id="chat-messages" style="display: flex; flex-direction: column;"></div>
+        <div style="display:flex; padding:5px; background:#111; gap:5px;">
+            <input type="text" id="chat-input" placeholder="Message..." style="margin:0; font-size:12px; height:35px;">
+            <button onclick="sendChatMessage()" class="ui-btn" style="padding:0 10px; height:35px;">SEND</button>
+        </div>
+    </div>
+    <div id="chat-trigger" onclick="toggleChatWindow()">💬</div>
+</div>
+
+<div class="intel-ticker-wrap">
+    <div class="intel-ticker-label">LIVE_FEED</div>
+    <marquee id="feed-text" style="color:#0f0; font-weight:bold;">>>> R4 FUSION SYSTEM STABLE :: ENCRYPTION ACTIVE :: WAITING FOR TRANSACTION...</marquee>
+</div>
+
+<audio id="hacker-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
+<audio id="snd-click" src="https://www.myinstants.com/media/sounds/sword-slash.mp3"></audio>
 
 <script>
-let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, systemReady = false;
+let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicStarted = false;
+let activeAdminSession = "";
 
-// [FIXED] Audio Initialization
-function initSystem() {
-    if(!systemReady) {
-        document.getElementById('bg-music').play().catch(()=>{});
-        systemReady = true;
-    }
+// ---------------- UI & NAVIGATION ----------------
+function toggleMusic(e) { 
+    if(e) e.stopPropagation();
+    let m = document.getElementById('hacker-music');
+    let btn = document.getElementById('music-btn');
+    if (m.paused) { m.play(); btn.innerText = "🔊 MUSIC: ON"; } else { m.pause(); btn.innerText = "🔇 MUSIC: OFF"; }
 }
 
-function playSound() {
-    const s = document.getElementById('click-sound');
-    s.currentTime = 0;
-    s.play().catch(()=>{});
-}
+function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='none'; }
+function showCheckout() { document.getElementById('shop-page').style.display='none'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='block'; renderCart(); }
 
-function showPage(id) {
-    document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-    window.scrollTo(0,0);
-    playSound();
-}
-
-// Shop Logic
-function loadProducts() {
-    db.ref('products').on('value', (s) => {
-        products = s.val() || [];
-        const ag = document.getElementById('android-grid'), ig = document.getElementById('ios-grid');
-        ag.innerHTML = ""; ig.innerHTML = "";
-        products.forEach((p, i) => {
-            if(!p) return;
-            const card = document.createElement('div'); card.className = "product";
-            card.innerHTML = `
-                <img src="${p.image || ''}" onclick="openInfo(${i})">
-                <h3 style="margin:10px 0 5px;">${p.name}</h3>
-                <div style="color:var(--primary); font-weight:bold;">$${p.price}</div>
-                <button class="ui-btn" style="width:100%; margin-top:10px;" onclick="addCart(${i})">ADD TO CART</button>
-            `;
-            p.category === 'ios' ? ig.appendChild(card) : ag.appendChild(card);
-        });
-        if(isAdmin) renderAdminList();
-    });
-}
-
-function openInfo(i) {
+function showInfo(i) {
     const p = products[i];
-    showPage('info-page');
+    document.getElementById('shop-page').style.display = 'none';
+    document.getElementById('info-page').style.display = 'block';
     document.getElementById('info-img').src = p.image || '';
     document.getElementById('info-title').innerText = p.name;
-    document.getElementById('info-price').innerText = "$"+p.price;
+    document.getElementById('info-price').innerText = "$" + p.price;
     document.getElementById('info-desc').innerText = p.desc;
-    document.getElementById('info-actions').innerHTML = `
-        <button class="ui-btn" style="width:100%;" onclick="addCart(${i})">ADD TO CART</button>
-        ${p.yt ? `<button class="ui-btn" style="width:100%; background:red; margin-top:10px;" onclick="window.open('https://youtube.com/watch?v=${p.yt}')">WATCH PREVIEW</button>` : ''}
+    document.getElementById('info-btns').innerHTML = `
+        <button class="ui-btn" onclick="addToCart(${i})" style="background:var(--primary); color:black;">ADD TO CART</button>
+        ${p.yt ? `<button class="ui-btn" onclick="window.open('https://youtube.com/watch?v=${p.yt}')" style="background:red; color:white;">📺 PREVIEW</button>` : ''}
     `;
 }
 
-function addCart(i) {
+// ---------------- CART & PAYMENTS ----------------
+function addToCart(i) {
+    document.getElementById('snd-click').play().catch(()=>{});
     cart.push(products[i]);
-    document.getElementById('cart-count').innerText = cart.length;
-    playSound();
-    renderCart();
+    updateCartCount();
+    db.ref('intel').push(`CART_ADD | ${userIP} | ${products[i].name}`);
 }
+
+function updateCartCount() { document.getElementById('cart-count').innerText = cart.length; }
+function clearCart() { cart = []; updateCartCount(); renderCart(); }
+function removeFromCart(i) { cart.splice(i, 1); updateCartCount(); renderCart(); }
 
 function renderCart() {
-    const list = document.getElementById('cart-list');
-    let total = 0; list.innerHTML = "";
-    cart.forEach((item, idx) => {
-        list.innerHTML += `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;">
-            <span>${item.name}</span><span>$${item.price}</span>
+    let l=document.getElementById('cart-list'), t=0; l.innerHTML = "";
+    cart.forEach((item, index) => {
+        l.innerHTML += `<div style="padding:10px; border-bottom:1px solid #222; display:flex; justify-content:space-between;">
+            <span>${item.name} - $${item.price}</span>
+            <button onclick="removeFromCart(${index})" style="background:none; border:none; color:red; cursor:pointer;">[REMOVE]</button>
         </div>`;
-        total += parseFloat(item.price);
+        t += parseFloat(item.price);
     });
-    let final = total - (total * (discount/100));
-    document.getElementById('total-display').innerText = "TOTAL: $" + final.toFixed(2);
-    
-    // Reset PayPal area
-    const area = document.getElementById('paypal-btn-area');
-    area.innerHTML = "";
-    if(cart.length > 0) {
-        paypal.Buttons({
-            createOrder: (data, actions) => actions.order.create({ purchase_units: [{ amount: { value: final.toFixed(2) } }] }),
-            onApprove: (data, actions) => actions.order.capture().then(det => {
-                cart.forEach(item => {
-                    if(item.delivery) {
-                        const a = document.createElement('a'); a.href = item.delivery.data; a.download = item.delivery.name; a.click();
-                    }
-                });
-                alert("PAYMENT SUCCESSFUL"); location.reload();
-            })
-        }).render('#paypal-btn-area');
-    }
+    let final = t - (t * (discount/100));
+    document.getElementById('total-usd').innerText = "TOTAL: $" + final.toFixed(2);
 }
 
-function clearCart() { cart = []; document.getElementById('cart-count').innerText = "0"; renderCart(); }
+function triggerHackerPay() {
+    if(cart.length === 0) return alert("INVENTORY EMPTY");
+    document.getElementById('auth-overlay').style.display = 'flex';
+    document.getElementById('paypal-button-container').innerHTML = '';
+    let t=0; cart.forEach(i=>t+=parseFloat(i.price));
+    let final = (t - (t * (discount/100))).toFixed(2);
+    paypal.Buttons({
+        createOrder: (data, actions) => actions.order.create({ purchase_units: [{ amount: { value: final } }] }),
+        onApprove: (data, actions) => actions.order.capture().then(det => {
+            cart.forEach(item => { if(item.delivery) { const a = document.createElement('a'); a.href = item.delivery.data; a.download = item.delivery.name; document.body.appendChild(a); a.click(); document.body.removeChild(a); } });
+            alert("SUCCESS.");
+            cart = []; updateCartCount(); location.reload();
+        })
+    }).render('#paypal-button-container');
+}
 
-// Admin Hub
-window.onkeydown = (e) => { if(e.key === "Insert") document.getElementById('admin-panel').style.display = 'block'; };
-function closeAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
+// ---------------- CHAT SYSTEM ----------------
+function toggleChatWindow() {
+    const win = document.getElementById('chat-window');
+    win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
+    if(win.style.display === 'flex' && userIP !== "unknown") listenForMessages();
+}
 
-function tryLogin() {
-    if(document.getElementById('admin-key').value === "spartytop1") {
+function sendChatMessage() {
+    const msg = document.getElementById('chat-input').value;
+    if(!msg || userIP === "unknown") return;
+    const dbSafeIP = userIP.replace(/\./g, '_');
+    db.ref('support/' + dbSafeIP).push({ sender: 'user', text: msg, timestamp: Date.now() });
+    document.getElementById('chat-input').value = "";
+}
+
+function listenForMessages() {
+    const dbSafeIP = userIP.replace(/\./g, '_');
+    db.ref('support/' + dbSafeIP).on('value', (snap) => {
+        const box = document.getElementById('chat-messages');
+        box.innerHTML = "";
+        snap.forEach(child => {
+            const m = child.val();
+            box.innerHTML += `<div class="msg msg-${m.sender}">${m.text}</div>`;
+        });
+        box.scrollTop = box.scrollHeight;
+    });
+}
+
+// ---------------- ADMIN LOGIC ----------------
+function login() {
+    if(document.getElementById('admin-pass').value === "spartytop1") {
         isAdmin = true;
-        document.getElementById('admin-ui').style.display = 'block';
-        document.getElementById('admin-login').style.display = 'none';
-        renderAdminList();
+        document.getElementById('admin-controls').style.display = 'grid';
+        document.getElementById('login-section').style.display = 'none';
+        
+        // Listen for chats
+        db.ref('support').on('value', (snap) => {
+            const list = document.getElementById('admin-chat-sessions');
+            list.innerHTML = "";
+            snap.forEach(child => {
+                const ip = child.key;
+                const div = document.createElement('div');
+                div.className = "chat-session-item";
+                div.innerText = "IP: " + ip.replace(/_/g, '.');
+                div.onclick = () => openAdminChat(ip);
+                list.appendChild(div);
+            });
+        });
+
+        db.ref('intel').limitToLast(30).on('value', s => { 
+            const list = s.val() ? Object.values(s.val()).reverse() : []; 
+            document.getElementById('pay-attempts-list').innerHTML = list.map(i => `<div>${i}</div>`).join(''); 
+        });
+        displayProducts();
     }
 }
 
-function saveProduct() {
-    const id = document.getElementById('edit-id').value;
-    const n = document.getElementById('p-name').value, p = document.getElementById('p-price').value;
-    const fImg = document.getElementById('p-img').files[0], fFile = document.getElementById('p-file').files[0];
+function openAdminChat(ip) {
+    activeAdminSession = ip;
+    document.getElementById('admin-chat-view').style.display = 'block';
+    document.getElementById('active-chat-user').innerText = "LINK ESTABLISHED: " + ip.replace(/_/g,'.');
     
-    const read = (f) => f ? new Promise(r => { const reader = new FileReader(); reader.onload=e=>r({data:e.target.result, name:f.name}); reader.readAsDataURL(f); }) : null;
-    
-    Promise.all([read(fImg), read(fFile)]).then(res => {
-        let obj = {
-            name: n, price: p, yt: document.getElementById('p-yt').value,
-            category: document.getElementById('p-cat').value, desc: document.getElementById('p-desc').value,
-            image: res[0] ? res[0].data : (id != -1 ? products[id].image : ""),
-            delivery: res[1] ? res[1] : (id != -1 ? products[id].delivery : null)
-        };
-        if(id == -1) products.push(obj); else products[id] = obj;
-        db.ref('products').set(products).then(() => { alert("SUCCESS"); resetForge(); });
+    db.ref('support/' + ip).on('value', (snap) => {
+        const box = document.getElementById('admin-chat-messages');
+        box.innerHTML = "";
+        snap.forEach(child => {
+            const m = child.val();
+            box.innerHTML += `<div class="msg msg-${m.sender}">${m.text}</div>`;
+        });
+        box.scrollTop = box.scrollHeight;
     });
 }
 
-function renderAdminList() {
-    const area = document.getElementById('admin-asset-list');
-    area.innerHTML = products.map((p, i) => !p ? '' : `
-        <div style="padding:10px; background:#111; border:1px solid #333; margin-top:5px; display:flex; justify-content:space-between;">
-            <span>${p.name}</span>
-            <div>
-                <button onclick="editItem(${i})" style="color:lime; background:none; border:none; cursor:pointer;">EDIT</button>
-                <button onclick="delItem(${i})" style="color:red; background:none; border:none; cursor:pointer; margin-left:10px;">DEL</button>
-            </div>
-        </div>
-    `).join('');
+function sendAdminReply() {
+    const msg = document.getElementById('admin-chat-input').value;
+    if(!msg || !activeAdminSession) return;
+    db.ref('support/' + activeAdminSession).push({ sender: 'admin', text: msg, timestamp: Date.now() });
+    document.getElementById('admin-chat-input').value = "";
 }
 
-function editItem(i) {
-    const p = products[i];
-    document.getElementById('p-name').value = p.name;
-    document.getElementById('p-price').value = p.price;
-    document.getElementById('p-yt').value = p.yt;
-    document.getElementById('p-cat').value = p.category;
-    document.getElementById('p-desc').value = p.desc;
-    document.getElementById('edit-id').value = i;
-    document.getElementById('forge-btn').innerText = "UPDATE ASSET";
-    document.getElementById('cancel-edit').style.display = "block";
-    document.getElementById('admin-panel').scrollTop = 0;
+function addProduct() {
+    const n=document.getElementById('p-name').value, p=document.getElementById('p-price').value, y=document.getElementById('p-yt').value, c=document.getElementById('p-cat').value, d=document.getElementById('p-desc').value, fImg=document.getElementById('p-img').files[0], fFile=document.getElementById('p-file').files[0], idx=document.getElementById('edit-index').value;
+    const read = (file) => file ? new Promise(res => { const r=new FileReader(); r.onload=e=>res({data:e.target.result, name:file.name}); r.readAsDataURL(file); }) : null;
+    Promise.all([read(fImg), read(fFile)]).then(vals => {
+        let obj = { name:n, price:p, yt:y, category:c, desc:d, image: vals[0] ? vals[0].data : (products[idx]?.image || ""), delivery: vals[1] ? vals[1] : (products[idx]?.delivery || null) };
+        if(idx == -1) products.push(obj); else products[idx] = obj;
+        db.ref('products').set(products).then(() => { alert("SYNC COMPLETE"); resetForge(); });
+    });
 }
 
-function delItem(i) { if(confirm("DELETE?")) { products.splice(i,1); db.ref('products').set(products); } }
-function resetForge() { document.getElementById('edit-id').value = "-1"; document.getElementById('forge-btn').innerText = "DEPLOY ASSET"; document.getElementById('cancel-edit').style.display = "none"; }
+function displayProducts() {
+    db.ref('products').on('value', (snap) => {
+        products = snap.val() || [];
+        const andr = document.getElementById("android-grid"), ios = document.getElementById("ios-grid"), adm = document.getElementById('admin-asset-list');
+        if(!andr) return; andr.innerHTML = ""; ios.innerHTML = ""; adm.innerHTML = "";
+        products.forEach((p, i) => {
+            const div = document.createElement("div"); div.className = "product";
+            div.innerHTML = `<img src="${p.image}" onclick="showInfo(${i})"><h3>${p.name}</h3><div style="color:var(--price-gold); font-weight:bold;">$${p.price}</div><button onclick="addToCart(${i})" class="ui-btn" style="width:100%; margin-top:5px; border:none;">BUY</button>`;
+            p.category === "ios" ? ios.appendChild(div) : andr.appendChild(div);
+            adm.innerHTML += `<div style="padding:5px; border-bottom:1px solid #222; font-size:10px;">${p.name} <button onclick="deleteProduct(${i})" style="color:red; background:none; border:none; cursor:pointer;">[X]</button></div>`;
+        });
+    });
+}
 
-// Matrix Effect
-const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d');
-let drops = [];
+function deleteProduct(i) { if(confirm("ERASE ASSET?")) { products.splice(i, 1); db.ref('products').set(products); } }
+function resetForge() { document.getElementById('edit-index').value = "-1"; document.getElementById('p-name').value = ""; document.getElementById('p-price').value = ""; }
+function closeAdmin() { document.getElementById('admin-terminal').style.display = 'none'; }
+function setBroadcast() { db.ref('settings/broadcast').set(document.getElementById('bc-input').value).then(() => alert("BROADCAST LIVE")); }
+
+// ---------------- MATRIX & INIT ----------------
+const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d'); let drops = [];
 function drawMatrix() {
-    ctx.fillStyle = "rgba(0,0,0,0.08)"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle = "#ffd700"; ctx.font = "15px monospace";
-    drops.forEach((y, i) => {
-        ctx.fillText(String.fromCharCode(0x30A0 + Math.random()*33), i*20, y*20);
-        if(y*20 > canvas.height && Math.random() > 0.975) drops[i] = 0;
-        drops[i]++;
-    });
+    drops.forEach((y, i) => { ctx.fillText(String.fromCharCode(0x30A0 + Math.random()*33), i*20, y*20); if(y*20 > canvas.height && Math.random() > 0.975) drops[i] = 0; drops[i]++; });
 }
 
 window.onload = () => {
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
     drops = Array(Math.floor(canvas.width/20)).fill(1);
     setInterval(drawMatrix, 50);
-    loadProducts();
-
-    // Loader logic
-    let bar = document.getElementById('load-bar'), p = 0;
-    let int = setInterval(() => {
-        p += 2; bar.style.width = p + "%";
-        if(p >= 100) { clearInterval(int); document.getElementById('loader-overlay').style.display = 'none'; }
+    displayProducts();
+    db.ref('settings/broadcast').on('value', s => {
+        const banner = document.getElementById('global-alert-banner');
+        if(s.val()) { banner.innerText = "⚠️ SYSTEM: " + s.val(); banner.style.display = 'block'; }
+        else { banner.style.display = 'none'; }
+    });
+    let lb = document.getElementById('load-bar'), p = 0;
+    let int = setInterval(() => { 
+        p += 2; lb.style.width = p + "%"; 
+        if(p>=100){ clearInterval(int); setTimeout(() => { document.getElementById('loader-overlay').style.display='none'; }, 500); }
     }, 30);
 };
 
+window.onkeydown = (e) => { if(e.key === "Insert") document.getElementById('admin-terminal').style.display = 'block'; };
 function toggleTheme() { document.body.classList.toggle('blue-theme'); }
+function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play().then(() => { musicStarted = true; }).catch(() => {}); } }
 </script>
 </body>
 </html>
