@@ -99,6 +99,13 @@
         }
         .cart-count { position: absolute; top: -5px; right: -5px; background: var(--secondary); color: white; font-size: 14px; padding: 5px 9px; border-radius: 50%; }
 
+        /* Live Chat Styling */
+        #chat-widget { position: fixed; bottom: 60px; right: 20px; width: 300px; height: 400px; background: var(--glass); border: 2px solid var(--primary); z-index: 9998; display: none; flex-direction: column; border-radius: 10px; overflow: hidden; }
+        #chat-header { background: var(--primary); color: #000; padding: 10px; font-weight: bold; display: flex; justify-content: space-between; }
+        #chat-msgs { flex: 1; overflow-y: auto; padding: 10px; font-size: 12px; text-align: left; }
+        .chat-input-wrap { display: flex; border-top: 1px solid #333; }
+        #chat-input { flex: 1; border: none; padding: 10px; background: #111; color: #fff; }
+
         .cat-label { margin: 40px auto; padding: 15px; background: var(--glass); border-top: 2px solid var(--primary); border-bottom: 2px solid var(--primary); max-width: 900px; font-size: 28px; font-weight: bold; color: var(--primary); }
         .product-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; padding: 20px; }
         .product { background: var(--glass); padding: 20px; width: 260px; border: 1px solid #333; border-radius: 10px; transition: 0.3s; }
@@ -116,9 +123,9 @@
         .intel-ticker-wrap { position: fixed; bottom: 0; left: 0; width: 100%; height: 45px; background: rgba(0,0,0,0.9); border-top: 2px solid var(--primary); z-index: 9999; display: flex; align-items: center; }
         .intel-ticker-label { background: var(--primary); color: #000; font-weight: bold; padding: 0 15px; height: 100%; display: flex; align-items: center; }
         
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+        ::–webkit-scrollbar { width: 8px; }
+        ::–webkit-scrollbar-track { background: #000; }
+        ::–webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
 
         @media (max-width: 768px) {
             header { font-size: 30px; letter-spacing: 4px; padding: 20px 0; }
@@ -134,10 +141,7 @@
             .terminal-loader { width: 95%; height: 350px; font-size: 11px; }
             .skull-ascii { font-size: 5px; line-height: 5px; }
             .admin-box { padding: 15px; }
-            #checkout-page, #info-page { padding: 20px 10px; }
-            #info-img { height: 220px; }
-            #login-section { padding-top: 50px; }
-            #login-section input, #login-section button { width: 100% !important; max-width: 100% !important; }
+            #chat-widget { width: 90%; right: 5%; bottom: 120px; }
         }
     </style>
 </head>
@@ -174,6 +178,16 @@
 <div class="top-nav">
     <button class="ui-btn" id="music-btn" onclick="toggleMusic(event)">🔊 MUSIC: ON</button>
     <button class="ui-btn" onclick="toggleTheme()">🌀 MODE</button>
+    <button class="ui-btn" onclick="toggleChat()">💬 CHAT</button>
+</div>
+
+<div id="chat-widget">
+    <div id="chat-header"><span>R4 SECURE CHAT</span> <span onclick="toggleChat()" style="cursor:pointer">X</span></div>
+    <div id="chat-msgs"></div>
+    <div class="chat-input-wrap">
+        <input type="text" id="chat-input" placeholder="Enter message..." onkeydown="if(event.key==='Enter') sendChat()">
+        <button onclick="sendChat()" style="background:var(--primary); border:none; padding:10px; cursor:pointer">></button>
+    </div>
 </div>
 
 <div class="floating-cart" onclick="showCheckout()">
@@ -229,15 +243,22 @@
 
     <div id="admin-controls" style="display:none;" class="admin-layout">
         <div class="panel-box">
-            <h3>📡 LIVE INTEL</h3>
+            <h3>📡 LIVE INTEL (EDIT/DEL)</h3>
             <div id="pay-attempts-list" style="font-size:11px; color:yellow; background:#111; padding:10px; height:200px; overflow-y:auto; border:1px solid #333;">Scanning...</div>
+            <button onclick="db.ref('intel').set(null)" class="ui-btn" style="width:100%; background:red; margin-top:5px;">WIPE ALL INTEL</button>
+            
             <h3 style="margin-top:20px;">🎟️ COUPONS</h3>
             <input type="text" id="c-code" placeholder="CODE">
             <input type="number" id="c-perc" placeholder="DISCOUNT %">
             <button onclick="addCoupon()" class="ui-btn" style="width:100%;">GENERATE</button>
-            <h3 style="margin-top:20px;">📢 BROADCAST ALERT</h3>
+            
+            <h3 style="margin-top:20px;">📢 BROADCAST</h3>
             <input type="text" id="bc-input" placeholder="ALERT MESSAGE">
-            <button onclick="setBroadcast()" class="ui-btn" style="width:100%; background:orange; color:black;">SEND SYSTEM ALERT</button>
+            <input type="number" id="bc-timer" placeholder="MINUTES TO LIVE (0=infinite)">
+            <div style="display:flex; gap:5px;">
+                <button onclick="setBroadcast()" class="ui-btn" style="flex:1; background:orange; color:black;">SEND</button>
+                <button onclick="db.ref('settings/broadcast').set('')" class="ui-btn" style="flex:1; background:red;">DELETE</button>
+            </div>
         </div>
 
         <div class="panel-box">
@@ -255,15 +276,21 @@
             <button id="forge-btn" onclick="addProduct()" class="ui-btn" style="width:100%; margin-top:10px;">DEPLOY ASSET</button>
             <button id="cancel-edit-btn" onclick="resetForge()" class="ui-btn" style="width:100%; margin-top:5px; background:gray; display:none;">CANCEL EDIT</button>
             
-            <h3 style="margin-top:20px;">📦 INVENTORY MANAGER</h3>
-            <div id="admin-asset-list" style="max-height:300px; overflow-y:auto; border:1px solid #333; background:#000; padding:5px;"></div>
+            <h3 style="margin-top:20px;">📦 INVENTORY</h3>
+            <div id="admin-asset-list" style="max-height:200px; overflow-y:auto; border:1px solid #333; background:#000; padding:5px;"></div>
         </div>
 
-        <div class="panel-box" style="border: 1px solid var(--secondary);">
+        <div class="panel-box">
             <h3 style="color:var(--secondary);">🛡️ ACCESS CONTROL</h3>
             <input type="text" id="ban-ip-input" placeholder="IP ADDRESS">
             <button onclick="banClientIP()" class="ui-btn" style="width:100%; background:red; color:white;">BLOCK ACCESS</button>
             <button onclick="clearBans()" class="ui-btn" style="width:100%; background:orange; color:black; margin-top:5px;">CLEAR ALL BANS</button>
+            
+            <h3 style="margin-top:20px;">💬 MODERATE CHAT</h3>
+            <button onclick="db.ref('chat').set(null)" class="ui-btn" style="width:100%; background:red;">CLEAR ALL MESSAGES</button>
+            
+            <h3 style="margin-top:20px;">🎨 THEME CONFIG</h3>
+            <button onclick="toggleTheme()" class="ui-btn" style="width:100%;">TOGGLE SYSTEM THEME</button>
             <hr style="border-color:#222; margin:15px 0;">
             <h3>🔑 GATEWAY CONFIG</h3>
             <input type="text" id="pp-id-input" placeholder="PAYPAL CLIENT ID">
@@ -281,7 +308,21 @@
 <audio id="snd-click" src="https://www.myinstants.com/media/sounds/sword-slash.mp3"></audio>
 
 <script>
-let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicStarted = false;
+let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicStarted = false, userIP = "Unknown";
+
+// Chat Functions
+function toggleChat() { let c = document.getElementById('chat-widget'); c.style.display = (c.style.display==='flex')?'none':'flex'; }
+function sendChat() {
+    let inp = document.getElementById('chat-input');
+    if(!inp.value.trim()) return;
+    db.ref('chat').push({ ip: userIP, msg: inp.value, time: Date.now() });
+    inp.value = "";
+}
+db.ref('chat').on('value', s => {
+    let list = s.val() ? Object.values(s.val()) : [];
+    document.getElementById('chat-msgs').innerHTML = list.map(m => `<div><b style="color:var(--primary)">${m.ip.split('.').slice(-1)[0]}</b>: ${m.msg}</div>`).join('');
+    let div = document.getElementById('chat-msgs'); div.scrollTop = div.scrollHeight;
+});
 
 function toggleMusic(e) { 
     if(e) e.stopPropagation();
@@ -330,10 +371,10 @@ function renderAdminAssets() {
     if(!list) return;
     list.innerHTML = products.map((p, i) => p ? `
         <div style="border-bottom:1px solid #222; padding:10px; display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:12px; color:white;">${p.name} ($${p.price})</span>
+            <span style="font-size:12px; color:white;">${p.name}</span>
             <div>
-                <button onclick="editProduct(${i})" style="color:lime; background:none; border:1px solid lime; cursor:pointer; padding:2px 5px; font-size:10px;">EDIT</button>
-                <button onclick="deleteProduct(${i})" style="color:red; background:none; border:1px solid red; cursor:pointer; margin-left:5px; padding:2px 5px; font-size:10px;">DEL</button>
+                <button onclick="editProduct(${i})" style="color:lime; background:none; border:1px solid lime; padding:2px 5px; font-size:10px;">EDIT</button>
+                <button onclick="deleteProduct(${i})" style="color:red; background:none; border:1px solid red; margin-left:5px; padding:2px 5px; font-size:10px;">DEL</button>
             </div>
         </div>
     ` : '').join('');
@@ -349,7 +390,6 @@ function editProduct(i) {
     document.getElementById('edit-index').value = i;
     document.getElementById('forge-btn').innerText = "CONFIRM UPDATE";
     document.getElementById('cancel-edit-btn').style.display = "block";
-    document.getElementById('admin-terminal').scrollTop = 0;
 }
 
 function deleteProduct(i) { if(confirm("DELETE ASSET?")) { products.splice(i, 1); db.ref('products').set(products); } }
@@ -360,7 +400,6 @@ function resetForge() {
     document.getElementById('cancel-edit-btn').style.display = "none";
     document.getElementById('p-name').value = ""; document.getElementById('p-price').value = ""; 
     document.getElementById('p-yt').value = ""; document.getElementById('p-desc').value = "";
-    document.getElementById('p-img').value = ""; document.getElementById('p-file').value = "";
 }
 
 function addToCart(i) {
@@ -368,13 +407,16 @@ function addToCart(i) {
     sound.currentTime = 0; sound.play().catch(()=>{});
     cart.push(products[i]);
     updateCartCount();
-    fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>{ db.ref('intel').push(`CART_ADD | ${d.ip} | ${products[i].name}`); });
+    db.ref('intel').push({ id: Date.now(), text: `CART_ADD | ${userIP} | ${products[i].name}` });
 }
+
+// Live Feed Edit/Delete
+function editIntel(key, text) { let n = prompt("Edit Feed Entry:", text); if(n) db.ref('intel/'+key).update({text: n}); }
+function delIntel(key) { if(confirm("Delete entry?")) db.ref('intel/'+key).remove(); }
 
 function updateCartCount() { document.getElementById('cart-count').innerText = cart.length; }
 function clearCart() { cart = []; updateCartCount(); renderCart(); }
 function removeFromCart(i) { cart.splice(i, 1); updateCartCount(); renderCart(); }
-
 function showCheckout() { document.getElementById('shop-page').style.display='none'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='block'; renderCart(); }
 
 function renderCart() {
@@ -412,9 +454,14 @@ function login() {
         document.getElementById('admin-controls').style.display = 'grid';
         document.getElementById('login-section').style.display = 'none';
         db.ref('intel').limitToLast(50).on('value', s => { 
-            const val = s.val();
-            const list = val ? Object.values(val).reverse() : []; 
-            document.getElementById('pay-attempts-list').innerHTML = list.map(i => `<div>${i}</div>`).join(''); 
+            const val = s.val() || {};
+            document.getElementById('pay-attempts-list').innerHTML = Object.keys(val).reverse().map(k => `
+                <div style="margin-bottom:5px; border-bottom:1px solid #222;">
+                    ${val[k].text} 
+                    <span style="color:lime" onclick="editIntel('${k}', '${val[k].text}')">[E]</span>
+                    <span style="color:red" onclick="delIntel('${k}')">[X]</span>
+                </div>
+            `).join(''); 
         });
         db.ref('coupons').on('value', s => { coupons = s.val() || {}; });
         db.ref('settings/paypal_id').once('value', s => document.getElementById('pp-id-input').value = s.val() || "");
@@ -432,10 +479,10 @@ function addCoupon() { db.ref('coupons/'+document.getElementById('c-code').value
 
 function setBroadcast() {
     const msg = document.getElementById('bc-input').value;
+    const time = parseInt(document.getElementById('bc-timer').value) || 0;
     db.ref('settings/broadcast').set(msg).then(() => {
         alert("BROADCAST LIVE");
-        if(msg === "") return;
-        setTimeout(() => { db.ref('settings/broadcast').set(""); }, 60000); // Clears after 1 min
+        if(time > 0) setTimeout(() => { db.ref('settings/broadcast').set(""); }, time * 60000);
     });
 }
 
@@ -463,11 +510,13 @@ function applyCoupon() {
 const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d'); let drops = [];
 function drawMatrix() {
     ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = "#ffd700"; ctx.font = "15px monospace";
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary'); 
+    ctx.font = "15px monospace";
     drops.forEach((y, i) => { ctx.fillText(String.fromCharCode(0x30A0 + Math.random()*33), i*20, y*20); if(y*20 > canvas.height && Math.random() > 0.975) drops[i] = 0; drops[i]++; });
 }
 
 window.onload = () => {
+    fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=> userIP = d.ip);
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
     drops = Array(Math.floor(canvas.width/20)).fill(1);
     setInterval(drawMatrix, 50);
@@ -497,4 +546,3 @@ function startAudio() { if(!musicStarted) { document.getElementById('hacker-musi
 </script>
 </body>
 </html>
-
