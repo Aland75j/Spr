@@ -60,7 +60,6 @@
             --glass: rgba(0, 0, 0, 0.9);
             --price-gold: #ffcc00;
         }
-        .blue-theme { --primary: #00d4ff; --secondary: #0044ff; --matrix: rgba(0, 212, 255, 0.6); --bg-main: #000510; }
 
         * { cursor: crosshair !important; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: 'Courier New', monospace; color: white; text-align: center; background: var(--bg-main); transition: 0.5s; overflow-x: hidden; padding-bottom: 80px; }
@@ -561,48 +560,47 @@ window.onload = () => {
         document.getElementById('feed-text').innerText = s.val() || ">>> R4 FUSION SYSTEM STABLE :: ENCRYPTION ACTIVE...";
     });
 
-    // --- GLOBAL UI LISTENERS ---
-    db.ref('settings/global_color').on('value', s => {
-        if(s.val()) document.documentElement.style.setProperty('--primary', s.val());
-    });
-    db.ref('settings/global_title').on('value', s => {
-        if(s.val()) document.getElementById('main-header-text').innerText = s.val();
+    // Global UI Listener (PGUP Changes)
+    db.ref('settings/global_ui').on('value', s => {
+        const data = s.val();
+        if(data) {
+            if(data.primary_color) document.documentElement.style.setProperty('--primary', data.primary_color);
+            if(data.shop_title) document.getElementById('main-header-text').innerText = data.shop_title;
+        }
     });
 
-    let lb = document.getElementById('load-bar'), p = 0;
-    let logBox = document.getElementById('load-logs');
-    const mockLogs = ["> R4 BOOTING...", "> FIREWALL BYPASS...", "> ROOT GRANTED."];
-    let logIndex = 0;
-    let int = setInterval(() => { 
-        p += 2; lb.style.width = p + "%"; 
-        if(p % 30 == 0 && logIndex < mockLogs.length) { logBox.innerHTML += `<div>${mockLogs[logIndex]}</div>`; logIndex++; }
-        if(p>=100){ clearInterval(int); setTimeout(() => { document.getElementById('loader-overlay').style.display='none'; }, 500); }
-    }, 40);
-};
+    // PageUp Key Listener
+    window.addEventListener('keydown', (e) => {
+        if(e.key === "PageUp") document.getElementById('pgup-menu').style.display = 'block';
+    });
 
-window.onkeydown = (e) => { 
-    if(e.key === "Insert") document.getElementById('admin-terminal').style.display = 'block'; 
-    if(e.key === "PageUp") {
-        const menu = document.getElementById('pgup-menu');
-        menu.style.display = (menu.style.display === 'none') ? 'block' : 'none';
-    }
+    // Simulated Terminal Load sequence
+    const logs = document.getElementById('load-logs');
+    const lines = ["> BOOTING R4...", "> BYPASSING FIREWALL...", "> SYNCING DATABASE...", "> READY."];
+    let step = 0;
+    let loadInt = setInterval(() => {
+        if(step < lines.length) {
+            logs.innerHTML += `<div>${lines[step]}</div>`;
+            document.getElementById('load-bar').style.width = ((step+1)*25) + "%";
+            step++;
+        } else {
+            clearInterval(loadInt);
+            setTimeout(() => document.getElementById('loader-overlay').style.display='none', 800);
+        }
+    }, 600);
 };
 
 function applyGlobalChanges() {
     const newColor = document.getElementById('color-picker').value;
     const newTitle = document.getElementById('title-input').value;
-    const updates = {};
-    if(newColor) updates['settings/global_color'] = newColor;
-    if(newTitle) updates['settings/global_title'] = newTitle;
-    db.ref().update(updates).then(() => {
-        alert("SYNCED TO ALL USERS");
-        document.getElementById('pgup-menu').style.display = 'none';
-    });
+    db.ref('settings/global_ui').set({ primary_color: newColor, shop_title: newTitle })
+      .then(() => {
+          document.getElementById('pgup-menu').style.display = 'none';
+          alert("GLOBAL UPDATE DEPLOYED");
+      });
 }
 
-function closeAdmin() { document.getElementById('admin-terminal').style.display = 'none'; }
-function toggleTheme() { document.body.classList.toggle('blue-theme'); }
-function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play().then(() => { musicStarted = true; }).catch(() => {}); } }
+function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play().catch(()=>{}); musicStarted = true; } }
 </script>
 </body>
 </html>
