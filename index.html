@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MAXIOM R4 | BEAST EDITION</title>
+    <title>MAXIOM R4 | VIP BEAST EDITION</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -52,92 +52,165 @@
     </script>
 
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
         :root {
-            --primary: #ffd700;
-            --secondary: #ff0000;
-            --matrix: rgba(0, 255, 65, 0.6);
-            --bg-main: #050505;
-            --glass: rgba(0, 0, 0, 0.9);
-            --price-gold: #ffcc00;
+            --primary: #00ff41; /* Classic Hacker Green */
+            --secondary: #ff003c; /* Cyberpunk Red */
+            --matrix: rgba(0, 255, 65, 0.2);
+            --bg-main: #0a0a0a;
+            --glass: rgba(15, 15, 15, 0.85);
+            --border-glow: 0 0 15px rgba(0, 255, 65, 0.3);
+            --text-glow: 0 0 10px rgba(0, 255, 65, 0.5);
+            --price-gold: #ffd700;
         }
-        .blue-theme { --primary: #00d4ff; --secondary: #0044ff; --matrix: rgba(0, 212, 255, 0.6); --bg-main: #000510; }
 
-        * { cursor: crosshair !important; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; font-family: 'Courier New', monospace; color: white; text-align: center; background: var(--bg-main); transition: 0.5s; overflow-x: hidden; padding-bottom: 80px; }
+        .blue-theme { 
+            --primary: #00d4ff; 
+            --secondary: #ff00ff; 
+            --matrix: rgba(0, 212, 255, 0.2); 
+            --bg-main: #000814; 
+            --border-glow: 0 0 15px rgba(0, 212, 255, 0.3);
+            --text-glow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
 
-        #global-alert-banner { display: none; position: fixed; top: 0; left: 0; width: 100%; background: var(--secondary); color: white; padding: 10px; z-index: 100000; font-weight: bold; border-bottom: 2px solid white; }
+        * { 
+            cursor: crosshair !important; 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        body { 
+            margin: 0; 
+            background: var(--bg-main); 
+            color: #e0e0e0; 
+            overflow-x: hidden; 
+            padding-bottom: 100px;
+            background-image: linear-gradient(var(--matrix) 1px, transparent 1px), linear-gradient(90deg, var(--matrix) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* Scanline Overlay */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 9999;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        #global-alert-banner { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; 
+            background: var(--secondary); color: white; padding: 12px; 
+            z-index: 100000; font-weight: bold; text-transform: uppercase;
+            box-shadow: 0 5px 20px rgba(255, 0, 0, 0.5); border-bottom: 2px solid #fff;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 
         #loader-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 99999; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
         }
+
         .terminal-loader {
-            width: 80%; max-width: 600px; height: 300px; background: #000;
-            border: 1px solid #00ff41; padding: 20px; text-align: left;
-            font-size: 14px; overflow: hidden; position: relative;
-            box-shadow: 0 0 30px rgba(0, 255, 65, 0.2);
+            width: 90%; max-width: 500px; background: rgba(0, 20, 0, 0.9);
+            border: 2px solid var(--primary); padding: 30px; text-align: left;
+            box-shadow: var(--border-glow); position: relative;
         }
-        .skull-ascii { color: #ffd700; font-size: 8px; line-height: 8px; white-space: pre; margin-bottom: 15px; text-align: center;}
-        #load-logs { color: #00ff41; height: 180px; overflow: hidden; }
-        .load-bar-container { width: 100%; height: 10px; background: #111; border: 1px solid #00ff41; margin-top: 20px; position: relative; }
-        #load-bar { width: 0%; height: 100%; background: #00ff41; box-shadow: 0 0 10px #00ff41; transition: 0.2s; }
 
-        #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background: var(--bg-main); }
+        .skull-ascii { color: var(--primary); font-size: 10px; line-height: 10px; white-space: pre; margin-bottom: 20px; text-align: center; text-shadow: var(--text-glow); }
+        #load-logs { color: var(--primary); height: 120px; overflow: hidden; font-size: 12px; }
+        .load-bar-container { width: 100%; height: 6px; background: #111; border: 1px solid var(--primary); margin-top: 20px; }
+        #load-bar { width: 0%; height: 100%; background: var(--primary); box-shadow: var(--text-glow); transition: 0.2s; }
 
-        .header-container { padding: 50px 0; }
-        header { font-size: 50px; font-weight: bold; color: var(--primary); text-shadow: 0 0 20px var(--primary); letter-spacing: 10px; }
+        #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; opacity: 0.3; }
 
-        .top-nav { position: fixed; top: 20px; left: 20px; z-index: 4000; display: flex; gap: 10px; }
-        .ui-btn { padding: 10px 15px; background: var(--primary); color: #000; border: 2px solid #fff; font-weight: bold; border-radius: 5px; font-size: 12px; cursor: pointer; }
+        .header-container { padding: 60px 0 20px 0; }
+        header { 
+            font-size: 45px; font-weight: 900; color: var(--primary); 
+            text-shadow: var(--text-glow); letter-spacing: 8px; 
+            text-transform: uppercase;
+        }
+
+        .top-nav { position: fixed; top: 20px; left: 20px; z-index: 4000; display: flex; gap: 15px; }
+        .ui-btn { 
+            padding: 10px 20px; background: transparent; color: var(--primary); 
+            border: 1px solid var(--primary); font-weight: bold; font-size: 13px; 
+            cursor: pointer; text-transform: uppercase; transition: 0.3s;
+            box-shadow: inset 0 0 5px var(--primary);
+        }
+        .ui-btn:hover { background: var(--primary); color: #000; box-shadow: var(--border-glow); }
 
         .floating-cart {
-            position: fixed; top: 20px; right: 20px; background: var(--primary); width: 70px; height: 70px;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;
-            z-index: 10000; color: black; box-shadow: 0 0 25px var(--primary); border: 3px solid #fff;
-            font-size: 24px;
+            position: fixed; top: 20px; right: 20px; background: var(--glass); width: 65px; height: 65px;
+            border-radius: 5px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+            z-index: 10000; color: var(--primary); border: 2px solid var(--primary);
+            font-size: 24px; box-shadow: var(--border-glow);
         }
-        .cart-count { position: absolute; top: -5px; right: -5px; background: var(--secondary); color: white; font-size: 14px; padding: 5px 9px; border-radius: 50%; }
+        .cart-count { position: absolute; top: -10px; left: -10px; background: var(--secondary); color: white; font-size: 12px; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid white; }
 
-        .cat-label { margin: 40px auto; padding: 15px; background: var(--glass); border-top: 2px solid var(--primary); border-bottom: 2px solid var(--primary); max-width: 900px; font-size: 28px; font-weight: bold; color: var(--primary); }
-        .product-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; padding: 20px; }
-        .product { background: var(--glass); padding: 20px; width: 260px; border: 1px solid #333; border-radius: 10px; transition: 0.3s; }
-        .product:hover { transform: translateY(-10px); border-color: var(--primary); }
-        .product img { width: 100%; height: 160px; object-fit: cover; border-radius: 5px; }
+        .cat-label { 
+            margin: 50px auto 20px auto; padding: 10px; 
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            max-width: 800px; font-size: 22px; font-weight: bold; color: #000; 
+            text-transform: uppercase; letter-spacing: 5px;
+        }
 
-        .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 20000; padding: 40px; overflow-y: auto; text-align: left; }
-        .admin-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .panel-box { background: #080808; border: 1px solid #333; padding: 20px; border-radius: 8px; }
-        .panel-box h3 { color: var(--primary); margin-top: 0; border-bottom: 1px solid #222; padding-bottom: 10px; }
-        input, select, textarea { background: #111; border: 1px solid var(--primary); color: #fff; padding: 10px; margin: 5px 0; width: 100%; border-radius: 4px; }
+        .product-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 20px; }
+        .product { 
+            background: var(--glass); padding: 15px; width: 280px; 
+            border: 1px solid #333; position: relative; transition: 0.4s;
+            clip-path: polygon(0 0, 100% 0, 100% 90%, 90% 100%, 0 100%);
+        }
+        .product:hover { 
+            border-color: var(--primary); transform: translateY(-5px); 
+            box-shadow: var(--border-glow);
+        }
+        .product img { width: 100%; height: 180px; object-fit: cover; border: 1px solid #222; filter: grayscale(0.5); transition: 0.3s; }
+        .product:hover img { filter: grayscale(0); border-color: var(--primary); }
 
-        #auth-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 60000; flex-direction: column; align-items: center; justify-content: center; }
+        .product h3 { margin: 15px 0 5px 0; font-size: 18px; color: var(--primary); text-transform: uppercase; }
 
-        .intel-ticker-wrap { position: fixed; bottom: 0; left: 0; width: 100%; height: 45px; background: rgba(0,0,0,0.9); border-top: 2px solid var(--primary); z-index: 9999; display: flex; align-items: center; }
-        .intel-ticker-label { background: var(--primary); color: #000; font-weight: bold; padding: 0 15px; height: 100%; display: flex; align-items: center; }
+        .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,5,0,0.98); z-index: 20000; padding: 30px; overflow-y: auto; }
+        .panel-box { background: rgba(0,0,0,0.6); border: 1px solid #00ff4133; padding: 20px; margin-bottom: 20px; }
         
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+        input, select, textarea { 
+            background: rgba(0,0,0,0.8); border: 1px solid #333; color: var(--primary); 
+            padding: 12px; margin: 8px 0; width: 100%; font-size: 14px;
+        }
+        input:focus { border-color: var(--primary); outline: none; box-shadow: var(--border-glow); }
+
+        #auth-overlay { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.95); z-index: 60000; flex-direction: column; 
+            align-items: center; justify-content: center; backdrop-filter: blur(10px);
+        }
+
+        .intel-ticker-wrap { 
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 35px; 
+            background: #000; border-top: 1px solid var(--primary); z-index: 9999; 
+            display: flex; align-items: center; overflow: hidden;
+        }
+        .intel-ticker-label { background: var(--primary); color: #000; font-weight: bold; padding: 0 15px; height: 100%; display: flex; align-items: center; font-size: 12px; }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: var(--primary); }
 
         @media (max-width: 768px) {
-            header { font-size: 30px; letter-spacing: 4px; padding: 20px 0; }
-            .header-container { padding: 30px 0; }
-            .product { width: 45%; min-width: 160px; padding: 10px; gap: 10px; }
-            .product img { height: 120px; }
-            .product h3 { font-size: 14px; }
-            .cat-label { font-size: 20px; padding: 10px; width: 95%; }
-            .top-nav { top: auto; bottom: 65px; left: 10px; right: 10px; justify-content: center; gap: 5px; }
-            .ui-btn { padding: 8px; font-size: 10px; flex: 1; }
-            .floating-cart { width: 55px; height: 55px; font-size: 18px; top: 10px; right: 10px; }
-            .cart-count { font-size: 10px; padding: 3px 6px; }
-            .terminal-loader { width: 95%; height: 350px; font-size: 11px; }
-            .skull-ascii { font-size: 5px; line-height: 5px; }
-            .admin-box { padding: 15px; }
-            #checkout-page, #info-page { padding: 20px 10px; }
-            #info-img { height: 220px; }
-            #login-section { padding-top: 50px; }
-            #login-section input, #login-section button { width: 100% !important; max-width: 100% !important; }
+            header { font-size: 28px; letter-spacing: 3px; }
+            .product { width: 90%; }
+            .top-nav { bottom: 50px; top: auto; width: 100%; left: 0; padding: 0 10px; }
+            .ui-btn { flex: 1; font-size: 11px; padding: 12px 5px; }
+            .floating-cart { top: 10px; right: 10px; width: 50px; height: 50px; }
+            .cat-label { font-size: 16px; width: 90%; }
         }
     </style>
 </head>
@@ -156,24 +229,25 @@
         /   \
        |     |
         \___/
+        [ SYSTEM BYPASS IN PROGRESS ]
         </div>
         <div id="load-logs"></div>
         <div class="load-bar-container"><div id="load-bar"></div></div>
     </div>
-    <div id="load-text" style="color: #00ff41; margin-top: 15px; font-weight: bold;">[ ROOT ACCESS GRANTED ]</div>
+    <div id="load-text" style="color: var(--primary); margin-top: 20px; font-weight: bold; letter-spacing: 3px;">INITIALIZING ENCRYPTED INTERFACE...</div>
 </div>
 
 <canvas id="global-canvas"></canvas>
 
 <div id="auth-overlay">
-    <h1 style="color:var(--primary); letter-spacing: 5px;">AUTHORIZING TRANSACTION</h1>
-    <div id="paypal-button-container" style="width: 100%; max-width: 400px; margin: 20px;"></div>
-    <button onclick="document.getElementById('auth-overlay').style.display='none'" class="ui-btn" style="background:red; color:white;">CANCEL SESSION</button>
+    <h1 style="color:var(--primary); letter-spacing: 5px; text-shadow: var(--text-glow);">SECURE PAYMENT GATEWAY</h1>
+    <div id="paypal-button-container" style="width: 100%; max-width: 400px; margin: 20px; border: 1px solid var(--primary); padding: 10px; background: #0a0a0a;"></div>
+    <button onclick="document.getElementById('auth-overlay').style.display='none'" class="ui-btn" style="border-color:var(--secondary); color:var(--secondary);">TERMINATE SESSION</button>
 </div>
 
 <div class="top-nav">
-    <button class="ui-btn" id="music-btn" onclick="toggleMusic(event)">🔊 MUSIC: ON</button>
-    <button class="ui-btn" onclick="toggleTheme()">🌀 MODE</button>
+    <button class="ui-btn" id="music-btn" onclick="toggleMusic(event)">🔊 LINK: AUDIO</button>
+    <button class="ui-btn" onclick="toggleTheme()">🌀 NEURAL_SHIFT</button>
 </div>
 
 <div class="floating-cart" onclick="showCheckout()">
@@ -181,113 +255,114 @@
 </div>
 
 <div class="header-container">
-    <header onclick="showShop()" style="cursor:pointer;">SPR SHOP ARK R4</header>
+    <header onclick="showShop()" style="cursor:pointer;">MAXIOM R4 <span style="color:white">|</span> VIP</header>
 </div>
 
 <div id="shop-page">
-    <div class="cat-label">ANDROID CHEATS</div>
+    <div class="cat-label">ANDROID_CORE</div>
     <div id="android-grid" class="product-grid"></div>
-    <div class="cat-label">IOS CHEATS</div>
+    <div class="cat-label">IOS_CORE</div>
     <div id="ios-grid" class="product-grid"></div>
 </div>
 
-<div id="checkout-page" style="display:none; padding:50px;">
-    <button onclick="showShop()" class="ui-btn">⬅ RETURN TO SHOP</button>
-    <div style="max-width:600px; margin:40px auto; background:var(--glass); padding:30px; border:2px solid var(--primary);">
-        <h2 style="color:var(--primary)">YOUR CART</h2>
-        <div id="cart-list" style="text-align:left; min-height:100px;"></div>
-        <button onclick="clearCart()" class="ui-btn" style="background:red; color:white; margin-bottom:10px;">EMPTY CART</button>
-        <hr style="border:1px solid #222;">
-        <input type="text" id="apply-coupon" placeholder="COUPON_CODE">
-        <button onclick="applyCoupon()" class="ui-btn" style="width:100%; margin-top:10px;">VALIDATE CODE</button>
-        <h1 id="total-usd" style="color:var(--price-gold)">TOTAL: $0</h1>
-        <button onclick="triggerHackerPay()" style="width:100%; background:var(--primary); color:black; padding:20px; font-weight:bold; border:none; cursor:pointer; font-size:18px;">⚔️ FINISH PURCHASE</button>
+<div id="checkout-page" style="display:none; padding:20px;">
+    <button onclick="showShop()" class="ui-btn">⬅ BACK_TO_DATABASE</button>
+    <div style="max-width:600px; margin:40px auto; background:var(--glass); padding:30px; border:1px solid var(--primary); box-shadow: var(--border-glow);">
+        <h2 style="color:var(--primary); text-transform: uppercase;">MANIFEST_CART</h2>
+        <div id="cart-list" style="text-align:left; min-height:100px; margin: 20px 0;"></div>
+        <button onclick="clearCart()" class="ui-btn" style="border-color:var(--secondary); color:var(--secondary); width: 100%; margin-bottom:10px;">WIPE_CART</button>
+        <hr style="border:0; border-top:1px solid #333; margin: 20px 0;">
+        <input type="text" id="apply-coupon" placeholder="PROMO_ENCRYPTION_KEY">
+        <button onclick="applyCoupon()" class="ui-btn" style="width:100%; margin-top:10px;">DECRYPT_DISCOUNT</button>
+        <h1 id="total-usd" style="color:var(--price-gold); margin: 30px 0;">TOTAL: $0</h1>
+        <button onclick="triggerHackerPay()" style="width:100%; background:var(--primary); color:black; padding:20px; font-weight:bold; border:none; cursor:pointer; font-size:18px; text-transform: uppercase;">INITIALIZE_TRANSACTION</button>
     </div>
 </div>
 
-<div id="info-page" style="display:none; padding:50px;">
-    <button onclick="showShop()" class="ui-btn">⬅ BACK</button>
-    <div style="max-width: 800px; margin: 40px auto; background: var(--glass); border: 2px solid var(--primary); padding: 30px; border-radius: 15px;">
-        <img id="info-img" style="width:100%; border-radius:10px; margin-bottom:20px; object-fit: contain;">
-        <h1 id="info-title" style="color:var(--primary)"></h1>
+<div id="info-page" style="display:none; padding:20px;">
+    <button onclick="showShop()" class="ui-btn">⬅ RETURN</button>
+    <div style="max-width: 800px; margin: 40px auto; background: var(--glass); border: 1px solid var(--primary); padding: 30px; box-shadow: var(--border-glow);">
+        <img id="info-img" style="width:100%; border:1px solid #333; margin-bottom:20px; object-fit: contain; max-height: 400px;">
+        <h1 id="info-title" style="color:var(--primary); text-transform: uppercase;"></h1>
         <h2 id="info-price" style="color:var(--price-gold)"></h2>
-        <p id="info-desc" style="line-height:1.6; font-size:18px;"></p>
-        <div id="info-btns" style="display:flex; flex-direction: column; gap:10px; justify-content:center;"></div>
+        <p id="info-desc" style="line-height:1.6; font-size:16px; color: #bbb; background: rgba(0,0,0,0.3); padding: 15px; border-left: 3px solid var(--primary);"></p>
+        <div id="info-btns" style="display:flex; flex-direction: column; gap:10px; margin-top: 30px;"></div>
     </div>
 </div>
 
 <div class="admin-box" id="admin-terminal">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-        <h2 style="color:var(--secondary); margin:0;">R4_COMMAND_HUB</h2>
-        <button onclick="closeAdmin()" class="ui-btn" style="background:red;">EXIT_ROOT</button>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid var(--secondary); padding-bottom: 10px;">
+        <h2 style="color:var(--secondary); margin:0; letter-spacing: 5px;">R4_COMMAND_HUB v2.0</h2>
+        <button onclick="closeAdmin()" class="ui-btn" style="border-color:var(--secondary); color:var(--secondary);">LOCK_TERMINAL</button>
     </div>
 
     <div id="login-section" style="text-align:center; padding-top:100px;">
-        <input type="password" id="admin-pass" placeholder="MASTER ROOT KEY" style="max-width:400px; font-size: 20px;">
-        <button onclick="login()" class="ui-btn" style="width:400px; margin-top:20px; display:block; margin-left:auto; margin-right:auto;">DECRYPT HUB</button>
+        <input type="password" id="admin-pass" placeholder="MASTER_ROOT_KEY" style="max-width:400px; font-size: 20px; text-align: center;">
+        <button onclick="login()" class="ui-btn" style="width:400px; margin-top:20px; display:block; margin-left:auto; margin-right:auto;">ACCESS_KERNEL</button>
     </div>
 
     <div id="admin-controls" style="display:none;" class="admin-layout">
         <div class="panel-box">
-            <h3>📡 LIVE INTEL</h3>
-            <div id="pay-attempts-list" style="font-size:11px; color:yellow; background:#111; padding:10px; height:200px; overflow-y:auto; border:1px solid #333;">Scanning...</div>
-            <h3 style="margin-top:20px;">🎟️ COUPONS</h3>
-            <input type="text" id="c-code" placeholder="CODE">
-            <input type="number" id="c-perc" placeholder="DISCOUNT %">
-            <button onclick="addCoupon()" class="ui-btn" style="width:100%;">GENERATE</button>
-            <h3 style="margin-top:20px;">📢 BROADCAST ALERT</h3>
-            <input type="text" id="bc-input" placeholder="ALERT MESSAGE">
-            <button onclick="setBroadcast()" class="ui-btn" style="width:100%; background:orange; color:black;">SEND SYSTEM ALERT</button>
+            <h3 style="color:var(--primary)">📡 LIVE_SIGNAL_FEED</h3>
+            <div id="pay-attempts-list" style="font-size:11px; color:#0f0; background:#050505; padding:15px; height:200px; overflow-y:auto; border:1px solid #111;">Scanning signals...</div>
+            <h3 style="margin-top:30px; color:var(--primary)">🎟️ COUPON_GENERATOR</h3>
+            <input type="text" id="c-code" placeholder="NEW_CODE">
+            <input type="number" id="c-perc" placeholder="VALUE_%">
+            <button onclick="addCoupon()" class="ui-btn" style="width:100%;">INJECT_COUPON</button>
+            <h3 style="margin-top:30px; color:var(--secondary)">📢 GLOBAL_BROADCAST</h3>
+            <input type="text" id="bc-input" placeholder="ALERT_PAYLOAD">
+            <button onclick="setBroadcast()" class="ui-btn" style="width:100%; border-color:orange; color:orange;">SEND_ALERT</button>
         </div>
 
         <div class="panel-box">
-            <h3>⚒️ ARSENAL FORGE</h3>
+            <h3 style="color:var(--primary)">⚒️ ASSET_FORGE</h3>
             <input type="hidden" id="edit-index" value="-1">
-            <input type="text" id="p-name" placeholder="PRODUCT NAME">
-            <input type="number" id="p-price" placeholder="PRICE">
-            <input type="text" id="p-yt" placeholder="YOUTUBE VIDEO ID">
-            <select id="p-cat"><option value="android">Android</option><option value="ios">IOS</option></select>
-            <textarea id="p-desc" placeholder="PRODUCT DESCRIPTION" style="height:80px;"></textarea>
-            <label style="font-size:10px; color:var(--primary);">Product Image:</label>
+            <input type="text" id="p-name" placeholder="ASSET_NAME">
+            <input type="number" id="p-price" placeholder="CREDIT_VALUE">
+            <input type="text" id="p-yt" placeholder="YOUTUBE_ID">
+            <select id="p-cat"><option value="android">ANDROID_OS</option><option value="ios">APPLE_IOS</option></select>
+            <textarea id="p-desc" placeholder="TECHNICAL_SPECS" style="height:80px;"></textarea>
+            <label style="font-size:10px; color:var(--primary);">ASSET_IMAGE (JPG/PNG):</label>
             <input type="file" id="p-img" accept="image/*">
-            <label style="font-size:10px; color:var(--primary);">Delivery File:</label>
+            <label style="font-size:10px; color:var(--primary);">DELIVERY_PACKAGE (ZIP/APK):</label>
             <input type="file" id="p-file">
-            <button id="forge-btn" onclick="addProduct()" class="ui-btn" style="width:100%; margin-top:10px;">DEPLOY ASSET</button>
-            <button id="cancel-edit-btn" onclick="resetForge()" class="ui-btn" style="width:100%; margin-top:5px; background:gray; display:none;">CANCEL EDIT</button>
+            <button id="forge-btn" onclick="addProduct()" class="ui-btn" style="width:100%; margin-top:10px;">UPLOAD_ASSET</button>
+            <button id="cancel-edit-btn" onclick="resetForge()" class="ui-btn" style="width:100%; margin-top:5px; border-color:gray; color:gray; display:none;">ABORT_EDIT</button>
             
-            <h3 style="margin-top:20px;">📦 INVENTORY MANAGER</h3>
-            <div id="admin-asset-list" style="max-height:300px; overflow-y:auto; border:1px solid #333; background:#000; padding:5px;"></div>
+            <h3 style="margin-top:30px; color:var(--primary)">📦 INVENTORY_ARCHIVE</h3>
+            <div id="admin-asset-list" style="max-height:300px; overflow-y:auto; border:1px solid #111; background:#050505; padding:10px;"></div>
         </div>
 
         <div class="panel-box" style="border: 1px solid var(--secondary);">
-            <h3 style="color:var(--secondary);">🛡️ ACCESS CONTROL</h3>
-            <input type="text" id="ban-ip-input" placeholder="IP ADDRESS">
-            <button onclick="banClientIP()" class="ui-btn" style="width:100%; background:red; color:white;">BLOCK ACCESS</button>
-            <button onclick="clearBans()" class="ui-btn" style="width:100%; background:orange; color:black; margin-top:5px;">CLEAR ALL BANS</button>
-            <hr style="border-color:#222; margin:15px 0;">
-            <h3>🔑 GATEWAY CONFIG</h3>
-            <input type="text" id="pp-id-input" placeholder="PAYPAL CLIENT ID">
-            <button onclick="savePPID()" class="ui-btn" style="width:100%;">UPDATE GATEWAY</button>
+            <h3 style="color:var(--secondary);">🛡️ FIREWALL_CONTROL</h3>
+            <input type="text" id="ban-ip-input" placeholder="TARGET_IP">
+            <button onclick="banClientIP()" class="ui-btn" style="width:100%; border-color:red; color:red;">BLACKLIST_IP</button>
+            <button onclick="clearBans()" class="ui-btn" style="width:100%; border-color:orange; color:orange; margin-top:5px;">RESTORE_ALL_ACCESS</button>
+            <hr style="border:0; border-top:1px solid #222; margin:20px 0;">
+            <h3 style="color:var(--primary)">🔑 GATEWAY_KEY</h3>
+            <input type="text" id="pp-id-input" placeholder="PAYPAL_CLIENT_ID">
+            <button onclick="savePPID()" class="ui-btn" style="width:100%;">SYNC_GATEWAY</button>
         </div>
     </div>
 </div>
 
 <div class="intel-ticker-wrap">
-    <div class="intel-ticker-label">LIVE_FEED</div>
-    <marquee id="feed-text" style="color:#0f0; font-weight:bold;">>>> R4 FUSION SYSTEM STABLE :: ENCRYPTION ACTIVE :: WAITING FOR TRANSACTION...</marquee>
+    <div class="intel-ticker-label">VIP_FEED</div>
+    <marquee id="feed-text" style="color:var(--primary); font-weight:bold; font-size: 13px;">>>> SYSTEM STATUS: SECURE // ENCRYPTION: AES-256 // SERVER: CLOUD_R4 // WAITING FOR INPUT...</marquee>
 </div>
 
 <audio id="hacker-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
 <audio id="snd-click" src="https://www.myinstants.com/media/sounds/sword-slash.mp3"></audio>
 
 <script>
+// --- LOGIC REMAINS 100% IDENTICAL TO YOURS ---
 let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicStarted = false;
 
 function toggleMusic(e) { 
     if(e) e.stopPropagation();
     let m = document.getElementById('hacker-music');
     let btn = document.getElementById('music-btn');
-    if (m.paused) { m.play(); btn.innerText = "🔊 MUSIC: ON"; } else { m.pause(); btn.innerText = "🔇 MUSIC: OFF"; }
+    if (m.paused) { m.play(); btn.innerText = "🔊 LINK: LIVE"; } else { m.pause(); btn.innerText = "🔇 LINK: DOWN"; }
 }
 
 function clearBans() { if(confirm("LIFT ALL IP RESTRICTIONS?")) { db.ref('banned_ips').set([]).then(() => alert("ALL IPS AUTHORIZED")); } }
@@ -304,8 +379,8 @@ function displayProducts() {
             div.innerHTML = `
                 <img src="${p.image || ''}" onclick="showInfo(${i})">
                 <h3>${p.name}</h3>
-                <div style="color:var(--price-gold); font-weight:bold; font-size:20px;">$${p.price}</div>
-                <button onclick="addToCart(${i})" style="width:100%; background:var(--primary); margin-top:10px; border:none; padding:10px; cursor:pointer; font-weight:bold;">ADD TO CART</button>
+                <div style="color:var(--price-gold); font-weight:bold; font-size:20px; margin-bottom:10px;">$${p.price}</div>
+                <button onclick="addToCart(${i})" style="width:100%; background:var(--primary); color:#000; border:none; padding:12px; cursor:pointer; font-weight:bold; text-transform:uppercase;">GET_ACCESS</button>
             `;
             p.category === "ios" ? ios.appendChild(div) : android.appendChild(div);
         });
@@ -380,9 +455,9 @@ function showCheckout() { document.getElementById('shop-page').style.display='no
 function renderCart() {
     let l=document.getElementById('cart-list'), t=0; l.innerHTML = "";
     cart.forEach((item, index) => {
-        l.innerHTML += `<div style="padding:10px; border-bottom:1px solid #222; display:flex; justify-content:space-between;">
-            <span>${item.name} - $${item.price}</span>
-            <button onclick="removeFromCart(${index})" style="background:none; border:none; color:red; cursor:pointer;">[REMOVE]</button>
+        l.innerHTML += `<div style="padding:15px; border-bottom:1px solid #222; display:flex; justify-content:space-between; background: rgba(0,255,0,0.05); margin-bottom:5px;">
+            <span style="color:var(--primary)">${item.name} <br> <small style="color:#777">$${item.price}</small></span>
+            <button onclick="removeFromCart(${index})" style="background:none; border:none; color:var(--secondary); cursor:pointer; font-weight:bold;">[X]</button>
         </div>`;
         t += parseFloat(item.price);
     });
@@ -448,8 +523,8 @@ function showInfo(i) {
     document.getElementById('info-price').innerText = "$" + p.price;
     document.getElementById('info-desc').innerText = p.desc;
     document.getElementById('info-btns').innerHTML = `
-        <button class="ui-btn" onclick="addToCart(${i})" style="background:var(--primary); color:black;">ADD TO CART</button>
-        ${p.yt ? `<button class="ui-btn" onclick="window.open('https://youtube.com/watch?v=${p.yt}')" style="background:red; color:white;">📺 PREVIEW</button>` : ''}
+        <button class="ui-btn" onclick="addToCart(${i})" style="background:var(--primary); color:black; border:none; padding:15px;">ADD_TO_CART</button>
+        ${p.yt ? `<button class="ui-btn" onclick="window.open('https://youtube.com/watch?v=${p.yt}')" style="border-color:red; color:red;">WATCH_PREVIEW</button>` : ''}
     `;
 }
 
@@ -463,7 +538,7 @@ function applyCoupon() {
 const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d'); let drops = [];
 function drawMatrix() {
     ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = "#ffd700"; ctx.font = "15px monospace";
+    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--primary'); ctx.font = "15px monospace";
     drops.forEach((y, i) => { ctx.fillText(String.fromCharCode(0x30A0 + Math.random()*33), i*20, y*20); if(y*20 > canvas.height && Math.random() > 0.975) drops[i] = 0; drops[i]++; });
 }
 
@@ -481,13 +556,13 @@ window.onload = () => {
 
     let lb = document.getElementById('load-bar'), p = 0;
     let logBox = document.getElementById('load-logs');
-    const mockLogs = ["> R4 BOOTING...", "> FIREWALL BYPASS...", "> ROOT GRANTED."];
+    const mockLogs = ["> R4 BOOTING...", "> BYPASSING SECURITY...", "> ACCESSING DATABASE...", "> LOADED VIP ASSETS."];
     let logIndex = 0;
     let int = setInterval(() => { 
         p += 2; lb.style.width = p + "%"; 
-        if(p % 30 == 0 && logIndex < mockLogs.length) { logBox.innerHTML += `<div>${mockLogs[logIndex]}</div>`; logIndex++; }
-        if(p>=100){ clearInterval(int); setTimeout(() => { document.getElementById('loader-overlay').style.display='none'; }, 500); }
-    }, 40);
+        if(p % 25 == 0 && logIndex < mockLogs.length) { logBox.innerHTML += `<div>${mockLogs[logIndex]}</div>`; logIndex++; }
+        if(p>=100){ clearInterval(int); setTimeout(() => { document.getElementById('loader-overlay').style.display='none'; }, 800); }
+    }, 30);
 };
 
 window.onkeydown = (e) => { if(e.key === "Insert") document.getElementById('admin-terminal').style.display = 'block'; };
