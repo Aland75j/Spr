@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MAXIOM R4 | TOTAL ELITE</title>
+    <title>MAXIOM R4 | BEAST V2</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -22,30 +22,21 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // [LOGIC] IP SHIELD - RUNS BEFORE UI
+        // Immediate IP Shield
         (function() {
-            const checkBans = async () => {
+            const shield = async () => {
                 try {
                     const r = await fetch('https://api.ipify.org?format=json');
                     const d = await r.json();
-                    const userIP = d.ip;
-                    db.ref('banned_ips').on('value', (snap) => {
-                        const list = snap.val() || [];
-                        if(list.includes(userIP)) {
-                            document.documentElement.innerHTML = "<body style='background:black;color:red;display:flex;align-items:center;justify-content:center;height:100vh;font-family:monospace;'><h1>IP_TERMINATED_BY_ADMIN</h1></body>";
+                    db.ref('banned_ips').on('value', s => {
+                        if((s.val() || []).includes(d.ip)) {
+                            document.write("<title>ACCESS DENIED</title><body style='background:#000;color:red;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;font-family:monospace;'><h1>[ IP_TERMINATED_BY_SYSTEM ]</h1></body>");
                             window.stop();
                         }
                     });
-                } catch(e) { console.log("Shield Error"); }
+                } catch(e) {}
             };
-            checkBans();
-
-            db.ref('settings/paypal_id').once('value', (snap) => {
-                const savedID = snap.val() || "test";
-                const script = document.createElement('script');
-                script.src = `https://www.paypal.com/sdk/js?client-id=${savedID}&currency=USD`;
-                document.head.appendChild(script);
-            });
+            shield();
         })();
     </script>
 
@@ -53,351 +44,344 @@
         :root {
             --primary: #ffd700;
             --secondary: #ff0000;
-            --bg-main: #020202;
-            --glass: rgba(0, 0, 0, 0.95);
-            --price-gold: #ffcc00;
+            --bg: #050505;
+            --glass: rgba(0,0,0,0.9);
+            --price: #ffcc00;
         }
-        .blue-theme { --primary: #00d4ff; --secondary: #0044ff; --bg-main: #000510; }
+        .blue-theme { --primary: #00d4ff; --secondary: #0044ff; --bg: #000510; }
 
-        * { cursor: crosshair !important; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; font-family: 'Courier New', monospace; color: white; background: var(--bg-main); transition: 0.5s; overflow-x: hidden; padding-bottom: 100px; }
+        * { cursor: crosshair !important; box-sizing: border-box; outline: none; }
+        body { margin: 0; background: var(--bg); color: white; font-family: 'Courier New', monospace; overflow-x: hidden; }
 
-        /* [3] Ghost Hover Effect */
-        .product { background: var(--glass); width: 280px; padding: 15px; border: 1px solid #111; position: relative; overflow: hidden; transition: 0.3s; border-radius: 8px; }
-        .product:hover { border-color: var(--primary); transform: translateY(-5px); box-shadow: 0 0 20px rgba(255, 215, 0, 0.2); }
-        .hex-dump { position: absolute; top: 0; left: 0; width: 100%; height: 100%; font-size: 8px; color: rgba(255, 215, 0, 0.05); pointer-events: none; word-break: break-all; opacity: 0; transition: 0.5s; z-index: 1; }
-        .product:hover .hex-dump { opacity: 1; animation: hexMove 15s linear infinite; }
-        @keyframes hexMove { from { transform: translateY(0); } to { transform: translateY(-50%); } }
-
-        /* [4] Neural Hub Navigation */
-        .neural-hub { position: fixed; bottom: 30px; right: 30px; z-index: 9000; display: flex; flex-direction: column-reverse; align-items: center; gap: 15px; }
-        .hub-main { width: 70px; height: 70px; background: var(--primary); border: 4px solid #fff; border-radius: 50%; cursor: pointer; font-size: 30px; box-shadow: 0 0 20px var(--primary); transition: 0.3s; }
-        .hub-menu { display: none; flex-direction: column; gap: 10px; animation: slideUp 0.3s forwards; }
-        .hub-item { width: 55px; height: 55px; background: black; border: 2px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); cursor: pointer; font-size: 20px; text-decoration: none; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        /* Background Layer */
+        #global-canvas { position: fixed; top:0; left:0; width:100%; height:100%; z-index: -1; pointer-events: none; }
 
         /* Loader */
-        #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .load-bar-container { width: 300px; height: 4px; background: #111; border: 1px solid #333; margin-top: 20px; }
-        #load-bar { width: 0%; height: 100%; background: var(--primary); transition: 0.1s; box-shadow: 0 0 10px var(--primary); }
+        #loader { position: fixed; inset: 0; background: #000; z-index: 100000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .bar-wrap { width: 250px; height: 4px; background: #111; border: 1px solid #333; margin-top: 20px; }
+        #bar { width: 0%; height: 100%; background: var(--primary); box-shadow: 0 0 15px var(--primary); transition: 0.1s; }
 
-        /* General UI */
-        #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; opacity: 0.4; }
-        header { font-size: 40px; color: var(--primary); text-shadow: 0 0 15px var(--primary); padding: 40px; letter-spacing: 5px; cursor: pointer; }
-        .cat-label { margin: 30px auto; padding: 15px; background: var(--glass); border-left: 5px solid var(--primary); max-width: 900px; text-align: left; font-size: 24px; font-weight: bold; }
-        .product-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
-        .ui-btn { padding: 12px 20px; background: var(--primary); color: #000; border: 1px solid #fff; font-weight: bold; cursor: pointer; font-size: 13px; }
-        .ui-btn:hover { background: #fff; box-shadow: 0 0 10px #fff; }
+        /* UI Navigation Hub */
+        .hub { position: fixed; bottom: 30px; right: 30px; z-index: 9999; display: flex; flex-direction: column-reverse; gap: 15px; align-items: center; }
+        .hub-main { width: 65px; height: 65px; background: var(--primary); border: 4px solid #fff; border-radius: 50%; box-shadow: 0 0 20px var(--primary); font-size: 28px; color: #000; border: none; cursor: pointer; }
+        .hub-menu { display: none; flex-direction: column; gap: 10px; }
+        .hub-btn { width: 50px; height: 50px; background: #000; border: 2px solid var(--primary); border-radius: 50%; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; transition: 0.2s; }
+        .hub-btn:hover { background: var(--primary); color: #000; box-shadow: 0 0 10px var(--primary); }
 
-        /* Admin Box */
-        .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 20000; padding: 30px; overflow-y: auto; text-align: left; }
-        .panel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
-        .panel { background: #080808; border: 1px solid #222; padding: 20px; border-radius: 5px; }
-        input, select, textarea { background: #000; border: 1px solid #444; color: #fff; padding: 10px; margin: 5px 0; width: 100%; font-family: monospace; }
+        header { padding: 40px; text-align: center; font-size: 35px; color: var(--primary); text-shadow: 0 0 15px var(--primary); letter-spacing: 5px; cursor: pointer; position: relative; z-index: 10; }
 
-        /* [2] Biometric Scan */
-        #biometric-scan { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 100000; flex-direction: column; align-items: center; justify-content: center; }
-        .scanner-ring { width: 200px; height: 200px; border: 2px solid var(--primary); border-radius: 50%; position: relative; display: flex; align-items: center; justify-content: center; }
-        .scan-line { position: absolute; width: 100%; height: 2px; background: var(--primary); box-shadow: 0 0 20px var(--primary); animation: scanV 2s infinite; }
-        @keyframes scanV { 0%, 100% { top: 0; } 50% { top: 100%; } }
+        /* Product Cards Layout */
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; padding: 20px; max-width: 1200px; margin: auto; min-height: 200px; }
+        .card { background: var(--glass); border: 1px solid #222; padding: 15px; border-radius: 8px; position: relative; overflow: hidden; transition: 0.3s; z-index: 10; }
+        .card:hover { border-color: var(--primary); transform: translateY(-5px); }
+        .card img { width: 100%; height: 160px; object-fit: cover; border-radius: 4px; }
+        .card h3 { margin: 15px 0 5px; font-size: 18px; color: #fff; }
+        .price { color: var(--price); font-weight: bold; font-size: 22px; margin-bottom: 15px; }
 
-        #global-alert-banner { display: none; position: fixed; top: 0; left: 0; width: 100%; background: var(--secondary); color: white; padding: 10px; z-index: 100000; font-weight: bold; text-align: center; }
+        /* Pages */
+        .page { display: none; padding: 20px; position: relative; z-index: 10; }
+        #shop-page { display: block; }
+
+        /* Admin Terminal */
+        .admin-panel { display: none; position: fixed; inset: 0; background: #000; z-index: 50000; padding: 40px; overflow-y: auto; text-align: left; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .box { background: #0a0a0a; border: 1px solid #333; padding: 20px; border-radius: 4px; }
+        input, select, textarea { width: 100%; padding: 12px; background: #000; border: 1px solid #444; color: #fff; margin: 8px 0; }
+        .ui-btn { padding: 12px 25px; background: var(--primary); color: #000; font-weight: bold; border: none; cursor: pointer; transition: 0.2s; }
+        .ui-btn:hover { box-shadow: 0 0 15px var(--primary); filter: brightness(1.1); }
+
+        /* Biometric & PayPal Overlays */
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100000; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .scan-line { width: 250px; height: 2px; background: var(--primary); position: absolute; animation: scan 2s infinite ease-in-out; }
+        @keyframes scan { 0%, 100% { top: 35%; } 50% { top: 65%; } }
+
+        #alert-banner { display: none; position: fixed; top: 0; width: 100%; background: var(--secondary); padding: 12px; z-index: 100001; font-weight: bold; text-align: center; border-bottom: 2px solid #fff; }
+    </marquee>
     </style>
 </head>
 <body onclick="startAudio()">
 
-<div id="global-alert-banner"></div>
+<div id="alert-banner"></div>
 
-<div id="loader-overlay">
-    <div style="font-size: 10px; color: var(--primary); white-space: pre; line-height: 8px;">
-        ██████╗ ██╗  ██╗
-        ██╔══██╗██║  ██║
-        ██████╔╝███████║
-        ██╔══██╗╚════██║
-        ██║  ██║     ██║
-        ╚═╝  ╚═╝     ╚═╝
-    </div>
-    <div id="load-logs" style="color:#0f0; font-size: 12px; margin-top: 15px;">Initializing Bypass...</div>
-    <div class="load-bar-container"><div id="load-bar"></div></div>
+<div id="loader">
+    <div style="color:var(--primary); font-size: 12px; white-space: pre;">[ SYSTEM INITIALIZING ]</div>
+    <div class="bar-wrap"><div id="bar"></div></div>
+    <div id="load-logs" style="margin-top:10px; font-size:10px; color:#0f0;">Checking root...</div>
 </div>
 
 <canvas id="global-canvas"></canvas>
 
-<div id="biometric-scan">
-    <div class="scanner-ring"><div class="scan-line"></div><span style="font-size: 40px;">👁️</span></div>
-    <h2 style="color:var(--primary); margin-top: 30px;">RETINA ENCRYPTION CHECK</h2>
-    <p style="color:#0f0;">ID: MASTER_ROOT | STATUS: SCANNING...</p>
+<div class="overlay" id="scan-overlay">
+    <div style="border:2px solid var(--primary); padding: 50px; border-radius: 50%;"><span style="font-size: 40px;">👁️</span></div>
+    <div class="scan-line"></div>
+    <h2 style="color:var(--primary); margin-top:30px; letter-spacing:5px;">AUTH_REQUIRED</h2>
+    <p id="scan-status" style="color:#0f0;">SCANNING RETINA...</p>
 </div>
 
-<div class="neural-hub">
-    <button class="hub-main" onclick="toggleHub()">⚔️</button>
-    <div class="hub-menu" id="hub-menu">
-        <div class="hub-item" onclick="showShop()" title="Arsenal">🏠</div>
-        <div class="hub-item" onclick="showCheckout()" title="Cart">🛒</div>
-        <div class="hub-item" onclick="toggleTheme()" title="Mode">🌀</div>
+<div class="overlay" id="pay-overlay">
+    <div style="background:#000; border:1px solid var(--primary); padding:40px; width: 90%; max-width: 450px;">
+        <h2 style="color:var(--primary)">SECURE GATEWAY</h2>
+        <div id="paypal-btn-container" style="margin:20px 0;"></div>
+        <button onclick="document.getElementById('pay-overlay').style.display='none'" class="ui-btn" style="background:red; color:white;">ABORT</button>
     </div>
 </div>
 
-<header onclick="showShop()">SPR SHOP ARK R4</header>
+<div class="hub">
+    <button class="hub-main" onclick="toggleHub()">⚔️</button>
+    <div class="hub-menu" id="hub-menu">
+        <div class="hub-btn" onclick="showPage('shop-page')">🏠</div>
+        <div class="hub-btn" onclick="showPage('cart-page')">🛒</div>
+        <div class="hub-btn" onclick="toggleTheme()">🌀</div>
+    </div>
+</div>
 
-<div id="shop-page">
-    <div class="cat-label">ANDROID_CHEATS</div>
+<header onclick="showPage('shop-page')">SPR SHOP ARK R4</header>
+
+<div id="shop-page" class="page">
+    <div style="text-align:center; color:var(--primary); margin-bottom: 20px;">[ ARSENAL_MODULES ]</div>
+    <div style="color:var(--primary); padding:10px; font-weight:bold; border-bottom:1px solid var(--primary); max-width:1200px; margin:auto;">ANDROID_CHEATS</div>
     <div id="android-grid" class="product-grid"></div>
-    <div class="cat-label">IOS_CHEATS</div>
+    <div style="color:var(--primary); padding:10px; font-weight:bold; border-bottom:1px solid var(--primary); max-width:1200px; margin:auto; margin-top:40px;">IOS_CHEATS</div>
     <div id="ios-grid" class="product-grid"></div>
 </div>
 
-<div id="info-page" style="display:none; padding:40px;">
-    <button onclick="showShop()" class="ui-btn">⬅ RETURN</button>
-    <div style="max-width: 800px; margin: 30px auto; background: var(--glass); border: 1px solid var(--primary); padding: 30px;">
-        <img id="info-img" style="width:100%; border-radius: 5px;">
+<div id="info-page" class="page">
+    <div style="max-width:800px; margin:auto; background:var(--glass); border:1px solid var(--primary); padding:30px;">
+        <button onclick="showPage('shop-page')" class="ui-btn" style="margin-bottom:20px;">⬅ BACK</button>
+        <img id="info-img" style="width:100%; max-height:400px; object-fit:contain;">
         <h1 id="info-title" style="color:var(--primary)"></h1>
-        <h2 id="info-price" style="color:var(--price-gold)"></h2>
+        <div id="info-price" class="price"></div>
         <p id="info-desc" style="line-height:1.6;"></p>
-        <div id="info-btns" style="display:flex; flex-direction: column; gap: 10px;"></div>
+        <div id="info-actions" style="display:flex; flex-direction:column; gap:10px;"></div>
     </div>
 </div>
 
-<div id="checkout-page" style="display:none; padding:40px;">
-    <div style="max-width: 600px; margin: auto; background: var(--glass); border: 1px solid var(--primary); padding: 30px;">
-        <h2 style="color:var(--primary)">ORDER_MANIFEST</h2>
-        <div id="cart-list" style="text-align:left; border-left: 2px solid var(--primary); padding-left: 20px; margin: 20px 0;"></div>
-        <input type="text" id="apply-coupon" placeholder="COUPON_CODE">
-        <button onclick="applyCoupon()" class="ui-btn" style="width:100%; margin: 10px 0;">VALIDATE CODE</button>
-        <h1 id="total-usd" style="color:var(--price-gold)">TOTAL: $0</h1>
-        <button onclick="triggerHackerPay()" style="width:100%; background:var(--primary); color:black; padding:20px; font-weight:bold; border:none; cursor:pointer;">⚔️ FINISH PURCHASE</button>
-        <p onclick="clearCart()" style="color:red; cursor:pointer; font-size:12px; margin-top: 15px;">[ WIPE_MANIFEST ]</p>
+<div id="cart-page" class="page">
+    <div style="max-width:600px; margin:auto; background:var(--glass); border:1px solid var(--primary); padding:30px;">
+        <h2 style="color:var(--primary)">MANIFEST</h2>
+        <div id="cart-items" style="text-align:left; border-left: 2px solid var(--primary); padding-left:20px; margin:20px 0;"></div>
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="coupon-in" placeholder="COUPON_CODE">
+            <button onclick="applyCoupon()" class="ui-btn">VALIDATE</button>
+        </div>
+        <h1 id="total-val" style="color:var(--price); font-size:40px;">TOTAL: $0</h1>
+        <button onclick="checkout()" class="ui-btn" style="width:100%; padding:20px; font-size:20px;">⚔️ FINISH PURCHASE</button>
+        <p onclick="clearCart()" style="color:red; cursor:pointer; margin-top:20px; font-size:12px;">[ WIPE_CART ]</p>
     </div>
 </div>
 
-<div id="auth-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:99999; flex-direction:column; align-items:center; justify-content:center;">
-    <div style="background:#000; border:1px solid var(--primary); padding:40px; text-align:center; width: 90%; max-width: 450px;">
-        <h2 style="color:var(--primary)">SECURE_UPLINK</h2>
-        <div id="paypal-button-container" style="margin: 20px 0;"></div>
-        <button onclick="document.getElementById('auth-overlay').style.display='none'" class="ui-btn" style="background:red; color:white;">ABORT SESSION</button>
-    </div>
-</div>
-
-<div class="admin-box" id="admin-terminal">
-    <div style="display:flex; justify-content:space-between; margin-bottom: 30px;">
-        <h2 style="color:var(--secondary)">R4_COMMAND_HUB</h2>
-        <button onclick="document.getElementById('admin-terminal').style.display='none'" class="ui-btn" style="background:red;">EXIT</button>
+<div class="admin-panel" id="admin-panel">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:40px;">
+        <h2 style="color:red;">R4_ROOT_TERMINAL</h2>
+        <button onclick="document.getElementById('admin-panel').style.display='none'" class="ui-btn" style="background:red; color:white;">LOGOUT</button>
     </div>
 
-    <div id="login-section" style="text-align:center; padding-top: 100px;">
-        <input type="password" id="admin-pass" placeholder="ROOT ACCESS KEY" style="max-width: 400px;">
-        <button onclick="login()" class="ui-btn" style="width: 400px; margin-top: 20px;">DECRYPT</button>
+    <div id="admin-login" style="text-align:center; padding-top:100px;">
+        <input type="password" id="root-pass" placeholder="ROOT KEY" style="max-width:400px;">
+        <button onclick="adminLogin()" class="ui-btn" style="width:400px; margin-top:20px;">DECRYPT</button>
     </div>
 
-    <div id="admin-controls" style="display:none;" class="panel-grid">
-        <div class="panel">
-            <h3>📡 LIVE INTEL</h3>
-            <div id="pay-attempts-list" style="font-size:11px; color:yellow; background:#000; height: 180px; overflow-y: auto;">Scanning Feed...</div>
+    <div id="admin-ui" style="display:none;" class="grid-3">
+        <div class="box">
+            <h3>📡 INTEL_FEED</h3>
+            <div id="intel-log" style="font-size:11px; color:yellow; background:#000; height:200px; overflow-y:auto; padding:10px; border:1px solid #222;"></div>
             <h3 style="margin-top:20px;">🎟️ COUPONS</h3>
-            <input type="text" id="c-code" placeholder="CODE"><input type="number" id="c-perc" placeholder="%">
-            <button onclick="addCoupon()" class="ui-btn" style="width:100%;">SAVE</button>
+            <input id="c-code" placeholder="CODE"><input id="c-perc" placeholder="DISCOUNT %">
+            <button onclick="saveCoupon()" class="ui-btn" style="width:100%;">DEPLOY COUPON</button>
         </div>
-        <div class="panel">
+        <div class="box">
             <h3>⚒️ ARSENAL FORGE</h3>
-            <input type="hidden" id="edit-index" value="-1">
-            <input type="text" id="p-name" placeholder="NAME">
-            <input type="number" id="p-price" placeholder="PRICE">
-            <input type="text" id="p-yt" placeholder="YT_ID">
+            <input type="hidden" id="edit-id" value="-1">
+            <input id="p-name" placeholder="PRODUCT NAME"><input id="p-price" placeholder="PRICE">
+            <input id="p-yt" placeholder="YOUTUBE ID">
             <select id="p-cat"><option value="android">Android</option><option value="ios">IOS</option></select>
-            <textarea id="p-desc" placeholder="DESC"></textarea>
-            <label style="font-size:10px;">IMG:</label><input type="file" id="p-img">
-            <label style="font-size:10px;">FILE:</label><input type="file" id="p-file">
-            <button id="forge-btn" onclick="addProduct()" class="ui-btn" style="width:100%;">DEPLOY</button>
-            <div id="admin-asset-list" style="margin-top: 15px; border-top: 1px solid #333; padding-top: 10px;"></div>
+            <textarea id="p-desc" placeholder="DESCRIPTION" style="height:80px;"></textarea>
+            <label style="font-size:10px;">IMAGE:</label><input type="file" id="p-img">
+            <label style="font-size:10px;">DELIVERY FILE:</label><input type="file" id="p-file">
+            <button id="save-btn" onclick="saveProduct()" class="ui-btn" style="width:100%;">DEPLOY ASSET</button>
+            <button id="cancel-edit" onclick="resetForge()" class="ui-btn" style="width:100%; background:gray; margin-top:5px; display:none;">CANCEL</button>
+            <div id="inventory-list" style="margin-top:20px; border-top:1px solid #333; padding-top:10px;"></div>
         </div>
-        <div class="panel">
-            <h3>🛡️ ACCESS</h3>
-            <input type="text" id="ban-ip-input" placeholder="IP">
-            <button onclick="banClientIP()" class="ui-btn" style="width:100%; background:red;">BLOCK</button>
-            <button onclick="db.ref('banned_ips').set([])" class="ui-btn" style="width:100%; margin-top:5px; background:orange;">CLEAR BANS</button>
+        <div class="box">
+            <h3>🛡️ FIREWALL</h3>
+            <input id="ban-ip" placeholder="TARGET IP">
+            <button onclick="banIP()" class="ui-btn" style="width:100%; background:red; color:white;">BLOCK IP</button>
             <h3 style="margin-top:20px;">📢 BROADCAST</h3>
-            <input type="text" id="bc-input" placeholder="ALERT">
-            <button onclick="db.ref('settings/broadcast').set(document.getElementById('bc-input').value)" class="ui-btn" style="width:100%;">SEND</button>
+            <input id="bc-msg" placeholder="SYSTEM MESSAGE">
+            <button onclick="db.ref('settings/broadcast').set(document.getElementById('bc-msg').value)" class="ui-btn" style="width:100%; background:orange;">SEND ALERT</button>
         </div>
     </div>
 </div>
 
 <audio id="hacker-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
-<audio id="snd-click" src="https://www.myinstants.com/media/sounds/sword-slash.mp3"></audio>
+<audio id="snd-click" src="https://www.myinstants.com/media/sounds/sword-slash.mp3" preload="auto"></audio>
 
 <script>
-let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicStarted = false;
+let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicOn = false;
 
-// Hub Controls
-function toggleHub() { let m = document.getElementById('hub-menu'); m.style.display = (m.style.display==='flex'?'none':'flex'); playClick(); }
-function playClick() { const s = document.getElementById('snd-click'); s.currentTime=0; s.play().catch(()=>{}); }
+// Audio & UI
+function startAudio() { if(!musicOn) { document.getElementById('hacker-music').play().catch(()=>{}); musicOn = true; } }
+function playClick() { const s = document.getElementById('snd-click'); s.currentTime = 0; s.play().catch(()=>{}); }
+function toggleHub() { const m = document.getElementById('hub-menu'); m.style.display = (m.style.display==='flex'?'none':'flex'); playClick(); }
+function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+    window.scrollTo(0,0);
+    playClick();
+}
+function toggleTheme() { document.body.classList.toggle('blue-theme'); playClick(); }
 
-// [LOGIC] DISPLAY PRODUCTS
-function displayProducts() {
-    db.ref('products').on('value', (snap) => {
+// Core Shop Logic
+function loadData() {
+    db.ref('products').on('value', snap => {
         products = snap.val() || [];
-        const android = document.getElementById("android-grid"), ios = document.getElementById("ios-grid");
-        if(!android) return;
-        android.innerHTML = ""; ios.innerHTML = "";
+        const ag = document.getElementById('android-grid'), ig = document.getElementById('ios-grid');
+        ag.innerHTML = ""; ig.innerHTML = "";
         products.forEach((p, i) => {
             if(!p) return;
-            const div = document.createElement("div"); div.className = "product";
-            div.innerHTML = `
-                <div class="hex-dump">0x00 0xFE 0xAA 0x11 0xBB 0xCC 0xDD 0xEE 0xFF</div>
-                <img src="${p.image || ''}" onclick="showInfo(${i})" style="width:100%; height:160px; object-fit:cover; z-index:2; position:relative;">
-                <h3 style="position:relative; z-index:2;">${p.name}</h3>
-                <div style="color:var(--price-gold); font-weight:bold; position:relative; z-index:2;">$${p.price}</div>
-                <button onclick="addToCart(${i})" class="ui-btn" style="width:100%; margin-top:10px; position:relative; z-index:2;">ADD TO CART</button>
-            `;
-            p.category === "ios" ? ios.appendChild(div) : android.appendChild(div);
+            const div = document.createElement('div'); div.className = 'card';
+            div.innerHTML = `<img src="${p.image||''}" onclick="viewItem(${i})"><h3>${p.name}</h3><div class="price">$${p.price}</div><button class="ui-btn" style="width:100%;" onclick="addToCart(${i})">ADD TO CART</button>`;
+            (p.category==='ios'?ig:ag).appendChild(div);
         });
-        if(isAdmin) renderAdminAssets();
+        if(isAdmin) renderAdminList();
     });
 }
 
 function addToCart(i) {
     playClick();
     cart.push(products[i]);
-    document.getElementById('cart-list').innerHTML = ""; // Force clear list for render
-    updateCartCount();
-    fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>{ db.ref('intel').push(`ADD_CART | ${d.ip} | ${products[i].name}`); });
+    fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>db.ref('intel').push(`CART_ADD | ${d.ip} | ${products[i].name}`));
 }
 
-function updateCartCount() { /* No counter in this UI version to keep it clean, handled in Hub items if needed */ }
+function viewItem(i) {
+    const p = products[i];
+    showPage('info-page');
+    document.getElementById('info-img').src = p.image || '';
+    document.getElementById('info-title').innerText = p.name;
+    document.getElementById('info-price').innerText = "$"+p.price;
+    document.getElementById('info-desc').innerText = p.desc;
+    document.getElementById('info-actions').innerHTML = `<button class="ui-btn" onclick="addToCart(${i})">ADD TO MANIFEST</button>${p.yt ? `<button class="ui-btn" style="background:red;color:white;" onclick="window.open('https://youtube.com/watch?v=${p.yt}')">WATCH PREVIEW</button>` : ''}`;
+}
+
+function renderCart() {
+    const list = document.getElementById('cart-items');
+    let total = 0; list.innerHTML = "";
+    cart.forEach((item, idx) => {
+        list.innerHTML += `<div style="display:flex;justify-content:space-between;margin-bottom:10px;"><span>> ${item.name}</span><span>$${item.price}</span></div>`;
+        total += parseFloat(item.price);
+    });
+    let final = total - (total * (discount/100));
+    document.getElementById('total-val').innerText = "TOTAL: $" + final.toFixed(2);
+}
+
 function clearCart() { cart = []; renderCart(); }
 
-function triggerHackerPay() {
-    if(cart.length === 0) return alert("MANIFEST_EMPTY");
-    document.getElementById('biometric-scan').style.display = 'flex';
+function checkout() {
+    if(cart.length === 0) return;
+    document.getElementById('scan-overlay').style.display = 'flex';
     setTimeout(() => {
-        document.getElementById('biometric-scan').style.display = 'none';
-        document.getElementById('auth-overlay').style.display = 'flex';
-        renderPaypal();
-    }, 2500);
+        document.getElementById('scan-status').innerText = "IDENTITY CONFIRMED";
+        setTimeout(() => {
+            document.getElementById('scan-overlay').style.display = 'none';
+            document.getElementById('pay-overlay').style.display = 'flex';
+            startPayPal();
+        }, 1500);
+    }, 2000);
 }
 
-function renderPaypal() {
-    document.getElementById('paypal-button-container').innerHTML = '';
-    let t=0; cart.forEach(i=>t+=parseFloat(i.price));
+function startPayPal() {
+    document.getElementById('paypal-btn-container').innerHTML = '';
+    let t = 0; cart.forEach(i=>t+=parseFloat(i.price));
     let final = (t - (t * (discount/100))).toFixed(2);
     paypal.Buttons({
         createOrder: (data, actions) => actions.order.create({ purchase_units: [{ amount: { value: final } }] }),
         onApprove: (data, actions) => actions.order.capture().then(det => {
             cart.forEach(item => { if(item.delivery) { const a=document.createElement('a'); a.href=item.delivery.data; a.download=item.delivery.name; a.click(); } });
-            alert("TRANSACTION SUCCESSFUL"); location.reload();
+            alert("PAYMENT SUCCESSFUL"); location.reload();
         })
-    }).render('#paypal-button-container');
+    }).render('#paypal-btn-container');
 }
 
-// [LOGIC] ADMIN LOGIN & ASSET FORGE
-window.onkeydown = (e) => { if(e.key === "Insert") document.getElementById('admin-terminal').style.display = 'block'; };
-
-function login() {
-    if(document.getElementById('admin-pass').value === "spartytop1") {
+// Admin Hub Logic
+window.onkeydown = (e) => { if(e.key === "Insert") document.getElementById('admin-panel').style.display = 'block'; };
+function adminLogin() {
+    if(document.getElementById('root-pass').value === "spartytop1") {
         isAdmin = true;
-        document.getElementById('admin-controls').style.display = 'grid';
-        document.getElementById('login-section').style.display = 'none';
-        db.ref('intel').limitToLast(30).on('value', s => {
-            const list = s.val() ? Object.values(s.val()).reverse() : [];
-            document.getElementById('pay-attempts-list').innerHTML = list.map(i => `<div>> ${i}</div>`).join('');
+        document.getElementById('admin-ui').style.display = 'grid';
+        document.getElementById('admin-login').style.display = 'none';
+        db.ref('intel').limitToLast(40).on('value', s => {
+            const logs = s.val() ? Object.values(s.val()).reverse() : [];
+            document.getElementById('intel-log').innerHTML = logs.map(l => `<div>> ${l}</div>`).join('');
         });
         db.ref('coupons').on('value', s => coupons = s.val() || {});
-        renderAdminAssets();
+        renderAdminList();
     }
 }
 
-function addProduct() {
-    const n=document.getElementById('p-name').value, p=document.getElementById('p-price').value, y=document.getElementById('p-yt').value, c=document.getElementById('p-cat').value, d=document.getElementById('p-desc').value, fImg=document.getElementById('p-img').files[0], fFile=document.getElementById('p-file').files[0], idx=document.getElementById('edit-index').value;
-    if(!n || !p) return alert("Missing Info");
+function saveProduct() {
+    const n=document.getElementById('p-name').value, p=document.getElementById('p-price').value, y=document.getElementById('p-yt').value, c=document.getElementById('p-cat').value, d=document.getElementById('p-desc').value, fImg=document.getElementById('p-img').files[0], fFile=document.getElementById('p-file').files[0], idx=document.getElementById('edit-id').value;
     const read = (file) => file ? new Promise(res => { const r=new FileReader(); r.onload=e=>res({data:e.target.result, name:file.name}); r.readAsDataURL(file); }) : null;
     Promise.all([read(fImg), read(fFile)]).then(vals => {
         let obj = { name:n, price:p, yt:y, category:c, desc:d, image: vals[0]?vals[0].data : (idx!=-1?products[idx].image:""), delivery: vals[1] || (idx!=-1?products[idx].delivery:null) };
         if(idx == -1) products.push(obj); else products[idx] = obj;
-        db.ref('products').set(products).then(() => { alert("DEPLOYED"); resetForge(); });
+        db.ref('products').set(products).then(() => { alert("MANIFEST DEPLOYED"); resetForge(); });
     });
 }
 
-function renderAdminAssets() {
-    const list = document.getElementById('admin-asset-list');
-    if(!list) return;
-    list.innerHTML = products.map((p, i) => p ? `
-        <div style="border-bottom:1px solid #222; padding:5px; font-size:12px; display:flex; justify-content:space-between;">
+function renderAdminList() {
+    document.getElementById('inventory-list').innerHTML = products.map((p, i) => p ? `
+        <div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #222;font-size:12px;">
             <span>${p.name}</span>
             <div>
-                <button onclick="editProduct(${i})" style="color:lime; background:none; border:none; cursor:pointer;">[EDIT]</button>
-                <button onclick="deleteProduct(${i})" style="color:red; background:none; border:none; cursor:pointer;">[X]</button>
+                <button onclick="editItem(${i})" style="color:lime;background:none;border:none;cursor:pointer;">[EDIT]</button>
+                <button onclick="deleteItem(${i})" style="color:red;background:none;border:none;cursor:pointer;margin-left:10px;">[DEL]</button>
             </div>
         </div>
     ` : '').join('');
 }
 
-function editProduct(i) {
+function editItem(i) {
     const p = products[i];
     document.getElementById('p-name').value = p.name;
     document.getElementById('p-price').value = p.price;
     document.getElementById('p-yt').value = p.yt || '';
     document.getElementById('p-cat').value = p.category;
     document.getElementById('p-desc').value = p.desc;
-    document.getElementById('edit-index').value = i;
-    document.getElementById('forge-btn').innerText = "UPDATE ASSET";
-    document.getElementById('admin-terminal').scrollTop = 0;
+    document.getElementById('edit-id').value = i;
+    document.getElementById('save-btn').innerText = "CONFIRM UPDATE";
+    document.getElementById('cancel-edit').style.display = "block";
+    document.getElementById('admin-panel').scrollTop = 0;
 }
 
-function deleteProduct(i) { if(confirm("DELETE?")) { products.splice(i,1); db.ref('products').set(products); } }
-function resetForge() { document.getElementById('edit-index').value = "-1"; document.getElementById('forge-btn').innerText="DEPLOY"; }
-function addCoupon() { db.ref('coupons/'+document.getElementById('c-code').value.toUpperCase()).set(document.getElementById('c-perc').value); alert("SAVED"); }
-function banClientIP() { const ip=document.getElementById('ban-ip-input').value; db.ref('banned_ips').once('value', s=>{ let l=s.val()||[]; l.push(ip); db.ref('banned_ips').set(l); }); }
+function deleteItem(i) { if(confirm("DELETE?")) { products.splice(i,1); db.ref('products').set(products); } }
+function resetForge() { document.getElementById('edit-id').value = "-1"; document.getElementById('save-btn').innerText="DEPLOY ASSET"; document.getElementById('cancel-edit').style.display="none"; }
+function banIP() { const ip = document.getElementById('ban-ip').value; db.ref('banned_ips').once('value', s => { let l=s.val()||[]; l.push(ip); db.ref('banned_ips').set(l); }); }
+function saveCoupon() { db.ref('coupons/'+document.getElementById('c-code').value.toUpperCase()).set(document.getElementById('c-perc').value); }
+function applyCoupon() { const c = document.getElementById('coupon-in').value.toUpperCase(); if(coupons[c]) { discount = coupons[c]; renderCart(); alert("DISCOUNT APPLIED"); } else alert("INVALID"); }
 
-// UI Navigation Logic
-function showInfo(i) {
-    const p = products[i];
-    document.getElementById('shop-page').style.display='none';
-    document.getElementById('info-page').style.display='block';
-    document.getElementById('info-img').src = p.image || '';
-    document.getElementById('info-title').innerText = p.name;
-    document.getElementById('info-price').innerText = "$"+p.price;
-    document.getElementById('info-desc').innerText = p.desc;
-    document.getElementById('info-btns').innerHTML = `<button class="ui-btn" onclick="addToCart(${i})">ADD TO MANIFEST</button>${p.yt ? `<button class="ui-btn" style="background:red;" onclick="window.open('https://youtube.com/watch?v=${p.yt}')">PREVIEW</button>` : ''}`;
+// Matrix Background
+const canvas = document.getElementById('global-canvas'), ctx = canvas.getContext('2d');
+let drops = [];
+function drawMatrix() {
+    ctx.fillStyle = "rgba(0,0,0,0.1)"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "#ffd700"; ctx.font = "15px monospace";
+    drops.forEach((y, i) => { ctx.fillText(String.fromCharCode(0x30A0 + Math.random()*33), i*20, y*20); if(y*20 > canvas.height && Math.random() > 0.975) drops[i] = 0; drops[i]++; });
 }
 
-function showCheckout() { document.getElementById('shop-page').style.display='none'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='block'; renderCart(); }
-function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='none'; }
-
-function renderCart() {
-    let l=document.getElementById('cart-list'), t=0; l.innerHTML="";
-    cart.forEach((item, idx) => {
-        l.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span>> ${item.name}</span><span>$${item.price}</span></div>`;
-        t += parseFloat(item.price);
-    });
-    let final = t - (t * (discount/100));
-    document.getElementById('total-usd').innerText = "TOTAL: $" + final.toFixed(2);
-}
-
-function applyCoupon() {
-    const c = document.getElementById('apply-coupon').value.toUpperCase();
-    if(coupons[c]) { discount = coupons[c]; renderCart(); alert("DISCOUNT ACTIVATED"); } else alert("INVALID CODE");
-}
-
-function toggleTheme() { document.body.classList.toggle('blue-theme'); }
-
-// Background & Loader
-const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d');
 window.onload = () => {
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    displayProducts();
+    drops = Array(Math.floor(canvas.width/20)).fill(1);
+    setInterval(drawMatrix, 50);
+    loadData();
     db.ref('settings/broadcast').on('value', s => {
-        const b = document.getElementById('global-alert-banner');
-        if(s.val()) { b.innerText = "⚠️ " + s.val(); b.style.display = 'block'; } else b.style.display = 'none';
+        const b = document.getElementById('alert-banner');
+        if(s.val()) { b.innerText = "⚠️ SYSTEM: " + s.val(); b.style.display = 'block'; } else b.style.display = 'none';
     });
-
-    let lb = document.getElementById('load-bar'), p = 0;
-    let int = setInterval(() => {
-        p += 2; lb.style.width = p + "%";
-        if(p >= 100) { clearInterval(int); document.getElementById('loader-overlay').style.display='none'; }
+    let p = 0; let int = setInterval(() => {
+        p += 2; document.getElementById('bar').style.width = p + "%";
+        if(p >= 100) { clearInterval(int); document.getElementById('loader').style.display='none'; }
     }, 30);
 };
-
-function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play(); musicStarted = true; } }
 </script>
 </body>
 </html>
