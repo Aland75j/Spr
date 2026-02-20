@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MAXIOM R4 | ELITE MANIFEST</title>
+    <title>MAXIOM R4 | MASTER ELITE</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -23,23 +23,6 @@
         const db = firebase.database();
 
         (function() {
-            const checkBans = async () => {
-                try {
-                    const r = await fetch('https://api.ipify.org?format=json');
-                    const d = await r.json();
-                    const userIP = d.ip;
-                    db.ref('banned_ips').on('value', (snap) => {
-                        const list = snap.val() || [];
-                        if(list.includes(userIP)) {
-                            window.stop();
-                            document.documentElement.innerHTML = "";
-                            alert("IP TERMINATED BY SYSTEM ADMIN");
-                            window.location.href = "about:blank";
-                        }
-                    });
-                } catch(e) { console.log("Shield Active"); }
-            };
-            checkBans();
             db.ref('settings/paypal_id').once('value', (snap) => {
                 const savedID = snap.val() || "test";
                 const script = document.createElement('script');
@@ -54,177 +37,155 @@
             --primary: #00d4ff; 
             --secondary: #00ff41; 
             --bg-main: #02050a;
-            --glass: rgba(0, 15, 30, 0.85);
+            --glass: rgba(0, 10, 20, 0.9);
             --price-gold: #ffd700;
-            --cyber-border: 1px solid rgba(0, 212, 255, 0.3);
         }
         * { cursor: crosshair !important; box-sizing: border-box; font-family: 'Courier New', monospace; }
-        body { margin: 0; color: white; text-align: center; background: var(--bg-main); overflow-x: hidden; padding-bottom: 80px; }
-        
-        header { font-size: 50px; font-weight: bold; color: var(--primary); text-shadow: 0 0 15px var(--primary); letter-spacing: 10px; padding: 40px 0; cursor: pointer; }
-        #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; opacity: 0.4; }
+        body { margin: 0; background: var(--bg-main); color: white; overflow-x: hidden; padding-bottom: 100px; }
 
-        /* Checkout Page Redesign */
-        #checkout-page { display:none; padding: 20px; }
-        .manifest-container {
-            max-width: 700px; margin: 40px auto; background: var(--glass); 
-            backdrop-filter: blur(10px); border: 1px solid var(--primary);
-            position: relative; padding: 40px; box-shadow: 0 0 40px rgba(0, 212, 255, 0.1);
-        }
-        .manifest-header { 
-            border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 30px; 
-            text-align: left; display: flex; justify-content: space-between; align-items: flex-end;
-        }
-        .manifest-item {
-            background: rgba(255, 255, 255, 0.03); border: var(--cyber-border);
-            margin-bottom: 15px; padding: 15px; display: flex; justify-content: space-between;
-            align-items: center; position: relative; overflow: hidden;
-        }
-        .item-status { font-size: 10px; color: var(--secondary); letter-spacing: 2px; }
-        .item-name { font-size: 18px; font-weight: bold; color: white; }
-        .remove-trigger { color: #ff4444; border: 1px solid #ff4444; padding: 5px 10px; font-size: 10px; cursor: pointer; transition: 0.3s; }
-        .remove-trigger:hover { background: #ff4444; color: white; }
+        #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; opacity: 0.5; }
 
-        .total-readout {
-            background: rgba(0,0,0,0.5); border: 2px solid var(--price-gold);
-            padding: 20px; margin: 30px 0; text-align: right;
-        }
-        .total-readout h1 { margin: 0; color: var(--price-gold); font-size: 32px; text-shadow: 0 0 10px var(--price-gold); }
+        /* [4] Neural Hub */
+        .neural-hub { position: fixed; bottom: 30px; right: 30px; z-index: 1000; }
+        .hub-main { width: 60px; height: 60px; background: var(--primary); border-radius: 50%; border: none; font-size: 24px; box-shadow: 0 0 20px var(--primary); cursor: pointer; transition: 0.3s; }
+        .hub-menu { display: none; position: absolute; bottom: 70px; right: 0; flex-direction: column; gap: 10px; }
+        .hub-item { width: 50px; height: 50px; background: black; border: 1px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); text-decoration: none; cursor: pointer; }
 
-        .pay-btn-elite {
-            width: 100%; background: var(--price-gold); color: black; padding: 25px;
-            font-size: 24px; font-weight: bold; border: none; cursor: pointer;
-            text-transform: uppercase; letter-spacing: 5px; transition: 0.4s;
-            clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%);
-        }
-        .pay-btn-elite:hover { transform: scale(1.02); filter: brightness(1.2); box-shadow: 0 0 30px var(--price-gold); }
+        /* [2] Biometric Overlay */
+        #biometric-scan { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100000; flex-direction: column; align-items: center; justify-content: center; }
+        .eye-scanner { width: 200px; height: 100px; border: 2px solid var(--primary); border-radius: 50% 50% 0 0; position: relative; overflow: hidden; }
+        .scan-bar { position: absolute; width: 100%; height: 2px; background: var(--primary); box-shadow: 0 0 15px var(--primary); animation: scanMove 2s infinite; }
+        @keyframes scanMove { 0% { top: 0; } 100% { top: 100%; } }
 
-        /* Shop Elements */
-        .product-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; padding: 20px; }
-        .product { background: var(--glass); padding: 15px; width: 270px; border: 1px solid #111; border-top: 3px solid var(--primary); transition: 0.3s; }
-        .product:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 0 20px var(--primary); }
-        .product img { width: 100%; height: 160px; object-fit: cover; }
+        /* [3] Ghost Hover Product */
+        .product { background: var(--glass); width: 280px; padding: 15px; border: 1px solid #111; border-top: 3px solid var(--primary); position: relative; overflow: hidden; transition: 0.3s; }
+        .product:hover { transform: scale(1.02); border-color: var(--primary); box-shadow: 0 0 20px var(--primary); }
+        .hex-dump { position: absolute; top: 0; left: 0; width: 100%; height: 100%; font-size: 8px; color: rgba(0, 212, 255, 0.05); pointer-events: none; word-break: break-all; opacity: 0; transition: 0.5s; }
+        .product:hover .hex-dump { opacity: 1; transform: translateY(-20px); }
 
-        .ui-btn { padding: 12px 25px; background: transparent; color: var(--primary); border: 1px solid var(--primary); font-weight: bold; cursor: pointer; transition: 0.3s; }
+        /* [8] Support Terminal */
+        #support-box { display: none; position: fixed; bottom: 100px; left: 20px; width: 300px; height: 350px; background: black; border: 1px solid var(--secondary); z-index: 999; padding: 10px; flex-direction: column; }
+
+        /* Core Layout */
+        .cat-title { font-size: 24px; color: var(--primary); margin: 40px; border-left: 4px solid var(--primary); padding-left: 15px; text-align: left; max-width: 900px; margin-inline: auto; }
+        .grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
+        .ui-btn { padding: 10px 20px; background: transparent; color: var(--primary); border: 1px solid var(--primary); cursor: pointer; font-weight: bold; }
         .ui-btn:hover { background: var(--primary); color: black; }
 
-        /* Page 3 Gold Gateway */
-        #auth-overlay {
-            display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
-            background: radial-gradient(circle at center, #1a1400 0%, #02050a 100%);
-            z-index:99999; flex-direction:column; align-items:center; justify-content:center;
-        }
-        .payment-box { width: 90%; max-width: 480px; background: rgba(0,0,0,0.95); border: 1px solid var(--price-gold); padding: 40px; position: relative; box-shadow: 0 0 50px rgba(255, 215, 0, 0.2); }
-
-        /* Admin Terminal */
-        .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 20000; padding: 40px; overflow-y: auto; text-align: left; border: 5px solid var(--secondary); }
-        input, select, textarea { background: #000; border: 1px solid var(--primary); color: var(--primary); padding: 12px; margin: 5px 0; width: 100%; }
-        
-        .floating-cart { position: fixed; top: 20px; right: 20px; background: var(--glass); width: 65px; height: 65px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10000; border: 1px solid var(--primary); box-shadow: 0 0 15px var(--primary); }
+        #auth-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: radial-gradient(circle, #1a1400 0%, #000 100%); z-index:99999; flex-direction:column; align-items:center; justify-content:center; }
+        .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 20000; padding: 50px; text-align: left; overflow-y: auto; }
     </style>
 </head>
 <body onclick="startAudio()">
 
 <canvas id="global-canvas"></canvas>
 
-<div id="loader-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:99999; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-    <div style="border:1px solid var(--primary); padding:25px; width:320px;">
-        <div id="load-logs" style="color:var(--secondary); font-size:11px; height:100px; overflow:hidden; text-align: left;"></div>
-        <div style="width:100%; height:4px; background:#111; margin-top:15px;"><div id="load-bar" style="width:0%; height:100%; background:var(--primary);"></div></div>
-    </div>
+<div id="biometric-scan">
+    <div class="eye-scanner"><div class="scan-bar"></div></div>
+    <h2 style="color:var(--primary); letter-spacing: 5px; margin-top: 20px;">RETINA IDENTITY CHECK</h2>
+    <p style="color:var(--secondary); font-size: 10px;">ID: UNKNOWN | AUTH_LEVEL: MASTER</p>
 </div>
 
-<div class="floating-cart" onclick="showCheckout()">🛒 <span id="cart-count" style="margin-left:5px; font-weight:bold;">0</span></div>
+<div id="support-box">
+    <div style="border-bottom:1px solid var(--secondary); padding-bottom:5px; margin-bottom:10px; display:flex; justify-content:space-between;">
+        <span style="color:var(--secondary)">ENCRYPTED_COMMS</span>
+        <span onclick="toggleSupport()" style="cursor:pointer; color:red;">[X]</span>
+    </div>
+    <div id="sup-logs" style="flex:1; font-size:10px; color:var(--secondary); overflow-y:auto;">> Connection established...</div>
+    <input type="text" id="sup-msg" placeholder="TYPE MESSAGE..." onkeydown="if(event.key==='Enter') sendSup()" style="background:#000; border:1px solid #333; color:var(--secondary); width:100%; padding:5px; margin-top:10px;">
+</div>
 
-<header onclick="showShop()">SPR SHOP ARK R4</header>
+<div class="neural-hub">
+    <div class="hub-menu" id="hub-menu">
+        <div class="hub-item" onclick="showShop()" title="Home">🏠</div>
+        <div class="hub-item" onclick="showCheckout()" title="Cart">🛒</div>
+        <div class="hub-item" onclick="toggleSupport()" title="Support">📡</div>
+    </div>
+    <button class="hub-main" onclick="toggleHub()">⚔️</button>
+</div>
+
+<header style="padding:40px; font-size: 40px; color:var(--primary); text-shadow: 0 0 10px var(--primary); cursor:pointer;" onclick="showShop()">SPR SHOP ARK R4</header>
 
 <div id="shop-page">
-    <div id="android-grid" class="product-grid"></div>
-    <div id="ios-grid" class="product-grid"></div>
+    <div class="cat-title">ANDROID_MODULES</div>
+    <div id="android-grid" class="grid"></div>
+    <div class="cat-title">IOS_MODULES</div>
+    <div id="ios-grid" class="grid"></div>
 </div>
 
-<div id="checkout-page">
-    <div class="manifest-container">
-        <div class="manifest-header">
-            <div>
-                <div style="color:var(--primary); font-size:12px; letter-spacing:3px;">SYSTEM.ORDER_MANIFEST</div>
-                <h2 style="margin:0; letter-spacing:2px;">SECURE INVENTORY</h2>
-            </div>
-            <div style="text-align:right;">
-                <div style="font-size:10px; color:gray;">SESSION_ID: #44921</div>
-                <div id="current-date" style="font-size:10px; color:gray;"></div>
-            </div>
-        </div>
-
-        <div id="cart-list">
-            </div>
-
-        <div style="margin-top:20px; text-align:left;">
-            <label style="color:var(--primary); font-size:10px; letter-spacing:2px;">APPLY VOUCHER CODE:</label>
-            <div style="display:flex; gap:10px; margin-top:5px;">
-                <input type="text" id="apply-coupon" placeholder="ENTER_CODE" style="flex:1; margin:0;">
-                <button onclick="applyCoupon()" class="ui-btn">AUTHENTICATE</button>
-            </div>
-        </div>
-
-        <div class="total-readout">
-            <span style="font-size:12px; color:white; letter-spacing:2px;">FINAL UPLINK COST:</span>
-            <h1 id="total-usd">TOTAL: $0.00</h1>
-        </div>
-
-        <button onclick="triggerHackerPay()" class="pay-btn-elite">⚔️ INITIALIZE PAYMENT</button>
-        
-        <div style="margin-top:20px;">
-            <span onclick="showShop()" style="color:gray; text-decoration:underline; font-size:12px; cursor:pointer;">[ RETURN_TO_TERMINAL ]</span>
-        </div>
+<div id="checkout-page" style="display:none; padding:40px;">
+    <div style="max-width:600px; margin:auto; background:var(--glass); border:1px solid var(--primary); padding:30px;">
+        <h2 style="color:var(--primary)">MANIFEST_SUMMARY</h2>
+        <div id="cart-list" style="text-align:left; border-left: 2px solid var(--primary); padding-left:15px; margin:20px 0;"></div>
+        <h1 id="total-usd" style="color:var(--price-gold)">TOTAL: $0</h1>
+        <button onclick="triggerHackerPay()" class="ui-btn" style="width:100%; height:60px; background:var(--price-gold); color:black; font-size:20px;">⚔️ INITIALIZE UPLINK</button>
+        <button onclick="showShop()" style="background:none; border:none; color:gray; margin-top:20px; cursor:pointer;">[ BACK TO SHOP ]</button>
     </div>
 </div>
 
 <div id="auth-overlay">
-    <div class="payment-box">
-        <div style="position:absolute; top:0; left:0; width:100%; height:4px; background:var(--price-gold); box-shadow:0 0 20px var(--price-gold);"></div>
-        <h1 style="color:var(--price-gold); letter-spacing: 10px; margin-bottom:5px;">PAY NOW</h1>
-        <p id="payment-status-text" style="color:var(--secondary); font-size:12px; margin-bottom:30px;">>>> ESTABLISHING ENCRYPTED UPLINK...</p>
+    <div style="background:rgba(0,0,0,0.9); border:1px solid var(--price-gold); padding:40px; text-align:center; max-width:450px;">
+        <h1 style="color:var(--price-gold)">GOLD_GATEWAY</h1>
+        <p id="pay-status" style="color:var(--secondary)">>>> WAITING FOR AUTHORIZATION...</p>
         <div id="paypal-button-container"></div>
-        <button onclick="document.getElementById('auth-overlay').style.display='none'" class="ui-btn" style="margin-top:30px; width:100%; border-color:red; color:red;">TERMINATE SESSION</button>
+        <button onclick="document.getElementById('auth-overlay').style.display='none'" class="ui-btn" style="border-color:red; color:red; margin-top:20px;">ABORT</button>
     </div>
 </div>
 
 <div class="admin-box" id="admin-terminal">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="color:var(--secondary)">R4_COMMAND_HUB</h2>
-        <button onclick="closeAdmin()" class="ui-btn" style="color:red; border-color:red;">EXIT</button>
+    <div style="display:flex; justify-content:space-between;">
+        <h2 style="color:var(--secondary)">MASTER_CONTROL</h2>
+        <button onclick="document.getElementById('admin-terminal').style.display='none'" class="ui-btn">EXIT</button>
     </div>
-    <div id="login-section" style="text-align:center; padding-top:100px;">
-        <input type="password" id="admin-pass" placeholder="ROOT KEY" style="max-width:400px;">
-        <button onclick="login()" class="ui-btn" style="display:block; margin:20px auto; width:400px;">DECRYPT</button>
+    <div id="login-sec" style="text-align:center; margin-top:100px;">
+        <input type="password" id="admin-pass" placeholder="ACCESS_KEY" style="padding:15px; width:300px; background:#000; border:1px solid var(--primary); color:white;">
+        <button onclick="login()" class="ui-btn">DECRYPT</button>
     </div>
-    <div id="admin-controls" style="display:none;">
-        <div class="panel-box" style="border:1px solid #222; padding:20px; margin-bottom:20px;">
-            <h3 style="color:var(--primary)">ASSET FORGE</h3>
-            <input type="text" id="p-name" placeholder="NAME">
-            <input type="number" id="p-price" placeholder="PRICE">
-            <input type="text" id="p-yt" placeholder="YT ID">
+    <div id="admin-controls" style="display:none; margin-top:30px;">
+        <div style="background:#111; padding:20px; border:1px solid #333;">
+            <h3>ASSET_FORGE</h3>
+            <input type="text" id="p-name" placeholder="Name">
+            <input type="number" id="p-price" placeholder="Price">
             <select id="p-cat"><option value="android">Android</option><option value="ios">IOS</option></select>
-            <textarea id="p-desc" placeholder="DESC"></textarea>
+            <textarea id="p-desc" placeholder="Description"></textarea>
             <input type="file" id="p-img" accept="image/*">
             <input type="file" id="p-file">
-            <button onclick="addProduct()" class="ui-btn" style="width:100%;">DEPLOY ASSET</button>
-        </div>
-        <div class="panel-box" style="border:1px solid #222; padding:20px;">
-            <h3 style="color:var(--primary)">GATEWAY CONFIG</h3>
-            <input type="text" id="pp-id-input" placeholder="PAYPAL ID">
-            <button onclick="savePPID()" class="ui-btn" style="width:100%;">UPDATE PAYPAL</button>
+            <button onclick="addProduct()" class="ui-btn" style="width:100%; margin-top:10px;">DEPLOY</button>
         </div>
     </div>
 </div>
 
-<audio id="hacker-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
+<audio id="snd-hover" src="https://www.myinstants.com/media/sounds/button-19.mp3"></audio>
+<audio id="snd-click" src="https://www.myinstants.com/media/sounds/sci-fi-click.mp3"></audio>
+<audio id="hacker-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3"></audio>
 
 <script>
-let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicStarted = false;
+let products = [], cart = [], isAdmin = false, musicStarted = false;
 
-// Display Shop Items
+// [4] Neural Hub Toggle
+function toggleHub() {
+    let m = document.getElementById('hub-menu');
+    m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
+    playSnd('snd-click');
+}
+
+// [8] Support Terminal
+function toggleSupport() {
+    let s = document.getElementById('support-box');
+    s.style.display = (s.style.display === 'flex') ? 'none' : 'flex';
+}
+function sendSup() {
+    let i = document.getElementById('sup-msg'), l = document.getElementById('sup-logs');
+    if(!i.value) return;
+    l.innerHTML += `<div>> YOU: ${i.value}</div>`;
+    i.value = "";
+    setTimeout(() => { l.innerHTML += `<div style="color:var(--primary)">> SYSTEM: Message Encrypted & Sent.</div>`; }, 1000);
+}
+
+// [9] Sound Engine
+function playSnd(id) { let s = document.getElementById(id); if(s) { s.currentTime=0; s.play().catch(()=>{}); } }
+
+// Core Shop Logic
 function displayProducts() {
     db.ref('products').on('value', (snap) => {
         products = snap.val() || [];
@@ -234,10 +195,12 @@ function displayProducts() {
         products.forEach((p, i) => {
             if(!p) return;
             const div = document.createElement("div"); div.className = "product";
+            div.onmouseenter = () => playSnd('snd-hover');
             div.innerHTML = `
-                <img src="${p.image || ''}">
+                <div class="hex-dump">0x55 0xAA 0xFF 0x00 0x11 0x22 0x33 0x44 0x55 0x66 0x77 0x88 0x99 0xAA</div>
+                <img src="${p.image || ''}" style="width:100%; height:150px; object-fit:cover;">
                 <h3 style="color:var(--primary)">${p.name}</h3>
-                <div style="color:var(--price-gold); font-size:20px; font-weight:bold;">$${p.price}</div>
+                <div style="color:var(--price-gold)">$${p.price}</div>
                 <button onclick="addToCart(${i})" class="ui-btn" style="width:100%; margin-top:10px;">ADD TO CART</button>
             `;
             p.category === "ios" ? ios.appendChild(div) : android.appendChild(div);
@@ -245,96 +208,67 @@ function displayProducts() {
     });
 }
 
-// Cart Management
-function addToCart(i) { cart.push(products[i]); updateCartCount(); }
-function updateCartCount() { document.getElementById('cart-count').innerText = cart.length; }
-function showCheckout() { 
-    document.getElementById('shop-page').style.display='none'; 
-    document.getElementById('checkout-page').style.display='block'; 
-    renderCart(); 
-}
+function addToCart(i) { playSnd('snd-click'); cart.push(products[i]); }
+function showCheckout() { document.getElementById('shop-page').style.display='none'; document.getElementById('checkout-page').style.display='block'; renderCart(); }
+function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('checkout-page').style.display='none'; }
 
 function renderCart() {
-    let list = document.getElementById('cart-list'), total = 0;
-    list.innerHTML = "";
-    if(cart.length === 0) {
-        list.innerHTML = "<div style='color:gray; padding:20px;'>MANIFEST_EMPTY: No items selected.</div>";
-    }
+    let l = document.getElementById('cart-list'), t = 0;
+    l.innerHTML = "";
     cart.forEach((item, index) => {
-        list.innerHTML += `
-            <div class="manifest-item">
-                <div style="text-align:left;">
-                    <div class="item-status">✓ [ STATUS: READY ]</div>
-                    <div class="item-name">${item.name}</div>
-                </div>
-                <div style="display:flex; align-items:center; gap:15px;">
-                    <div style="color:var(--price-gold); font-weight:bold;">$${item.price}</div>
-                    <div class="remove-trigger" onclick="cart.splice(${index},1); renderCart(); updateCartCount();">DELETE</div>
-                </div>
-            </div>
-        `;
-        total += parseFloat(item.price);
+        l.innerHTML += `<div style="margin-bottom:10px; display:flex; justify-content:space-between;">
+            <span>> ${item.name}</span>
+            <span style="color:var(--price-gold)">$${item.price}</span>
+        </div>`;
+        t += parseFloat(item.price);
     });
-    let finalValue = (total - (total * (discount/100))).toFixed(2);
-    document.getElementById('total-usd').innerText = "TOTAL: $" + finalValue;
+    document.getElementById('total-usd').innerText = "TOTAL: $" + t.toFixed(2);
 }
 
-// Same logic, new Page 3 look
+// [2] Trigger Hacker Pay with Biometric Scan
 function triggerHackerPay() {
-    if(cart.length === 0) return alert("MANIFEST ERROR: Inventory Empty.");
-    document.getElementById('auth-overlay').style.display = 'flex';
+    if(cart.length === 0) return alert("CART EMPTY");
+    document.getElementById('biometric-scan').style.display = 'flex';
+    
+    setTimeout(() => {
+        document.getElementById('biometric-scan').style.display = 'none';
+        document.getElementById('auth-overlay').style.display = 'flex';
+        renderPaypal();
+    }, 2500);
+}
+
+function renderPaypal() {
     document.getElementById('paypal-button-container').innerHTML = '';
-    
-    let total=0; cart.forEach(i=>total+=parseFloat(i.price));
-    let final = (total - (total * (discount/100))).toFixed(2);
-    
+    let t = 0; cart.forEach(i => t += parseFloat(i.price));
     paypal.Buttons({
-        style: { shape: 'rect', color: 'gold', layout: 'vertical' },
-        createOrder: (data, actions) => actions.order.create({ purchase_units: [{ amount: { value: final } }] }),
+        style: { color: 'gold', shape: 'rect' },
+        createOrder: (data, actions) => actions.order.create({ purchase_units: [{ amount: { value: t.toFixed(2) } }] }),
         onApprove: (data, actions) => actions.order.capture().then(det => {
-            cart.forEach(item => { if(item.delivery) { const a=document.createElement('a'); a.href=item.delivery.data; a.download=item.delivery.name; a.click(); } });
-            alert("TRANSACTION VERIFIED. FILES DELIVERED."); location.reload();
+            alert("TRANSACTION SUCCESS"); location.reload();
         })
     }).render('#paypal-button-container');
 }
 
 // Admin Logic (INSERT KEY)
 window.onkeydown = (e) => { if(e.key === "Insert") document.getElementById('admin-terminal').style.display = 'block'; };
-function closeAdmin() { document.getElementById('admin-terminal').style.display = 'none'; }
 function login() {
     if(document.getElementById('admin-pass').value === "spartytop1") {
-        isAdmin = true;
         document.getElementById('admin-controls').style.display = 'block';
-        document.getElementById('login-section').style.display = 'none';
-        db.ref('settings/paypal_id').once('value', s => document.getElementById('pp-id-input').value = s.val() || "");
+        document.getElementById('login-sec').style.display = 'none';
     }
 }
 function addProduct() {
-    const n=document.getElementById('p-name').value, p=document.getElementById('p-price').value, y=document.getElementById('p-yt').value, c=document.getElementById('p-cat').value, d=document.getElementById('p-desc').value, fImg=document.getElementById('p-img').files[0], fFile=document.getElementById('p-file').files[0];
+    const n=document.getElementById('p-name').value, p=document.getElementById('p-price').value, c=document.getElementById('p-cat').value, d=document.getElementById('p-desc').value, fImg=document.getElementById('p-img').files[0], fFile=document.getElementById('p-file').files[0];
     const read = (file) => file ? new Promise(res => { const r=new FileReader(); r.onload=e=>res({data:e.target.result, name:file.name}); r.readAsDataURL(file); }) : null;
     Promise.all([read(fImg), read(fFile)]).then(vals => {
-        products.push({ name:n, price:p, yt:y, category:c, desc:d, image: vals[0] ? vals[0].data : "", delivery: vals[1] || null });
-        db.ref('products').set(products).then(() => alert("DEATH_STAR_DEPLOYED"));
-    });
-}
-function savePPID() { db.ref('settings/paypal_id').set(document.getElementById('pp-id-input').value).then(()=>alert("UPLINK_STABLE")); }
-
-// UI Support
-function showShop() { 
-    document.getElementById('shop-page').style.display='block'; 
-    document.getElementById('checkout-page').style.display='none'; 
-}
-function applyCoupon() {
-    const code = document.getElementById('apply-coupon').value.toUpperCase();
-    db.ref('coupons/'+code).once('value', s => { 
-        if(s.exists()){ discount=s.val(); renderCart(); alert("AUTHENTICATED: " + discount + "% OFF"); } 
-        else alert("ACCESS_DENIED: Invalid Code"); 
+        products.push({ name:n, price:p, category:c, desc:d, image: vals[0] ? vals[0].data : "", delivery: vals[1] || null });
+        db.ref('products').set(products).then(() => alert("DEPLOYED"));
     });
 }
 
 // Background Grid
 const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d'); let dots = [];
-function initDots() { dots = []; for(let i=0; i<85; i++) dots.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.8, vy: (Math.random()-0.5)*0.8 }); }
+function initDots() { dots = []; for(let i=0; i<80; i++) dots.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5), vy: (Math.random()-0.5) }); }
 function drawGrid() {
     ctx.clearRect(0,0,canvas.width, canvas.height);
     dots.forEach((d, i) => {
@@ -343,26 +277,13 @@ function drawGrid() {
         ctx.fillStyle = "rgba(0, 212, 255, 0.4)"; ctx.beginPath(); ctx.arc(d.x, d.y, 2, 0, Math.PI*2); ctx.fill();
         for(let j=i+1; j<dots.length; j++) {
             let dist = Math.hypot(d.x-dots[j].x, d.y-dots[j].y);
-            if(dist < 110) { ctx.strokeStyle = "rgba(0, 212, 255, 0.08)"; ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(dots[j].x, dots[j].y); ctx.stroke(); }
+            if(dist < 100) { ctx.strokeStyle = "rgba(0, 212, 255, 0.1)"; ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(dots[j].x, dots[j].y); ctx.stroke(); }
         }
     });
     requestAnimationFrame(drawGrid);
 }
 
-window.onload = () => {
-    document.getElementById('current-date').innerText = new Date().toLocaleDateString();
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    initDots(); drawGrid(); displayProducts();
-    let lb = document.getElementById('load-bar'), p = 0;
-    let logBox = document.getElementById('load-logs');
-    const logs = ["> INJECTING...", "> BYPASSING_FIREWALL...", "> SESSION_ENCRYPTED...", "> ACCESS_GRANTED"];
-    let logIdx = 0;
-    let int = setInterval(() => { 
-        p += 5; lb.style.width = p + "%"; 
-        if(p%25==0) { logBox.innerHTML += `<div>${logs[logIdx]}</div>`; logIdx++; }
-        if(p>=100) { clearInterval(int); document.getElementById('loader-overlay').style.display='none'; }
-    }, 40);
-};
+window.onload = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; initDots(); drawGrid(); displayProducts(); };
 function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play(); musicStarted = true; } }
 </script>
 </body>
