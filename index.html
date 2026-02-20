@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MAXIOM R4 | MASTER ELITE</title>
+    <title>MAXIOM R4 | BEAST EDITION</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -23,6 +23,24 @@
         const db = firebase.database();
 
         (function() {
+            const checkBans = async () => {
+                try {
+                    const r = await fetch('https://api.ipify.org?format=json');
+                    const d = await r.json();
+                    const userIP = d.ip;
+                    db.ref('banned_ips').on('value', (snap) => {
+                        const list = snap.val() || [];
+                        if(list.includes(userIP)) {
+                            window.stop();
+                            document.documentElement.innerHTML = "";
+                            alert("IP TERMINATED BY SYSTEM ADMIN");
+                            window.location.href = "about:blank";
+                        }
+                    });
+                } catch(e) { console.log("Shield Active"); }
+            };
+            checkBans();
+
             db.ref('settings/paypal_id').once('value', (snap) => {
                 const savedID = snap.val() || "test";
                 const script = document.createElement('script');
@@ -34,158 +52,208 @@
 
     <style>
         :root {
-            --primary: #00d4ff; 
-            --secondary: #00ff41; 
-            --bg-main: #02050a;
-            --glass: rgba(0, 10, 20, 0.9);
-            --price-gold: #ffd700;
+            --primary: #ffd700;
+            --secondary: #ff0000;
+            --bg-main: #050505;
+            --glass: rgba(0, 0, 0, 0.93);
+            --price-gold: #ffcc00;
+            --accent-blue: #00d4ff;
         }
+        .blue-theme { --primary: #00d4ff; --secondary: #0044ff; --bg-main: #000510; }
+
         * { cursor: crosshair !important; box-sizing: border-box; font-family: 'Courier New', monospace; }
-        body { margin: 0; background: var(--bg-main); color: white; overflow-x: hidden; padding-bottom: 100px; }
+        body { margin: 0; color: white; text-align: center; background: var(--bg-main); overflow-x: hidden; padding-bottom: 80px; }
 
-        #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; opacity: 0.5; }
+        /* [2] Biometric Scan Overlay */
+        #biometric-scan { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:100000; flex-direction:column; align-items:center; justify-content:center; }
+        .scan-line { width: 300px; height: 2px; background: var(--primary); box-shadow: 0 0 20px var(--primary); animation: scan 2s infinite ease-in-out; position: absolute; }
+        @keyframes scan { 0% { top: 30%; } 50% { top: 70%; } 100% { top: 30%; } }
 
-        /* [4] Neural Hub */
-        .neural-hub { position: fixed; bottom: 30px; right: 30px; z-index: 1000; }
-        .hub-main { width: 60px; height: 60px; background: var(--primary); border-radius: 50%; border: none; font-size: 24px; box-shadow: 0 0 20px var(--primary); cursor: pointer; transition: 0.3s; }
-        .hub-menu { display: none; position: absolute; bottom: 70px; right: 0; flex-direction: column; gap: 10px; }
-        .hub-item { width: 50px; height: 50px; background: black; border: 1px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); text-decoration: none; cursor: pointer; }
+        /* [4] Neural Hub Navigation Wheel */
+        .neural-hub { position: fixed; bottom: 30px; right: 30px; z-index: 9999; }
+        .hub-trigger { width: 70px; height: 70px; border-radius: 50%; background: var(--primary); border: 4px solid #fff; box-shadow: 0 0 20px var(--primary); cursor: pointer; font-size: 30px; color: black; transition: 0.4s; z-index: 10; position: relative; }
+        .hub-trigger:hover { transform: rotate(90deg) scale(1.1); }
+        .hub-options { position: absolute; bottom: 0; right: 0; width: 200px; height: 200px; pointer-events: none; opacity: 0; transition: 0.4s; transform: scale(0.5); }
+        .hub-options.active { opacity: 1; pointer-events: all; transform: scale(1); }
+        .hub-btn { position: absolute; width: 50px; height: 50px; background: #000; border: 2px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); cursor: pointer; transition: 0.3s; }
+        .hub-btn:hover { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
 
-        /* [2] Biometric Overlay */
-        #biometric-scan { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100000; flex-direction: column; align-items: center; justify-content: center; }
-        .eye-scanner { width: 200px; height: 100px; border: 2px solid var(--primary); border-radius: 50% 50% 0 0; position: relative; overflow: hidden; }
-        .scan-bar { position: absolute; width: 100%; height: 2px; background: var(--primary); box-shadow: 0 0 15px var(--primary); animation: scanMove 2s infinite; }
-        @keyframes scanMove { 0% { top: 0; } 100% { top: 100%; } }
+        /* [3] Ghost Hover Product Card */
+        .product { background: var(--glass); padding: 20px; width: 280px; border: 1px solid #222; position: relative; overflow: hidden; transition: 0.3s; border-radius: 4px; }
+        .product:hover { border-color: var(--primary); transform: translateY(-5px); }
+        .hex-bg { position: absolute; top:0; left:0; width:100%; height:100%; font-size: 8px; color: rgba(255,215,0,0.03); word-break: break-all; pointer-events: none; opacity: 0; transition: 0.5s; }
+        .product:hover .hex-bg { opacity: 1; animation: scrollHex 10s linear infinite; }
+        @keyframes scrollHex { from { transform: translateY(0); } to { transform: translateY(-50%); } }
 
-        /* [3] Ghost Hover Product */
-        .product { background: var(--glass); width: 280px; padding: 15px; border: 1px solid #111; border-top: 3px solid var(--primary); position: relative; overflow: hidden; transition: 0.3s; }
-        .product:hover { transform: scale(1.02); border-color: var(--primary); box-shadow: 0 0 20px var(--primary); }
-        .hex-dump { position: absolute; top: 0; left: 0; width: 100%; height: 100%; font-size: 8px; color: rgba(0, 212, 255, 0.05); pointer-events: none; word-break: break-all; opacity: 0; transition: 0.5s; }
-        .product:hover .hex-dump { opacity: 1; transform: translateY(-20px); }
+        /* General UI Elements */
+        #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; opacity: 0.3; }
+        header { font-size: 45px; font-weight: bold; color: var(--primary); text-shadow: 0 0 20px var(--primary); letter-spacing: 8px; padding: 40px 0; cursor: pointer; }
+        .ui-btn { padding: 10px 20px; background: var(--primary); color: black; border: 1px solid #fff; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .ui-btn:hover { filter: brightness(1.2); box-shadow: 0 0 15px var(--primary); }
 
-        /* [8] Support Terminal */
-        #support-box { display: none; position: fixed; bottom: 100px; left: 20px; width: 300px; height: 350px; background: black; border: 1px solid var(--secondary); z-index: 999; padding: 10px; flex-direction: column; }
+        /* Admin Terminal Styling */
+        .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 20000; padding: 40px; overflow-y: auto; text-align: left; }
+        .panel-box { background: rgba(10,10,10,1); border: 1px solid #333; padding: 20px; margin-bottom: 20px; border-left: 4px solid var(--primary); }
+        input, select, textarea { background: #000; border: 1px solid #333; color: var(--primary); padding: 10px; margin: 5px 0; width: 100%; }
 
-        /* Core Layout */
-        .cat-title { font-size: 24px; color: var(--primary); margin: 40px; border-left: 4px solid var(--primary); padding-left: 15px; text-align: left; max-width: 900px; margin-inline: auto; }
-        .grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
-        .ui-btn { padding: 10px 20px; background: transparent; color: var(--primary); border: 1px solid var(--primary); cursor: pointer; font-weight: bold; }
-        .ui-btn:hover { background: var(--primary); color: black; }
+        /* Support Terminal Mini Window */
+        #support-terminal { display: none; position: fixed; bottom: 110px; right: 30px; width: 300px; height: 400px; background: black; border: 2px solid var(--primary); z-index: 9998; flex-direction: column; box-shadow: 0 0 30px rgba(0,0,0,1); }
+        #sup-messages { flex: 1; overflow-y: auto; padding: 10px; font-size: 11px; color: #0f0; text-align: left; }
 
-        #auth-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: radial-gradient(circle, #1a1400 0%, #000 100%); z-index:99999; flex-direction:column; align-items:center; justify-content:center; }
-        .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 20000; padding: 50px; text-align: left; overflow-y: auto; }
+        #global-alert-banner { display: none; position: fixed; top: 0; left: 0; width: 100%; background: var(--secondary); color: white; padding: 12px; z-index: 100000; font-weight: bold; letter-spacing: 2px; border-bottom: 2px solid white; }
     </style>
 </head>
 <body onclick="startAudio()">
 
-<canvas id="global-canvas"></canvas>
+<div id="global-alert-banner"></div>
 
 <div id="biometric-scan">
-    <div class="eye-scanner"><div class="scan-bar"></div></div>
-    <h2 style="color:var(--primary); letter-spacing: 5px; margin-top: 20px;">RETINA IDENTITY CHECK</h2>
-    <p style="color:var(--secondary); font-size: 10px;">ID: UNKNOWN | AUTH_LEVEL: MASTER</p>
+    <div class="scan-line"></div>
+    <div style="border: 2px solid var(--primary); padding: 40px; border-radius: 50%;">
+        <span style="font-size: 50px;">👁️</span>
+    </div>
+    <h2 style="color:var(--primary); margin-top: 20px; letter-spacing: 5px;">BIOMETRIC AUTHENTICATION</h2>
+    <p id="scan-status" style="color:#0f0;">SCANNING RETINA...</p>
 </div>
 
-<div id="support-box">
-    <div style="border-bottom:1px solid var(--secondary); padding-bottom:5px; margin-bottom:10px; display:flex; justify-content:space-between;">
-        <span style="color:var(--secondary)">ENCRYPTED_COMMS</span>
-        <span onclick="toggleSupport()" style="cursor:pointer; color:red;">[X]</span>
+<div id="support-terminal">
+    <div style="background:var(--primary); color:black; padding:10px; font-weight:bold; display:flex; justify-content:space-between;">
+        <span>📡 SUPPORT_UPLINK</span>
+        <span onclick="toggleSupport()" style="cursor:pointer;">[X]</span>
     </div>
-    <div id="sup-logs" style="flex:1; font-size:10px; color:var(--secondary); overflow-y:auto;">> Connection established...</div>
-    <input type="text" id="sup-msg" placeholder="TYPE MESSAGE..." onkeydown="if(event.key==='Enter') sendSup()" style="background:#000; border:1px solid #333; color:var(--secondary); width:100%; padding:5px; margin-top:10px;">
+    <div id="sup-messages">> Connection Secure...<br>> Waiting for input...</div>
+    <input type="text" id="sup-input" placeholder="Type message..." onkeydown="if(event.key==='Enter') sendSupMsg()" style="border:none; border-top:1px solid #333;">
 </div>
 
 <div class="neural-hub">
-    <div class="hub-menu" id="hub-menu">
-        <div class="hub-item" onclick="showShop()" title="Home">🏠</div>
-        <div class="hub-item" onclick="showCheckout()" title="Cart">🛒</div>
-        <div class="hub-item" onclick="toggleSupport()" title="Support">📡</div>
+    <div class="hub-options" id="hub-options">
+        <div class="hub-btn" style="bottom: 140px; right: 0;" onclick="showShop()">🏠</div>
+        <div class="hub-btn" style="bottom: 100px; right: 100px;" onclick="showCheckout()">🛒</div>
+        <div class="hub-btn" style="bottom: 0; right: 140px;" onclick="toggleSupport()">📡</div>
     </div>
-    <button class="hub-main" onclick="toggleHub()">⚔️</button>
+    <button class="hub-trigger" onclick="toggleHub()">⚔️</button>
 </div>
 
-<header style="padding:40px; font-size: 40px; color:var(--primary); text-shadow: 0 0 10px var(--primary); cursor:pointer;" onclick="showShop()">SPR SHOP ARK R4</header>
+<canvas id="global-canvas"></canvas>
+
+<header onclick="showShop()">SPR SHOP ARK R4</header>
 
 <div id="shop-page">
-    <div class="cat-title">ANDROID_MODULES</div>
-    <div id="android-grid" class="grid"></div>
-    <div class="cat-title">IOS_MODULES</div>
-    <div id="ios-grid" class="grid"></div>
+    <div style="color:var(--primary); font-size: 20px; margin: 20px;">[ SELECT YOUR MODULE ]</div>
+    <div class="cat-label">ANDROID_CHEATS</div>
+    <div id="android-grid" class="product-grid"></div>
+    <div class="cat-label">IOS_CHEATS</div>
+    <div id="ios-grid" class="product-grid"></div>
 </div>
 
-<div id="checkout-page" style="display:none; padding:40px;">
-    <div style="max-width:600px; margin:auto; background:var(--glass); border:1px solid var(--primary); padding:30px;">
-        <h2 style="color:var(--primary)">MANIFEST_SUMMARY</h2>
-        <div id="cart-list" style="text-align:left; border-left: 2px solid var(--primary); padding-left:15px; margin:20px 0;"></div>
-        <h1 id="total-usd" style="color:var(--price-gold)">TOTAL: $0</h1>
-        <button onclick="triggerHackerPay()" class="ui-btn" style="width:100%; height:60px; background:var(--price-gold); color:black; font-size:20px;">⚔️ INITIALIZE UPLINK</button>
-        <button onclick="showShop()" style="background:none; border:none; color:gray; margin-top:20px; cursor:pointer;">[ BACK TO SHOP ]</button>
+<div id="info-page" style="display:none; padding:50px;">
+    <button onclick="showShop()" class="ui-btn">⬅ BACK TO ARSENAL</button>
+    <div style="max-width: 800px; margin: 40px auto; background: var(--glass); border: 2px solid var(--primary); padding: 30px;">
+        <img id="info-img" style="width:100%; max-height:400px; object-fit: contain; margin-bottom:20px;">
+        <h1 id="info-title" style="color:var(--primary); margin:0;"></h1>
+        <h2 id="info-price" style="color:var(--price-gold)"></h2>
+        <p id="info-desc" style="line-height:1.6; color:#ccc;"></p>
+        <div id="info-btns" style="display:flex; flex-direction:column; gap:10px;"></div>
+    </div>
+</div>
+
+<div id="checkout-page" style="display:none; padding:50px;">
+    <div style="max-width:650px; margin:auto; background:var(--glass); border:1px solid var(--primary); padding:40px; position:relative;">
+        <div style="position:absolute; top:0; left:0; width:100%; height:4px; background:var(--primary);"></div>
+        <h2 style="color:var(--primary); letter-spacing:3px;">ORDER_MANIFEST</h2>
+        <div id="cart-list" style="text-align:left; margin:30px 0; border-left: 2px solid var(--primary); padding-left: 15px;"></div>
+        <div style="display:flex; gap:10px; margin-bottom:20px;">
+            <input type="text" id="apply-coupon" placeholder="COUPON_CODE" style="flex:1;">
+            <button onclick="applyCoupon()" class="ui-btn">VALIDATE</button>
+        </div>
+        <h1 id="total-usd" style="color:var(--price-gold); font-size: 40px;">TOTAL: $0</h1>
+        <button onclick="triggerHackerPay()" style="width:100%; padding:25px; background:var(--primary); color:black; font-weight:bold; border:none; font-size:20px; cursor:pointer;">⚔️ INITIALIZE TRANSACTION</button>
+        <p onclick="clearCart()" style="color:red; cursor:pointer; margin-top:20px; font-size:12px;">[ WIPE_CART ]</p>
     </div>
 </div>
 
 <div id="auth-overlay">
-    <div style="background:rgba(0,0,0,0.9); border:1px solid var(--price-gold); padding:40px; text-align:center; max-width:450px;">
-        <h1 style="color:var(--price-gold)">GOLD_GATEWAY</h1>
-        <p id="pay-status" style="color:var(--secondary)">>>> WAITING FOR AUTHORIZATION...</p>
+    <div style="background:#000; border:1px solid var(--primary); padding:40px; text-align:center;">
+        <h1 style="color:var(--primary)">SECURE GATEWAY</h1>
         <div id="paypal-button-container"></div>
-        <button onclick="document.getElementById('auth-overlay').style.display='none'" class="ui-btn" style="border-color:red; color:red; margin-top:20px;">ABORT</button>
+        <button onclick="document.getElementById('auth-overlay').style.display='none'" class="ui-btn" style="background:red; margin-top:20px;">TERMINATE</button>
     </div>
 </div>
 
 <div class="admin-box" id="admin-terminal">
-    <div style="display:flex; justify-content:space-between;">
-        <h2 style="color:var(--secondary)">MASTER_CONTROL</h2>
-        <button onclick="document.getElementById('admin-terminal').style.display='none'" class="ui-btn">EXIT</button>
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 20px;">
+        <h2 style="color:var(--secondary)">R4_COMMAND_HUB</h2>
+        <button onclick="closeAdmin()" class="ui-btn" style="background:red;">EXIT_ROOT</button>
     </div>
-    <div id="login-sec" style="text-align:center; margin-top:100px;">
-        <input type="password" id="admin-pass" placeholder="ACCESS_KEY" style="padding:15px; width:300px; background:#000; border:1px solid var(--primary); color:white;">
-        <button onclick="login()" class="ui-btn">DECRYPT</button>
+
+    <div id="login-section" style="text-align:center; padding-top:100px;">
+        <input type="password" id="admin-pass" placeholder="MASTER ROOT KEY" style="max-width:400px;">
+        <button onclick="login()" class="ui-btn" style="width:400px; margin-top:20px;">DECRYPT HUB</button>
     </div>
-    <div id="admin-controls" style="display:none; margin-top:30px;">
-        <div style="background:#111; padding:20px; border:1px solid #333;">
-            <h3>ASSET_FORGE</h3>
-            <input type="text" id="p-name" placeholder="Name">
-            <input type="number" id="p-price" placeholder="Price">
+
+    <div id="admin-controls" style="display:none;">
+        <div class="panel-box">
+            <h3>📡 LIVE INTEL</h3>
+            <div id="pay-attempts-list" style="font-size:11px; color:yellow; background:#000; padding:10px; height:150px; overflow-y:auto; border:1px solid #222;">Scanning...</div>
+            <h3 style="margin-top:20px;">🎟️ COUPONS</h3>
+            <input type="text" id="c-code" placeholder="CODE">
+            <input type="number" id="c-perc" placeholder="DISCOUNT %">
+            <button onclick="addCoupon()" class="ui-btn" style="width:100%;">GENERATE</button>
+        </div>
+
+        <div class="panel-box">
+            <h3>⚒️ ARSENAL FORGE</h3>
+            <input type="hidden" id="edit-index" value="-1">
+            <input type="text" id="p-name" placeholder="PRODUCT NAME">
+            <input type="number" id="p-price" placeholder="PRICE">
+            <input type="text" id="p-yt" placeholder="YOUTUBE VIDEO ID">
             <select id="p-cat"><option value="android">Android</option><option value="ios">IOS</option></select>
-            <textarea id="p-desc" placeholder="Description"></textarea>
-            <input type="file" id="p-img" accept="image/*">
-            <input type="file" id="p-file">
-            <button onclick="addProduct()" class="ui-btn" style="width:100%; margin-top:10px;">DEPLOY</button>
+            <textarea id="p-desc" placeholder="DESCRIPTION"></textarea>
+            <label>Image:</label><input type="file" id="p-img">
+            <label>File:</label><input type="file" id="p-file">
+            <button id="forge-btn" onclick="addProduct()" class="ui-btn" style="width:100%;">DEPLOY ASSET</button>
+            <button id="cancel-edit-btn" onclick="resetForge()" class="ui-btn" style="width:100%; background:gray; display:none;">CANCEL</button>
+            
+            <h3 style="margin-top:20px;">📦 INVENTORY</h3>
+            <div id="admin-asset-list"></div>
+        </div>
+
+        <div class="panel-box">
+            <h3>🛡️ ACCESS CONTROL</h3>
+            <input type="text" id="ban-ip-input" placeholder="IP ADDRESS">
+            <button onclick="banClientIP()" class="ui-btn" style="width:100%; background:red;">BLOCK IP</button>
+            <button onclick="clearBans()" class="ui-btn" style="width:100%; background:orange; margin-top:5px;">LIFT ALL BANS</button>
+            <h3 style="margin-top:20px;">📢 BROADCAST</h3>
+            <input type="text" id="bc-input" placeholder="ALERT MESSAGE">
+            <button onclick="setBroadcast()" class="ui-btn" style="width:100%; background:var(--accent-blue);">SEND SYSTEM ALERT</button>
         </div>
     </div>
 </div>
 
-<audio id="snd-hover" src="https://www.myinstants.com/media/sounds/button-19.mp3"></audio>
-<audio id="snd-click" src="https://www.myinstants.com/media/sounds/sci-fi-click.mp3"></audio>
-<audio id="hacker-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3"></audio>
+<div class="intel-ticker-wrap">
+    <marquee id="feed-text" style="color:#0f0;">>>> R4 FUSION SYSTEM ACTIVE :: ENCRYPTION STABLE :: WAITING FOR TRANSACTION...</marquee>
+</div>
+
+<audio id="hacker-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
+<audio id="snd-click" src="https://www.myinstants.com/media/sounds/sword-slash.mp3"></audio>
 
 <script>
-let products = [], cart = [], isAdmin = false, musicStarted = false;
+let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicStarted = false;
 
-// [4] Neural Hub Toggle
-function toggleHub() {
-    let m = document.getElementById('hub-menu');
-    m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
-    playSnd('snd-click');
-}
-
-// [8] Support Terminal
-function toggleSupport() {
-    let s = document.getElementById('support-box');
-    s.style.display = (s.style.display === 'flex') ? 'none' : 'flex';
-}
-function sendSup() {
-    let i = document.getElementById('sup-msg'), l = document.getElementById('sup-logs');
+// [4] Hub Toggle
+function toggleHub() { document.getElementById('hub-options').classList.toggle('active'); playClick(); }
+function toggleSupport() { let s = document.getElementById('support-terminal'); s.style.display = (s.style.display==='flex'?'none':'flex'); }
+function sendSupMsg() { 
+    let i = document.getElementById('sup-input'), m = document.getElementById('sup-messages');
     if(!i.value) return;
-    l.innerHTML += `<div>> YOU: ${i.value}</div>`;
+    m.innerHTML += `<div style="color:white;">> User: ${i.value}</div>`;
     i.value = "";
-    setTimeout(() => { l.innerHTML += `<div style="color:var(--primary)">> SYSTEM: Message Encrypted & Sent.</div>`; }, 1000);
+    setTimeout(() => { m.innerHTML += `<div style="color:var(--primary)">> System: Message Encrypted.</div>`; }, 800);
 }
 
-// [9] Sound Engine
-function playSnd(id) { let s = document.getElementById(id); if(s) { s.currentTime=0; s.play().catch(()=>{}); } }
+function playClick() { const s = document.getElementById('snd-click'); s.currentTime=0; s.play().catch(()=>{}); }
 
-// Core Shop Logic
+// CORE LOGIC (YOUR ORIGINAL FUNCTIONS)
 function displayProducts() {
     db.ref('products').on('value', (snap) => {
         products = snap.val() || [];
@@ -195,95 +263,167 @@ function displayProducts() {
         products.forEach((p, i) => {
             if(!p) return;
             const div = document.createElement("div"); div.className = "product";
-            div.onmouseenter = () => playSnd('snd-hover');
             div.innerHTML = `
-                <div class="hex-dump">0x55 0xAA 0xFF 0x00 0x11 0x22 0x33 0x44 0x55 0x66 0x77 0x88 0x99 0xAA</div>
-                <img src="${p.image || ''}" style="width:100%; height:150px; object-fit:cover;">
-                <h3 style="color:var(--primary)">${p.name}</h3>
-                <div style="color:var(--price-gold)">$${p.price}</div>
-                <button onclick="addToCart(${i})" class="ui-btn" style="width:100%; margin-top:10px;">ADD TO CART</button>
+                <div class="hex-bg">0x55 0xAA 0xFF 0x00 0x11 0x22 0x33 0x44 0x55 0xAA 0xFF</div>
+                <img src="${p.image || ''}" onclick="showInfo(${i})" style="width:100%; height:160px; object-fit:cover;">
+                <h3>${p.name}</h3>
+                <div style="color:var(--price-gold); font-weight:bold; font-size:20px;">$${p.price}</div>
+                <button onclick="addToCart(${i})" class="ui-btn" style="width:100%; margin-top:10px; border:none;">ADD TO CART</button>
             `;
             p.category === "ios" ? ios.appendChild(div) : android.appendChild(div);
         });
+        if(isAdmin) renderAdminAssets();
     });
 }
 
-function addToCart(i) { playSnd('snd-click'); cart.push(products[i]); }
-function showCheckout() { document.getElementById('shop-page').style.display='none'; document.getElementById('checkout-page').style.display='block'; renderCart(); }
-function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('checkout-page').style.display='none'; }
-
-function renderCart() {
-    let l = document.getElementById('cart-list'), t = 0;
-    l.innerHTML = "";
-    cart.forEach((item, index) => {
-        l.innerHTML += `<div style="margin-bottom:10px; display:flex; justify-content:space-between;">
-            <span>> ${item.name}</span>
-            <span style="color:var(--price-gold)">$${item.price}</span>
-        </div>`;
-        t += parseFloat(item.price);
-    });
-    document.getElementById('total-usd').innerText = "TOTAL: $" + t.toFixed(2);
+function addToCart(i) {
+    playClick();
+    cart.push(products[i]);
+    updateCartCount();
+    fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>{ db.ref('intel').push(`CART_ADD | ${d.ip} | ${products[i].name}`); });
 }
 
-// [2] Trigger Hacker Pay with Biometric Scan
+function updateCartCount() { document.getElementById('cart-count').innerText = cart.length; }
+function clearCart() { cart = []; updateCartCount(); renderCart(); }
+
 function triggerHackerPay() {
     if(cart.length === 0) return alert("CART EMPTY");
+    // [2] Biometric Scan Sequence
     document.getElementById('biometric-scan').style.display = 'flex';
+    setTimeout(() => { document.getElementById('scan-status').innerText = "IDENTITY VERIFIED"; }, 1500);
     
     setTimeout(() => {
         document.getElementById('biometric-scan').style.display = 'none';
         document.getElementById('auth-overlay').style.display = 'flex';
         renderPaypal();
-    }, 2500);
+    }, 3000);
 }
 
 function renderPaypal() {
     document.getElementById('paypal-button-container').innerHTML = '';
-    let t = 0; cart.forEach(i => t += parseFloat(i.price));
+    let t=0; cart.forEach(i=>t+=parseFloat(i.price));
+    let final = (t - (t * (discount/100))).toFixed(2);
     paypal.Buttons({
-        style: { color: 'gold', shape: 'rect' },
-        createOrder: (data, actions) => actions.order.create({ purchase_units: [{ amount: { value: t.toFixed(2) } }] }),
+        createOrder: (data, actions) => actions.order.create({ purchase_units: [{ amount: { value: final } }] }),
         onApprove: (data, actions) => actions.order.capture().then(det => {
-            alert("TRANSACTION SUCCESS"); location.reload();
+            cart.forEach(item => { if(item.delivery) { const a = document.createElement('a'); a.href = item.delivery.data; a.download = item.delivery.name; a.click(); } });
+            alert("TRANSACTION COMPLETE.");
+            location.reload();
         })
     }).render('#paypal-button-container');
 }
 
-// Admin Logic (INSERT KEY)
+// Admin Hub Logic (YOURS)
 window.onkeydown = (e) => { if(e.key === "Insert") document.getElementById('admin-terminal').style.display = 'block'; };
+function closeAdmin() { document.getElementById('admin-terminal').style.display = 'none'; }
 function login() {
     if(document.getElementById('admin-pass').value === "spartytop1") {
+        isAdmin = true;
         document.getElementById('admin-controls').style.display = 'block';
-        document.getElementById('login-sec').style.display = 'none';
+        document.getElementById('login-section').style.display = 'none';
+        db.ref('intel').limitToLast(50).on('value', s => {
+            const list = s.val() ? Object.values(s.val()).reverse() : [];
+            document.getElementById('pay-attempts-list').innerHTML = list.map(i => `<div>${i}</div>`).join('');
+        });
+        db.ref('coupons').on('value', s => { coupons = s.val() || {}; });
+        renderAdminAssets();
     }
 }
+
 function addProduct() {
-    const n=document.getElementById('p-name').value, p=document.getElementById('p-price').value, c=document.getElementById('p-cat').value, d=document.getElementById('p-desc').value, fImg=document.getElementById('p-img').files[0], fFile=document.getElementById('p-file').files[0];
+    const n=document.getElementById('p-name').value, p=document.getElementById('p-price').value, y=document.getElementById('p-yt').value, c=document.getElementById('p-cat').value, d=document.getElementById('p-desc').value, fImg=document.getElementById('p-img').files[0], fFile=document.getElementById('p-file').files[0], idx=document.getElementById('edit-index').value;
     const read = (file) => file ? new Promise(res => { const r=new FileReader(); r.onload=e=>res({data:e.target.result, name:file.name}); r.readAsDataURL(file); }) : null;
     Promise.all([read(fImg), read(fFile)]).then(vals => {
-        products.push({ name:n, price:p, category:c, desc:d, image: vals[0] ? vals[0].data : "", delivery: vals[1] || null });
-        db.ref('products').set(products).then(() => alert("DEPLOYED"));
+        let obj = { name:n, price:p, yt:y, category:c, desc:d, image: vals[0]?vals[0].data: (idx!=-1?products[idx].image:""), delivery: vals[1] || (idx!=-1?products[idx].delivery:null) };
+        if(idx == -1) products.push(obj); else products[idx] = obj;
+        db.ref('products').set(products).then(() => { alert("SUCCESS"); resetForge(); });
     });
 }
 
-// Background Grid
-const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d'); let dots = [];
-function initDots() { dots = []; for(let i=0; i<80; i++) dots.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5), vy: (Math.random()-0.5) }); }
-function drawGrid() {
-    ctx.clearRect(0,0,canvas.width, canvas.height);
-    dots.forEach((d, i) => {
-        d.x += d.vx; d.y += d.vy;
-        if(d.x<0 || d.x>canvas.width) d.vx *= -1; if(d.y<0 || d.y>canvas.height) d.vy *= -1;
-        ctx.fillStyle = "rgba(0, 212, 255, 0.4)"; ctx.beginPath(); ctx.arc(d.x, d.y, 2, 0, Math.PI*2); ctx.fill();
-        for(let j=i+1; j<dots.length; j++) {
-            let dist = Math.hypot(d.x-dots[j].x, d.y-dots[j].y);
-            if(dist < 100) { ctx.strokeStyle = "rgba(0, 212, 255, 0.1)"; ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(dots[j].x, dots[j].y); ctx.stroke(); }
-        }
-    });
-    requestAnimationFrame(drawGrid);
+function renderAdminAssets() {
+    document.getElementById('admin-asset-list').innerHTML = products.map((p, i) => p ? `
+        <div style="border-bottom:1px solid #222; padding:10px; display:flex; justify-content:space-between;">
+            <span>${p.name}</span>
+            <div>
+                <button onclick="editProduct(${i})" style="color:lime; background:none; border:1px solid lime;">EDIT</button>
+                <button onclick="deleteProduct(${i})" style="color:red; background:none; border:1px solid red;">DEL</button>
+            </div>
+        </div>
+    ` : '').join('');
 }
 
-window.onload = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; initDots(); drawGrid(); displayProducts(); };
+function editProduct(i) {
+    const p = products[i];
+    document.getElementById('p-name').value = p.name;
+    document.getElementById('p-price').value = p.price;
+    document.getElementById('p-yt').value = p.yt || '';
+    document.getElementById('p-cat').value = p.category;
+    document.getElementById('p-desc').value = p.desc;
+    document.getElementById('edit-index').value = i;
+    document.getElementById('forge-btn').innerText = "CONFIRM UPDATE";
+    document.getElementById('cancel-edit-btn').style.display = "block";
+}
+
+function deleteProduct(i) { if(confirm("DELETE?")) { products.splice(i,1); db.ref('products').set(products); } }
+function resetForge() { document.getElementById('edit-index').value = "-1"; document.getElementById('forge-btn').innerText="DEPLOY ASSET"; document.getElementById('cancel-edit-btn').style.display="none"; }
+function banClientIP() { const ip = document.getElementById('ban-ip-input').value; db.ref('banned_ips').once('value', s => { let l = s.val()||[]; l.push(ip); db.ref('banned_ips').set(l).then(()=>alert("BANNED")); }); }
+function clearBans() { db.ref('banned_ips').set([]); }
+function setBroadcast() { db.ref('settings/broadcast').set(document.getElementById('bc-input').value); }
+
+function showInfo(i) {
+    const p = products[i];
+    document.getElementById('shop-page').style.display = 'none';
+    document.getElementById('info-page').style.display = 'block';
+    document.getElementById('info-img').src = p.image || '';
+    document.getElementById('info-title').innerText = p.name;
+    document.getElementById('info-price').innerText = "$" + p.price;
+    document.getElementById('info-desc').innerText = p.desc;
+    document.getElementById('info-btns').innerHTML = `
+        <button class="ui-btn" onclick="addToCart(${i})">ADD TO CART</button>
+        ${p.yt ? `<button class="ui-btn" onclick="window.open('https://youtube.com/watch?v=${p.yt}')" style="background:red;">📺 WATCH PREVIEW</button>` : ''}
+    `;
+}
+
+function showCheckout() { document.getElementById('shop-page').style.display='none'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='block'; renderCart(); }
+function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='none'; }
+
+function renderCart() {
+    let l=document.getElementById('cart-list'), t=0; l.innerHTML = "";
+    cart.forEach((item, index) => {
+        l.innerHTML += `<div style="padding:10px; border-bottom:1px solid #222; display:flex; justify-content:space-between;">
+            <span>${item.name}</span><span>$${item.price}</span>
+        </div>`;
+        t += parseFloat(item.price);
+    });
+    let final = t - (t * (discount/100));
+    document.getElementById('total-usd').innerText = "TOTAL: $" + final.toFixed(2);
+}
+
+function applyCoupon() {
+    const c = document.getElementById('apply-coupon').value.toUpperCase();
+    db.ref('coupons/'+c).once('value', s => {
+        if(s.exists()) { discount = s.val(); renderCart(); alert("DISCOUNT APPLIED"); } else { alert("INVALID CODE"); }
+    });
+}
+
+// Background Matrix
+const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d'); let drops = [];
+function drawMatrix() {
+    ctx.fillStyle = "rgba(0,0,0,0.1)"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "#ffd700"; ctx.font = "15px monospace";
+    drops.forEach((y, i) => { ctx.fillText(String.fromCharCode(0x30A0 + Math.random()*33), i*20, y*20); if(y*20 > canvas.height && Math.random() > 0.975) drops[i] = 0; drops[i]++; });
+}
+
+window.onload = () => {
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    drops = Array(Math.floor(canvas.width/20)).fill(1);
+    setInterval(drawMatrix, 50);
+    displayProducts();
+    db.ref('settings/broadcast').on('value', s => {
+        const b = document.getElementById('global-alert-banner');
+        if(s.val()) { b.innerText = "⚠️ SYSTEM ALERT: " + s.val(); b.style.display = 'block'; } else b.style.display = 'none';
+    });
+};
 function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play(); musicStarted = true; } }
 </script>
 </body>
