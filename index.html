@@ -33,22 +33,13 @@
                     db.ref('banned_ips').on('value', (snap) => {
                         const list = snap.val() || [];
                         if(list.includes(userIP)) {
+                            document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:100px;'>ACCESS DENIED: IP TERMINATED</h1>";
                             window.stop();
-                            document.documentElement.innerHTML = "";
-                            alert("IP TERMINATED BY SYSTEM ADMIN");
-                            window.location.href = "about:blank";
                         }
                     });
                 } catch(e) { console.log("Shield Active"); }
             };
             checkBans();
-
-            db.ref('settings/paypal_id').once('value', (snap) => {
-                const savedID = snap.val() || "test";
-                const script = document.createElement('script');
-                script.src = `https://www.paypal.com/sdk/js?client-id=${savedID}&currency=USD`;
-                document.head.appendChild(script);
-            });
         })();
     </script>
 
@@ -62,54 +53,43 @@
         }
         .blue-theme { --primary: #00d4ff; --secondary: #0044ff; --bg-main: #000510; }
 
-        * { cursor: crosshair !important; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; font-family: 'Courier New', monospace; color: white; text-align: center; background: var(--bg-main); transition: 0.5s; overflow-x: hidden; padding-bottom: 80px; }
+        * { cursor: crosshair !important; box-sizing: border-box; }
+        body { margin: 0; font-family: 'Courier New', monospace; color: white; text-align: center; background: var(--bg-main); overflow-x: hidden; padding-bottom: 80px; }
 
-        #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background: radial-gradient(circle at center, #0a0a0a 0%, #000 100%); }
-
+        #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background: #000; }
         #global-alert-banner { display: none; position: fixed; top: 0; left: 0; width: 100%; background: var(--secondary); color: white; padding: 10px; z-index: 100000; font-weight: bold; border-bottom: 2px solid white; }
 
-        #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .terminal-loader { width: 80%; max-width: 600px; height: 300px; background: #000; border: 1px solid #00ff41; padding: 20px; text-align: left; font-size: 14px; overflow: hidden; position: relative; box-shadow: 0 0 30px rgba(0, 255, 65, 0.2); }
-        .skull-ascii { color: #ffd700; font-size: 8px; line-height: 8px; white-space: pre; margin-bottom: 15px; text-align: center;}
-        #load-logs { color: #00ff41; height: 180px; overflow: hidden; }
-        .load-bar-container { width: 100%; height: 10px; background: #111; border: 1px solid #00ff41; margin-top: 20px; position: relative; }
-        #load-bar { width: 0%; height: 100%; background: #00ff41; box-shadow: 0 0 10px #00ff41; transition: 0.2s; }
+        #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 99999; display: flex; align-items: center; justify-content: center; }
+        .terminal-loader { width: 80%; max-width: 600px; height: 150px; border: 1px solid #00ff41; padding: 20px; text-align: left; }
+        #load-bar { width: 0%; height: 10px; background: #00ff41; margin-top: 10px; transition: 0.1s; }
 
-        .header-container { padding: 50px 0; }
-        header { font-size: 50px; font-weight: bold; color: var(--primary); text-shadow: 0 0 20px var(--primary); letter-spacing: 10px; }
+        header { font-size: 50px; font-weight: bold; color: var(--primary); text-shadow: 0 0 20px var(--primary); letter-spacing: 10px; padding: 50px 0; cursor: pointer; }
 
         .top-nav { position: fixed; top: 20px; left: 20px; z-index: 4000; display: flex; gap: 10px; }
-        .ui-btn { padding: 10px 15px; background: var(--primary); color: #000; border: 2px solid #fff; font-weight: bold; border-radius: 5px; font-size: 12px; cursor: pointer; }
+        .ui-btn { padding: 10px 15px; background: var(--primary); color: #000; border: 1px solid #fff; font-weight: bold; border-radius: 5px; font-size: 12px; cursor: pointer; }
 
-        .floating-cart { position: fixed; top: 20px; right: 20px; background: var(--primary); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10000; color: black; box-shadow: 0 0 25px var(--primary); border: 3px solid #fff; font-size: 24px; }
-        .cart-count { position: absolute; top: -5px; right: -5px; background: var(--secondary); color: white; font-size: 14px; padding: 5px 9px; border-radius: 50%; }
+        .floating-cart { position: fixed; top: 20px; right: 20px; background: var(--primary); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10000; color: black; border: 2px solid #fff; font-size: 20px; }
+        .cart-count { position: absolute; top: -5px; right: -5px; background: var(--secondary); color: white; font-size: 12px; padding: 3px 7px; border-radius: 50%; }
 
-        .cat-label { margin: 40px auto; padding: 15px; background: var(--glass); border-top: 2px solid var(--primary); border-bottom: 2px solid var(--primary); max-width: 900px; font-size: 28px; font-weight: bold; color: var(--primary); }
-        .product-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; padding: 20px; }
-        .product { background: var(--glass); padding: 20px; width: 260px; border: 1px solid #333; border-radius: 10px; transition: 0.3s; }
-        .product:hover { transform: translateY(-10px); border-color: var(--primary); }
-        .product img { width: 100%; height: 160px; object-fit: cover; border-radius: 5px; }
+        .cat-label { margin: 40px auto; padding: 15px; background: var(--glass); border-top: 2px solid var(--primary); border-bottom: 2px solid var(--primary); max-width: 900px; font-size: 24px; font-weight: bold; color: var(--primary); }
+        .product-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px; }
+        .product { background: var(--glass); padding: 15px; width: 250px; border: 1px solid #333; border-radius: 10px; transition: 0.3s; }
+        .product img { width: 100%; height: 150px; object-fit: cover; border-radius: 5px; }
 
-        .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 20000; padding: 40px; overflow-y: auto; text-align: left; }
-        .admin-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .panel-box { background: #080808; border: 1px solid #333; padding: 20px; border-radius: 8px; }
-        .panel-box h3 { color: var(--primary); margin-top: 0; border-bottom: 1px solid #222; padding-bottom: 10px; }
-        input, select, textarea { background: #111; border: 1px solid var(--primary); color: #fff; padding: 10px; margin: 5px 0; width: 100%; border-radius: 4px; }
+        .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 20000; padding: 20px; overflow-y: auto; text-align: left; }
+        .admin-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
+        .panel-box { background: #080808; border: 1px solid #333; padding: 15px; border-radius: 8px; }
+        input, select { background: #111; border: 1px solid var(--primary); color: #fff; padding: 8px; margin: 5px 0; width: 100%; }
 
         #chat-widget { position: fixed; bottom: 80px; right: 20px; z-index: 9999; }
-        #chat-trigger { width: 60px; height: 60px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; border: 2px solid white; box-shadow: 0 0 15px var(--primary); }
-        #chat-window { display: none; position: absolute; bottom: 70px; right: 0; width: 300px; height: 400px; background: #000; border: 2px solid var(--primary); border-radius: 10px; flex-direction: column; overflow: hidden; box-shadow: 0 0 30px rgba(0,0,0,1); }
-        #chat-header { background: var(--primary); color: #000; padding: 10px; font-weight: bold; text-align: center; }
-        #chat-messages { flex: 1; padding: 10px; overflow-y: auto; font-size: 13px; text-align: left; background: #050505; }
-        .msg { margin-bottom: 8px; padding: 8px 12px; border-radius: 5px; max-width: 85%; word-wrap: break-word; }
-        .msg-user { background: #222; align-self: flex-start; border-left: 3px solid var(--primary); color: #fff; }
-        .msg-admin { background: var(--primary); color: #000; align-self: flex-end; font-weight: bold; }
-        .chat-session-item { padding: 12px; border-bottom: 1px solid #222; cursor: pointer; color: lime; font-size: 11px; }
+        #chat-trigger { width: 50px; height: 50px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; border: 2px solid white; }
+        #chat-window { display: none; position: absolute; bottom: 60px; right: 0; width: 280px; height: 350px; background: #000; border: 2px solid var(--primary); flex-direction: column; }
+        #chat-messages { flex: 1; padding: 10px; overflow-y: auto; font-size: 12px; display: flex; flex-direction: column; }
+        .msg { margin-bottom: 5px; padding: 5px 10px; border-radius: 4px; max-width: 80%; }
+        .msg-user { background: #222; align-self: flex-start; }
+        .msg-admin { background: var(--primary); color: #000; align-self: flex-end; }
 
-        #auth-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 60000; flex-direction: column; align-items: center; justify-content: center; }
-        .intel-ticker-wrap { position: fixed; bottom: 0; left: 0; width: 100%; height: 45px; background: rgba(0,0,0,0.9); border-top: 2px solid var(--primary); z-index: 9999; display: flex; align-items: center; }
-        .intel-ticker-label { background: var(--primary); color: #000; font-weight: bold; padding: 0 15px; height: 100%; display: flex; align-items: center; }
+        .intel-ticker-wrap { position: fixed; bottom: 0; left: 0; width: 100%; height: 40px; background: rgba(0,0,0,0.9); border-top: 2px solid var(--primary); z-index: 9999; display: flex; align-items: center; }
     </style>
 </head>
 <body onclick="startAudio()">
@@ -118,22 +98,15 @@
 
 <div id="loader-overlay">
     <div class="terminal-loader">
-        <div class="skull-ascii">.-'''-. / _   _ \ | ( ' ) | |(_ o _)| '.(_).-' / \ | | \___/</div>
-        <div id="load-logs"></div>
-        <div class="load-bar-container"><div id="load-bar"></div></div>
+        <div id="load-logs" style="color:#00ff41; font-size:12px;">Initializing Maxiom R4...</div>
+        <div id="load-bar"></div>
     </div>
 </div>
 
 <canvas id="global-canvas"></canvas>
 
-<div id="auth-overlay">
-    <h1 style="color:var(--primary); letter-spacing: 5px;">AUTHORIZING TRANSACTION</h1>
-    <div id="paypal-button-container" style="width: 100%; max-width: 400px; margin: 20px;"></div>
-    <button onclick="document.getElementById('auth-overlay').style.display='none'" class="ui-btn" style="background:red; color:white;">CANCEL SESSION</button>
-</div>
-
 <div class="top-nav">
-    <button class="ui-btn" id="music-btn" onclick="toggleMusic(event)">🔊 MUSIC: ON</button>
+    <button class="ui-btn" onclick="toggleMusic(event)">🔊 MUSIC</button>
     <button class="ui-btn" onclick="toggleTheme()">🌀 MODE</button>
 </div>
 
@@ -141,9 +114,7 @@
     🛒 <span class="cart-count" id="cart-count">0</span>
 </div>
 
-<div class="header-container">
-    <header onclick="showShop()" style="cursor:pointer;">SPR SHOP ARK R4</header>
-</div>
+<header onclick="showShop()">SPR SHOP ARK R4</header>
 
 <div id="shop-page">
     <div class="cat-label">ANDROID CHEATS</div>
@@ -153,146 +124,191 @@
 </div>
 
 <div id="checkout-page" style="display:none; padding:50px;">
-    <button onclick="showShop()" class="ui-btn">⬅ RETURN TO SHOP</button>
-    <div style="max-width:600px; margin:40px auto; background:var(--glass); padding:30px; border:2px solid var(--primary);">
-        <h2 style="color:var(--primary)">YOUR CART</h2>
-        <div id="cart-list" style="text-align:left; min-height:100px;"></div>
-        <h1 id="total-usd" style="color:var(--price-gold)">TOTAL: $0</h1>
-        <button onclick="triggerHackerPay()" style="width:100%; background:var(--primary); color:black; padding:20px; font-weight:bold; cursor:pointer; font-size:18px; border:none;">⚔️ FINISH PURCHASE</button>
+    <button onclick="showShop()" class="ui-btn">⬅ BACK</button>
+    <div style="max-width:500px; margin:20px auto; background:var(--glass); padding:20px; border:1px solid var(--primary);">
+        <div id="cart-list"></div>
+        <h2 id="total-usd">TOTAL: $0</h2>
+        <button onclick="alert('Checkout integration ready.')" class="ui-btn" style="width:100%; padding:15px;">FINISH PURCHASE</button>
     </div>
 </div>
 
 <div class="admin-box" id="admin-terminal">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-        <h2 style="color:var(--secondary); margin:0;">R4_COMMAND_HUB_V2</h2>
-        <button onclick="closeAdmin()" class="ui-btn" style="background:red;">EXIT_ROOT</button>
+    <div style="display:flex; justify-content:space-between;">
+        <h2 style="color:var(--secondary)">R4_ROOT_HUB</h2>
+        <button onclick="closeAdmin()" class="ui-btn" style="background:red;">EXIT</button>
     </div>
 
-    <div id="login-section" style="text-align:center; padding-top:100px;">
-        <input type="password" id="admin-pass" placeholder="MASTER ROOT KEY" style="max-width:400px; font-size: 20px;">
-        <button onclick="login()" class="ui-btn" style="width:400px; margin-top:20px; display:block; margin:20px auto;">DECRYPT HUB</button>
+    <div id="login-section">
+        <input type="password" id="admin-pass" placeholder="ROOT KEY">
+        <button onclick="login()" class="ui-btn" style="width:100%; margin-top:10px;">DECRYPT</button>
     </div>
 
     <div id="admin-controls" style="display:none;" class="admin-layout">
         <div class="panel-box">
-            <h3>📡 GLOBAL SYSTEM OVERRIDE</h3>
-            <input type="text" id="bc-input" placeholder="BROADCAST MESSAGE">
-            <button onclick="setBroadcast()" class="ui-btn" style="width:100%; background:orange; color:black;">SEND SYSTEM ALERT</button>
-            <hr style="border:1px solid #222; margin:15px 0;">
-            <input type="text" id="ban-ip-input" placeholder="IP TO TERMINATE">
-            <button onclick="banIP()" class="ui-btn" style="width:100%; background:red; color:white;">BAN IP ADDRESS</button>
-            <div id="ban-list" style="font-size:10px; color:red; margin-top:10px; max-height:80px; overflow-y:auto;"></div>
+            <h3>📡 BROADCAST & BANS</h3>
+            <input type="text" id="bc-input" placeholder="Broadcast Msg">
+            <button onclick="setBroadcast()" class="ui-btn" style="width:100%; background:orange;">SEND ALERT</button>
+            <input type="text" id="ban-ip-input" placeholder="IP to Ban" style="margin-top:10px;">
+            <button onclick="banIP()" class="ui-btn" style="width:100%; background:red; color:white;">BAN IP</button>
+            <div id="ban-list" style="font-size:10px; color:red; margin-top:5px;"></div>
         </div>
 
         <div class="panel-box">
-            <h3>📈 LIVE INTEL & FEED</h3>
-            <input type="text" id="feed-input" placeholder="Add Marquee Alert...">
-            <button onclick="addFeedMessage()" class="ui-btn" style="width:100%; margin-top:5px;">ADD TO FEED</button>
-            <div id="admin-feed-list" style="margin-top:10px; max-height:100px; overflow-y:auto; border:1px solid #333; font-size:10px;"></div>
-            <h4 style="color:yellow; margin:10px 0 5px 0;">INTEL LOG:</h4>
-            <div id="pay-attempts-list" style="font-size:9px; color:#0f0; background:#000; padding:5px; height:100px; overflow-y:auto;">Scanning logs...</div>
+            <h3>📈 FEED & INTEL</h3>
+            <input type="text" id="feed-input" placeholder="Marquee Text">
+            <button onclick="addFeedMessage()" class="ui-btn" style="width:100%;">ADD FEED</button>
+            <div id="admin-feed-list" style="max-height:100px; overflow-y:auto; margin-top:10px; font-size:10px;"></div>
+            <h4 style="margin:10px 0 0 0;">INTEL LOG:</h4>
+            <div id="intel-logs" style="font-size:9px; color:#0f0; height:80px; overflow-y:auto;"></div>
         </div>
 
         <div class="panel-box">
-            <h3>💬 COMMS & ⚒️ FORGE</h3>
-            <div id="admin-chat-sessions" style="max-height:100px; overflow-y:auto; border:1px solid #333; margin-bottom:5px;"></div>
-            <div id="admin-chat-view" style="display:none; border-top:1px solid var(--primary); padding-top:5px;">
-                <div id="admin-chat-messages" style="height:100px; overflow-y:auto; background:#000; padding:5px; font-size:11px; display:flex; flex-direction:column;"></div>
-                <div style="display:flex; gap:5px; margin-top:5px;"><input type="text" id="admin-chat-input" placeholder="Reply..."><button onclick="sendAdminReply()" class="ui-btn">SEND</button></div>
+            <h3>💬 CHAT & ⚒️ FORGE</h3>
+            <div id="admin-chat-sessions" style="max-height:80px; overflow-y:auto; border:1px solid #333;"></div>
+            <div id="admin-chat-view" style="display:none;">
+                <div id="admin-chat-messages" style="height:80px; overflow-y:auto; font-size:10px;"></div>
+                <input type="text" id="admin-chat-input" placeholder="Reply...">
+                <button onclick="sendAdminReply()" class="ui-btn">SEND</button>
             </div>
-            <hr style="border:1px solid #222;">
-            <input type="text" id="p-name" placeholder="PRODUCT NAME">
-            <input type="number" id="p-price" placeholder="PRICE">
+            <hr>
+            <input type="text" id="p-name" placeholder="Name">
+            <input type="number" id="p-price" placeholder="Price">
             <select id="p-cat"><option value="android">Android</option><option value="ios">IOS</option></select>
-            <input type="file" id="p-img" accept="image/*">
-            <button onclick="addProduct()" class="ui-btn" style="width:100%; margin-top:5px;">DEPLOY ASSET</button>
+            <input type="file" id="p-img">
+            <button onclick="addProduct()" class="ui-btn" style="width:100%;">DEPLOY</button>
         </div>
     </div>
 </div>
 
 <div id="chat-widget">
     <div id="chat-window">
-        <div id="chat-header">OPERATOR SUPPORT</div>
-        <div id="chat-messages" style="display: flex; flex-direction: column;"></div>
-        <div style="display:flex; padding:5px; background:#111; gap:5px;"><input type="text" id="chat-input" placeholder="Message..."><button onclick="sendChatMessage()" class="ui-btn">SEND</button></div>
+        <div style="background:var(--primary); color:#000; padding:5px; font-weight:bold;">SUPPORT</div>
+        <div id="chat-messages"></div>
+        <div style="display:flex; padding:2px;"><input type="text" id="chat-input" placeholder="Msg..."><button onclick="sendChatMessage()" class="ui-btn">></button></div>
     </div>
     <div id="chat-trigger" onclick="toggleChatWindow()">💬</div>
 </div>
 
 <div class="intel-ticker-wrap">
-    <div class="intel-ticker-label">LIVE_FEED</div>
     <marquee id="main-ticker" style="color:#0f0; font-weight:bold;"></marquee>
 </div>
 
 <audio id="hacker-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
-<audio id="snd-click" src="https://www.myinstants.com/media/sounds/sword-slash.mp3"></audio>
 
 <script>
-let products = [], cart = [], isAdmin = false, musicStarted = false;
-let activeAdminSession = "";
+let products = [], cart = [], musicStarted = false, activeAdminSession = "";
 
-// --- NODE BACKGROUND ---
+// --- NODE BACKGROUND ENGINE (FIXED) ---
 const canvas = document.getElementById('global-canvas');
 const ctx = canvas.getContext('2d');
 let particles = [];
 const mouse = { x: null, y: null, radius: 150 };
 window.addEventListener('mousemove', (e) => { mouse.x = e.x; mouse.y = e.y; });
+
 class Particle {
-    constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.size = Math.random() * 2 + 1; this.speedX = Math.random() * 1 - 0.5; this.speedY = Math.random() * 1 - 0.5; }
-    update() { this.x += this.speedX; this.y += this.speedY; if (this.x > canvas.width || this.x < 0) this.speedX *= -1; if (this.y > canvas.height || this.y < 0) this.speedY *= -1; let dx = mouse.x - this.x; let dy = mouse.y - this.y; let dist = Math.sqrt(dx * dx + dy * dy); if (distance < mouse.radius) { if (mouse.x < this.x && this.x < canvas.width - 10) this.x += 2; if (mouse.x > this.x && this.x > 10) this.x -= 2; if (mouse.y < this.y && this.y < canvas.height - 10) this.y += 2; if (mouse.y > this.y && this.y > 10) this.y -= 2; } }
+    constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2 + 1;
+        this.speedX = (Math.random() - 0.5) * 1.5;
+        this.speedY = (Math.random() - 0.5) * 1.5;
+    }
+    update() {
+        this.x += this.speedX; this.y += this.speedY;
+        if (this.x > canvas.width || this.x < 0) this.speedX *= -1;
+        if (this.y > canvas.height || this.y < 0) this.speedY *= -1;
+        let dx = mouse.x - this.x; let dy = mouse.y - this.y;
+        let dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < mouse.radius) {
+            if (mouse.x < this.x && this.x < canvas.width - 10) this.x += 2;
+            if (mouse.x > this.x && this.x > 10) this.x -= 2;
+            if (mouse.y < this.y && this.y < canvas.height - 10) this.y += 2;
+            if (mouse.y > this.y && this.y > 10) this.y -= 2;
+        }
+    }
     draw() { ctx.fillStyle = 'rgba(255, 215, 0, 0.8)'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
 }
-function initNodes() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; particles = []; let n = (canvas.height * canvas.width) / 9000; for (let i = 0; i < n; i++) particles.push(new Particle()); }
-function animateNodes() { ctx.clearRect(0, 0, canvas.width, canvas.height); for (let i = 0; i < particles.length; i++) { particles[i].update(); particles[i].draw(); for (let j = i; j < particles.length; j++) { let dx = particles[i].x - particles[j].x; let dy = particles[i].y - particles[j].y; let dist = Math.sqrt(dx * dx + dy * dy); if (dist < 150) { ctx.strokeStyle = `rgba(255, 215, 0, ${1 - dist/150})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke(); } } } requestAnimationFrame(animateNodes); }
 
-// --- RECOVERED R3 ADMIN LOGIC ---
-function setBroadcast() { db.ref('settings/broadcast').set(document.getElementById('bc-input').value).then(()=>alert("ALERT LIVE")); }
-function banIP() { let ip = document.getElementById('ban-ip-input').value; if(!ip) return; db.ref('banned_ips').once('value', snap => { let list = snap.val() || []; list.push(ip); db.ref('banned_ips').set(list).then(()=>alert("IP TERMINATED")); }); }
-function addFeedMessage() { let t = document.getElementById('feed-input').value; if(t) db.ref('live_feed').push(t); document.getElementById('feed-input').value=""; }
-function deleteFeedMessage(k) { db.ref('live_feed/' + k).remove(); }
+function initNodes() {
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    particles = []; let n = (canvas.height * canvas.width) / 9000;
+    for (let i = 0; i < n; i++) particles.push(new Particle());
+}
 
-// --- CORE FUNCTIONS ---
+function animateNodes() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < particles.length; i++) {
+        particles[i].update(); particles[i].draw();
+        for (let j = i; j < particles.length; j++) {
+            let dx = particles[i].x - particles[j].x; let dy = particles[i].y - particles[j].y;
+            let dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 150) {
+                ctx.strokeStyle = `rgba(255, 215, 0, ${1 - dist/150})`;
+                ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y);
+                ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
+            }
+        }
+    }
+    requestAnimationFrame(animateNodes);
+}
+
+// --- CORE ADMIN FUNCTIONS ---
 function login() {
     if(document.getElementById('admin-pass').value === "spartytop1") {
-        isAdmin = true;
         document.getElementById('admin-controls').style.display = 'grid';
         document.getElementById('login-section').style.display = 'none';
         db.ref('support').on('value', snap => {
             const list = document.getElementById('admin-chat-sessions'); list.innerHTML = "";
-            snap.forEach(child => { let ip = child.key; let div = document.createElement('div'); div.className = "chat-session-item"; div.innerText = "IP: " + ip.replace(/_/g, '.'); div.onclick = () => openAdminChat(ip); list.appendChild(div); });
+            snap.forEach(c => { let ip = c.key; let div = document.createElement('div'); div.style.cursor='pointer'; div.innerText = "IP: " + ip.replace(/_/g,'.'); div.onclick = () => openAdminChat(ip); list.appendChild(div); });
         });
-        db.ref('intel').limitToLast(30).on('value', s => { let l = s.val() ? Object.values(s.val()).reverse() : []; document.getElementById('pay-attempts-list').innerHTML = l.map(i => `<div>${i}</div>`).join(''); });
-        db.ref('banned_ips').on('value', snap => { let l = snap.val() || []; document.getElementById('ban-list').innerHTML = l.map(ip => `<div>${ip}</div>`).join(''); });
-        displayProducts();
+        db.ref('intel').limitToLast(20).on('value', s => { let l = s.val() ? Object.values(s.val()).reverse() : []; document.getElementById('intel-logs').innerHTML = l.map(i => `<div>${i}</div>`).join(''); });
+        db.ref('banned_ips').on('value', s => { let l = s.val() || []; document.getElementById('ban-list').innerHTML = l.map(ip => `<div>${ip}</div>`).join(''); });
     }
 }
-function openAdminChat(ip) { activeAdminSession = ip; document.getElementById('admin-chat-view').style.display = 'block'; db.ref('support/' + ip).on('value', snap => { let box = document.getElementById('admin-chat-messages'); box.innerHTML = ""; snap.forEach(c => { let m = c.val(); box.innerHTML += `<div class="msg msg-${m.sender}">${m.text}</div>`; }); box.scrollTop = box.scrollHeight; }); }
-function sendAdminReply() { let m = document.getElementById('admin-chat-input').value; if(m && activeAdminSession) db.ref('support/' + activeAdminSession).push({ sender: 'admin', text: m, timestamp: Date.now() }); document.getElementById('admin-chat-input').value = ""; }
-function addProduct() { let n=document.getElementById('p-name').value, p=document.getElementById('p-price').value, c=document.getElementById('p-cat').value, f=document.getElementById('p-img').files[0]; let r = new FileReader(); r.onload = (e) => { products.push({ name:n, price:p, category:c, image: e.target.result }); db.ref('products').set(products).then(() => alert("SYNC COMPLETE")); }; if(f) r.readAsDataURL(f); }
-function displayProducts() { db.ref('products').on('value', snap => { products = snap.val() || []; const andr = document.getElementById("android-grid"), ios = document.getElementById("ios-grid"); andr.innerHTML = ""; ios.innerHTML = ""; products.forEach((p, i) => { let div = document.createElement("div"); div.className = "product"; div.innerHTML = `<img src="${p.image}" onclick="showInfo(${i})"><h3>${p.name}</h3><div style="color:var(--price-gold); font-weight:bold;">$${p.price}</div><button onclick="addToCart(${i})" class="ui-btn" style="width:100%; border:none;">BUY</button>`; p.category === "ios" ? ios.appendChild(div) : andr.appendChild(div); }); }); }
-function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='none'; }
+
+function openAdminChat(ip) { activeAdminSession = ip; document.getElementById('admin-chat-view').style.display='block'; db.ref('support/'+ip).on('value', s => { let b = document.getElementById('admin-chat-messages'); b.innerHTML = ""; s.forEach(c => { b.innerHTML += `<div class="msg msg-${c.val().sender}">${c.val().text}</div>`; }); b.scrollTop = b.scrollHeight; }); }
+function sendAdminReply() { let m = document.getElementById('admin-chat-input').value; if(m && activeAdminSession) db.ref('support/'+activeAdminSession).push({sender:'admin', text:m}); document.getElementById('admin-chat-input').value=""; }
+function setBroadcast() { db.ref('settings/broadcast').set(document.getElementById('bc-input').value); }
+function banIP() { let ip = document.getElementById('ban-ip-input').value; db.ref('banned_ips').once('value', s => { let l = s.val() || []; l.push(ip); db.ref('banned_ips').set(l); }); }
+function addFeedMessage() { db.ref('live_feed').push(document.getElementById('feed-input').value); document.getElementById('feed-input').value=""; }
+function deleteFeed(k) { db.ref('live_feed/'+k).remove(); }
+
+// --- SHOP LOGIC ---
+function displayProducts() {
+    db.ref('products').on('value', snap => {
+        products = snap.val() || [];
+        const andr = document.getElementById("android-grid"), ios = document.getElementById("ios-grid");
+        andr.innerHTML = ""; ios.innerHTML = "";
+        products.forEach((p, i) => {
+            let div = document.createElement("div"); div.className = "product";
+            div.innerHTML = `<img src="${p.image}"><h3>${p.name}</h3><div style="color:var(--price-gold)">$${p.price}</div><button onclick="addToCart(${i})" class="ui-btn" style="width:100%">ADD</button>`;
+            p.category === "ios" ? ios.appendChild(div) : andr.appendChild(div);
+        });
+    });
+}
+function addToCart(i) { cart.push(products[i]); document.getElementById('cart-count').innerText = cart.length; db.ref('intel').push(`ADD_CART | ${userIP} | ${products[i].name}`); }
+function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('checkout-page').style.display='none'; }
 function showCheckout() { document.getElementById('shop-page').style.display='none'; document.getElementById('checkout-page').style.display='block'; renderCart(); }
-function addToCart(i) { document.getElementById('snd-click').play().catch(()=>{}); cart.push(products[i]); updateCartCount(); db.ref('intel').push(`CART_ADD | ${userIP} | ${products[i].name}`); }
-function updateCartCount() { document.getElementById('cart-count').innerText = cart.length; }
-function renderCart() { let l=document.getElementById('cart-list'), t=0; l.innerHTML = ""; cart.forEach((item, index) => { l.innerHTML += `<div style="padding:10px; border-bottom:1px solid #222; display:flex; justify-content:space-between;"><span>${item.name} - $${item.price}</span></div>`; t += parseFloat(item.price); }); document.getElementById('total-usd').innerText = "TOTAL: $" + t.toFixed(2); }
-function toggleChatWindow() { let win = document.getElementById('chat-window'); win.style.display = win.style.display === 'flex' ? 'none' : 'flex'; if(win.style.display === 'flex') listenForMessages(); }
-function sendChatMessage() { let m = document.getElementById('chat-input').value; if(m && userIP !== "unknown") { let ip = userIP.replace(/\./g, '_'); db.ref('support/' + ip).push({ sender: 'user', text: m, timestamp: Date.now() }); document.getElementById('chat-input').value = ""; } }
-function listenForMessages() { let ip = userIP.replace(/\./g, '_'); db.ref('support/' + ip).on('value', snap => { let box = document.getElementById('chat-messages'); box.innerHTML = ""; snap.forEach(c => { let m = c.val(); box.innerHTML += `<div class="msg msg-${m.sender}">${m.text}</div>`; }); box.scrollTop = box.scrollHeight; }); }
+function renderCart() { let l = document.getElementById('cart-list'), t = 0; l.innerHTML = ""; cart.forEach(i => { l.innerHTML += `<div>${i.name} - $${i.price}</div>`; t += parseFloat(i.price); }); document.getElementById('total-usd').innerText = "TOTAL: $"+t; }
+
+function toggleChatWindow() { let w = document.getElementById('chat-window'); w.style.display = w.style.display === 'flex' ? 'none' : 'flex'; if(w.style.display==='flex') listenMessages(); }
+function sendChatMessage() { let m = document.getElementById('chat-input').value; if(m && userIP !== "unknown"){ db.ref('support/'+userIP.replace(/\./g,'_')).push({sender:'user', text:m}); document.getElementById('chat-input').value=""; } }
+function listenMessages() { db.ref('support/'+userIP.replace(/\./g,'_')).on('value', s => { let b = document.getElementById('chat-messages'); b.innerHTML = ""; s.forEach(c => { b.innerHTML += `<div class="msg msg-${c.val().sender}">${c.val().text}</div>`; }); b.scrollTop = b.scrollHeight; }); }
+
 function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play().then(()=>musicStarted=true).catch(()=>{}); } }
 function toggleMusic(e) { e.stopPropagation(); let m = document.getElementById('hacker-music'); m.paused ? m.play() : m.pause(); }
 function toggleTheme() { document.body.classList.toggle('blue-theme'); }
-function closeAdmin() { document.getElementById('admin-terminal').style.display = 'none'; }
+function closeAdmin() { document.getElementById('admin-terminal').style.display='none'; }
 
 window.onload = () => {
     initNodes(); animateNodes(); displayProducts();
-    db.ref('live_feed').on('value', snap => {
-        let marquee = document.getElementById('main-ticker');
-        let adminList = document.getElementById('admin-feed-list');
-        let txt = " >>> R4 SYSTEM ACTIVE :: "; adminList.innerHTML = "";
-        snap.forEach(c => { txt += `${c.val()} :: `; adminList.innerHTML += `<div style="padding:5px; border-bottom:1px solid #222; display:flex; justify-content:space-between;"><span>${c.val()}</span><button onclick="deleteFeedMessage('${c.key}')" style="color:red; background:none; border:none; cursor:pointer;">[X]</button></div>`; });
-        marquee.innerText = txt;
+    db.ref('live_feed').on('value', s => {
+        let mt = document.getElementById('main-ticker'), al = document.getElementById('admin-feed-list');
+        let full = " >>> SYSTEM ACTIVE :: "; al.innerHTML = "";
+        s.forEach(c => { full += `${c.val()} :: `; al.innerHTML += `<div>${c.val()} <button onclick="deleteFeed('${c.key}')" style="color:red; background:none; border:none;">[X]</button></div>`; });
+        mt.innerText = full;
     });
-    db.ref('settings/broadcast').on('value', s => { let b = document.getElementById('global-alert-banner'); if(s.val()){ b.innerText = "⚠️ SYSTEM: "+s.val(); b.style.display='block'; } else b.style.display='none'; });
+    db.ref('settings/broadcast').on('value', s => { let b = document.getElementById('global-alert-banner'); if(s.val()){ b.innerText = "⚠️ "+s.val(); b.style.display='block'; } else b.style.display='none'; });
     let lb = document.getElementById('load-bar'), p = 0;
     let int = setInterval(() => { p += 2; lb.style.width = p + "%"; if(p>=100){ clearInterval(int); document.getElementById('loader-overlay').style.display='none'; } }, 30);
 };
