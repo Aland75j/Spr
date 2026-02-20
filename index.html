@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MAXIOM R4 | BEAST EDITION</title>
+    <title>MAXIOM R4 | PRIVATE EDITION</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -178,12 +178,12 @@
 
 <div id="chat-widget">
     <div id="chat-header">
-        <span id="chat-title">R4 SECURE CHAT</span> 
+        <span id="chat-title">SECURE BRIDGE</span> 
         <span onclick="toggleChat()" style="cursor:pointer">X</span>
     </div>
     <div id="chat-msgs"></div>
     <div class="chat-input-wrap">
-        <input type="text" id="chat-input" placeholder="Enter message..." onkeydown="if(event.key==='Enter') sendChat()">
+        <input type="text" id="chat-input" placeholder="Message Admin..." onkeydown="if(event.key==='Enter') sendChat()">
         <button onclick="sendChat()" style="background:var(--primary); border:none; padding:10px; cursor:pointer">></button>
     </div>
 </div>
@@ -241,7 +241,7 @@
 
     <div id="admin-controls" style="display:none;" class="admin-layout">
         <div class="panel-box">
-            <h3>📡 LIVE INTEL (CLICK IP TO CHAT)</h3>
+            <h3>📡 INTEL (CLICK TO OPEN PRIVATE CHAT)</h3>
             <div id="pay-attempts-list" style="font-size:11px; color:yellow; background:#111; padding:10px; height:200px; overflow-y:auto; border:1px solid #333;">Scanning...</div>
             <button onclick="db.ref('intel').set(null)" class="ui-btn" style="width:100%; background:red; margin-top:5px;">WIPE ALL INTEL</button>
             
@@ -249,14 +249,6 @@
             <input type="text" id="c-code" placeholder="CODE">
             <input type="number" id="c-perc" placeholder="DISCOUNT %">
             <button onclick="addCoupon()" class="ui-btn" style="width:100%;">GENERATE</button>
-            
-            <h3 style="margin-top:20px;">📢 BROADCAST</h3>
-            <input type="text" id="bc-input" placeholder="ALERT MESSAGE">
-            <input type="number" id="bc-timer" placeholder="MINUTES TO LIVE (0=infinite)">
-            <div style="display:flex; gap:5px;">
-                <button onclick="setBroadcast()" class="ui-btn" style="flex:1; background:orange; color:black;">SEND</button>
-                <button onclick="db.ref('settings/broadcast').set('')" class="ui-btn" style="flex:1; background:red;">DELETE</button>
-            </div>
         </div>
 
         <div class="panel-box">
@@ -282,19 +274,11 @@
             <h3 style="color:var(--secondary);">🛡️ ACCESS CONTROL</h3>
             <input type="text" id="ban-ip-input" placeholder="IP ADDRESS">
             <button onclick="banClientIP()" class="ui-btn" style="width:100%; background:red; color:white;">BLOCK ACCESS</button>
-            <button onclick="clearBans()" class="ui-btn" style="width:100%; background:orange; color:black; margin-top:5px;">CLEAR ALL BANS</button>
             
-            <h3 style="margin-top:20px;">💬 MODERATE CHAT</h3>
-            <div id="active-target-display" style="color:lime; font-size:10px; margin-bottom:5px;">No Target Selected</div>
-            <button onclick="db.ref('chat').set(null)" class="ui-btn" style="width:100%; background:red;">CLEAR ALL MESSAGES</button>
-            <button onclick="resetTarget()" class="ui-btn" style="width:100%; margin-top:5px; background:gray;">RESET TARGET</button>
-            
-            <h3 style="margin-top:20px;">🎨 THEME CONFIG</h3>
-            <button onclick="toggleTheme()" class="ui-btn" style="width:100%;">TOGGLE SYSTEM THEME</button>
-            <hr style="border-color:#222; margin:15px 0;">
-            <h3>🔑 GATEWAY CONFIG</h3>
-            <input type="text" id="pp-id-input" placeholder="PAYPAL CLIENT ID">
-            <button onclick="savePPID()" class="ui-btn" style="width:100%;">UPDATE GATEWAY</button>
+            <h3 style="margin-top:20px;">💬 PRIVATE CHANNEL</h3>
+            <div id="active-target-display" style="color:lime; font-size:10px; margin-bottom:5px;">Target: User_Self</div>
+            <button onclick="if(chatTarget!=='NONE') db.ref('private_chats/'+chatTarget).set(null)" class="ui-btn" style="width:100%; background:red;">WIPE THIS CHANNEL</button>
+            <button onclick="resetTarget()" class="ui-btn" style="width:100%; margin-top:5px; background:gray;">DISCONNECT BRIDGE</button>
         </div>
     </div>
 </div>
@@ -309,40 +293,36 @@
 
 <script>
 let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicStarted = false;
-let userIP = "Scanning...", userID = "Unknown", chatTarget = "GLOBAL";
+let userIP = "Scanning...", userID = "Unknown", chatTarget = "NONE";
 
-// Chat System Upgrade
+// PRIVACY UPGRADE: Chat is now strictly point-to-point (Admin <-> UserID)
 function toggleChat() { let c = document.getElementById('chat-widget'); c.style.display = (c.style.display==='flex')?'none':'flex'; }
 
 function sendChat() {
     let inp = document.getElementById('chat-input');
     if(!inp.value.trim()) return;
     
-    // Logic: If Admin, send as ADMIN to specific target or Global. If User, send as User_ID.
-    let chatPath = (isAdmin && chatTarget !== "GLOBAL") ? `private_chats/${chatTarget}` : 'chat';
-    if (!isAdmin && chatTarget === "GLOBAL") {
-        // Users send to their own private bridge or global depending on your preference.
-        // For this specific request, we use ID based routing.
-        chatPath = `private_chats/${userID}`;
-    }
+    // Admin speaks to chatTarget, User speaks to their own room (userID)
+    let room = isAdmin ? chatTarget : userID;
+    if(room === "NONE") return alert("SELECT A TARGET FIRST");
 
-    db.ref(chatPath).push({ 
+    db.ref(`private_chats/${room}`).push({ 
         sender: isAdmin ? "ADMIN" : `User_${userID}`, 
         msg: inp.value, 
-        ip: userIP,
         time: Date.now() 
     });
     inp.value = "";
 }
 
-// Global Chat Listener for Main Hub / Private Chat Listener for Admin
 function syncChat() {
-    let path = (isAdmin && chatTarget !== "GLOBAL") ? `private_chats/${chatTarget}` : `private_chats/${userID}`;
-    
-    db.ref(path).on('value', s => {
+    let room = isAdmin ? chatTarget : userID;
+    if(room === "NONE") return;
+
+    db.ref(`private_chats/${room}`).off(); // Clean old listener
+    db.ref(`private_chats/${room}`).on('value', s => {
         let list = s.val() ? Object.values(s.val()) : [];
         document.getElementById('chat-msgs').innerHTML = list.map(m => `
-            <div><b style="color:${m.sender === "ADMIN" ? "red" : "var(--primary)"}">${m.sender}</b>: ${m.msg}</div>
+            <div style="margin-bottom:5px;"><b style="color:${m.sender === "ADMIN" ? "#00ff00" : "var(--primary)"}">${m.sender}</b>: ${m.msg}</div>
         `).join('');
         let div = document.getElementById('chat-msgs'); div.scrollTop = div.scrollHeight;
     });
@@ -350,27 +330,26 @@ function syncChat() {
 
 function targetUser(targetID) {
     chatTarget = targetID;
-    document.getElementById('active-target-display').innerText = "TARGETING: User_" + targetID;
-    document.getElementById('chat-title').innerText = "PRIVATE: User_" + targetID;
+    document.getElementById('active-target-display').innerText = "Target: User_" + targetID;
+    document.getElementById('chat-title').innerText = "BRIDGE: User_" + targetID;
     syncChat();
     toggleChat();
 }
 
 function resetTarget() {
-    chatTarget = "GLOBAL";
-    document.getElementById('active-target-display').innerText = "No Target Selected";
-    document.getElementById('chat-title').innerText = "R4 SECURE CHAT";
-    syncChat();
+    chatTarget = "NONE";
+    document.getElementById('active-target-display').innerText = "Target: User_Self";
+    document.getElementById('chat-title').innerText = "SECURE BRIDGE";
+    document.getElementById('chat-msgs').innerHTML = "";
 }
 
-// Logic to extract IP for name
 async function getIdentity() {
     try {
         const r = await fetch('https://api.ipify.org?format=json');
         const d = await r.json();
         userIP = d.ip;
-        userID = userIP.split('.')[0]; // IP 144.132.1 becomes 144
-        syncChat();
+        userID = userIP.split('.')[0]; // IP 144.x.x.x becomes 144
+        if(!isAdmin) syncChat();
     } catch(e) { console.log("Identity Error"); }
 }
 
@@ -380,8 +359,6 @@ function toggleMusic(e) {
     let btn = document.getElementById('music-btn');
     if (m.paused) { m.play(); btn.innerText = "🔊 MUSIC: ON"; } else { m.pause(); btn.innerText = "🔇 MUSIC: OFF"; }
 }
-
-function clearBans() { if(confirm("LIFT ALL IP RESTRICTIONS?")) { db.ref('banned_ips').set([]).then(() => alert("ALL IPS AUTHORIZED")); } }
 
 function displayProducts() {
     db.ref('products').on('value', (snap) => {
@@ -457,11 +434,8 @@ function addToCart(i) {
     sound.currentTime = 0; sound.play().catch(()=>{});
     cart.push(products[i]);
     updateCartCount();
-    db.ref('intel').push({ id: Date.now(), text: `CART_ADD | ${userIP} | ${products[i].name}`, owner: userIP.split('.')[0] });
+    db.ref('intel').push({ id: Date.now(), text: `VISIT | ${userIP} | ${products[i].name}`, owner: userIP.split('.')[0] });
 }
-
-function editIntel(key, text) { let n = prompt("Edit Feed Entry:", text); if(n) db.ref('intel/'+key).update({text: n}); }
-function delIntel(key) { if(confirm("Delete entry?")) db.ref('intel/'+key).remove(); }
 
 function updateCartCount() { document.getElementById('cart-count').innerText = cart.length; }
 function clearCart() { cart = []; updateCartCount(); renderCart(); }
@@ -506,15 +480,12 @@ function login() {
             const val = s.val() || {};
             document.getElementById('pay-attempts-list').innerHTML = Object.keys(val).reverse().map(k => {
                 let currentOwner = val[k].owner || val[k].text.split('|')[1].trim().split('.')[0];
-                return `
-                <div style="margin-bottom:5px; border-bottom:1px solid #333; cursor:pointer;" onclick="targetUser('${currentOwner}')">
-                    [TARGET User_${currentOwner}] ${val[k].text} 
-                    <span style="color:red" onclick="event.stopPropagation(); delIntel('${k}')">[X]</span>
+                return `<div style="margin-bottom:5px; border-bottom:1px solid #333; cursor:pointer;" onclick="targetUser('${currentOwner}')">
+                    [BRIDGE] User_${currentOwner}: ${val[k].text}
                 </div>`;
             }).join(''); 
         });
         db.ref('coupons').on('value', s => { coupons = s.val() || {}; });
-        db.ref('settings/paypal_id').once('value', s => document.getElementById('pp-id-input').value = s.val() || "");
         renderAdminAssets();
     }
 }
@@ -526,15 +497,6 @@ function banClientIP() {
 
 function savePPID() { db.ref('settings/paypal_id').set(document.getElementById('pp-id-input').value).then(()=>alert("UPDATED")); }
 function addCoupon() { db.ref('coupons/'+document.getElementById('c-code').value.toUpperCase()).set(document.getElementById('c-perc').value).then(()=>alert("COUPON SAVED")); }
-
-function setBroadcast() {
-    const msg = document.getElementById('bc-input').value;
-    const time = parseInt(document.getElementById('bc-timer').value) || 0;
-    db.ref('settings/broadcast').set(msg).then(() => {
-        alert("BROADCAST LIVE");
-        if(time > 0) setTimeout(() => { db.ref('settings/broadcast').set(""); }, time * 60000);
-    });
-}
 
 function showInfo(i) {
     const p = products[i];
