@@ -99,7 +99,6 @@
         }
         .cart-count { position: absolute; top: -5px; right: -5px; background: var(--secondary); color: white; font-size: 14px; padding: 5px 9px; border-radius: 50%; }
 
-        /* Live Chat Styling */
         #chat-widget { position: fixed; bottom: 60px; right: 20px; width: 300px; height: 400px; background: var(--glass); border: 2px solid var(--primary); z-index: 9998; display: none; flex-direction: column; border-radius: 10px; overflow: hidden; }
         #chat-header { background: var(--primary); color: #000; padding: 10px; font-weight: bold; display: flex; justify-content: space-between; }
         #chat-msgs { flex: 1; overflow-y: auto; padding: 10px; font-size: 12px; text-align: left; }
@@ -123,10 +122,6 @@
         .intel-ticker-wrap { position: fixed; bottom: 0; left: 0; width: 100%; height: 45px; background: rgba(0,0,0,0.9); border-top: 2px solid var(--primary); z-index: 9999; display: flex; align-items: center; }
         .intel-ticker-label { background: var(--primary); color: #000; font-weight: bold; padding: 0 15px; height: 100%; display: flex; align-items: center; }
         
-        ::–webkit-scrollbar { width: 8px; }
-        ::–webkit-scrollbar-track { background: #000; }
-        ::–webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
-
         @media (max-width: 768px) {
             header { font-size: 30px; letter-spacing: 4px; padding: 20px 0; }
             .header-container { padding: 30px 0; }
@@ -182,7 +177,10 @@
 </div>
 
 <div id="chat-widget">
-    <div id="chat-header"><span>R4 SECURE CHAT</span> <span onclick="toggleChat()" style="cursor:pointer">X</span></div>
+    <div id="chat-header">
+        <span id="chat-title">R4 SECURE CHAT</span> 
+        <span onclick="toggleChat()" style="cursor:pointer">X</span>
+    </div>
     <div id="chat-msgs"></div>
     <div class="chat-input-wrap">
         <input type="text" id="chat-input" placeholder="Enter message..." onkeydown="if(event.key==='Enter') sendChat()">
@@ -243,7 +241,7 @@
 
     <div id="admin-controls" style="display:none;" class="admin-layout">
         <div class="panel-box">
-            <h3>📡 LIVE INTEL (EDIT/DEL)</h3>
+            <h3>📡 LIVE INTEL (CLICK IP TO CHAT)</h3>
             <div id="pay-attempts-list" style="font-size:11px; color:yellow; background:#111; padding:10px; height:200px; overflow-y:auto; border:1px solid #333;">Scanning...</div>
             <button onclick="db.ref('intel').set(null)" class="ui-btn" style="width:100%; background:red; margin-top:5px;">WIPE ALL INTEL</button>
             
@@ -287,7 +285,9 @@
             <button onclick="clearBans()" class="ui-btn" style="width:100%; background:orange; color:black; margin-top:5px;">CLEAR ALL BANS</button>
             
             <h3 style="margin-top:20px;">💬 MODERATE CHAT</h3>
+            <div id="active-target-display" style="color:lime; font-size:10px; margin-bottom:5px;">No Target Selected</div>
             <button onclick="db.ref('chat').set(null)" class="ui-btn" style="width:100%; background:red;">CLEAR ALL MESSAGES</button>
+            <button onclick="resetTarget()" class="ui-btn" style="width:100%; margin-top:5px; background:gray;">RESET TARGET</button>
             
             <h3 style="margin-top:20px;">🎨 THEME CONFIG</h3>
             <button onclick="toggleTheme()" class="ui-btn" style="width:100%;">TOGGLE SYSTEM THEME</button>
@@ -308,21 +308,71 @@
 <audio id="snd-click" src="https://www.myinstants.com/media/sounds/sword-slash.mp3"></audio>
 
 <script>
-let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicStarted = false, userIP = "Unknown";
+let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicStarted = false;
+let userIP = "Scanning...", userID = "Unknown", chatTarget = "GLOBAL";
 
-// Chat Functions
+// Chat System Upgrade
 function toggleChat() { let c = document.getElementById('chat-widget'); c.style.display = (c.style.display==='flex')?'none':'flex'; }
+
 function sendChat() {
     let inp = document.getElementById('chat-input');
     if(!inp.value.trim()) return;
-    db.ref('chat').push({ ip: userIP, msg: inp.value, time: Date.now() });
+    
+    // Logic: If Admin, send as ADMIN to specific target or Global. If User, send as User_ID.
+    let chatPath = (isAdmin && chatTarget !== "GLOBAL") ? `private_chats/${chatTarget}` : 'chat';
+    if (!isAdmin && chatTarget === "GLOBAL") {
+        // Users send to their own private bridge or global depending on your preference.
+        // For this specific request, we use ID based routing.
+        chatPath = `private_chats/${userID}`;
+    }
+
+    db.ref(chatPath).push({ 
+        sender: isAdmin ? "ADMIN" : `User_${userID}`, 
+        msg: inp.value, 
+        ip: userIP,
+        time: Date.now() 
+    });
     inp.value = "";
 }
-db.ref('chat').on('value', s => {
-    let list = s.val() ? Object.values(s.val()) : [];
-    document.getElementById('chat-msgs').innerHTML = list.map(m => `<div><b style="color:var(--primary)">${m.ip.split('.').slice(-1)[0]}</b>: ${m.msg}</div>`).join('');
-    let div = document.getElementById('chat-msgs'); div.scrollTop = div.scrollHeight;
-});
+
+// Global Chat Listener for Main Hub / Private Chat Listener for Admin
+function syncChat() {
+    let path = (isAdmin && chatTarget !== "GLOBAL") ? `private_chats/${chatTarget}` : `private_chats/${userID}`;
+    
+    db.ref(path).on('value', s => {
+        let list = s.val() ? Object.values(s.val()) : [];
+        document.getElementById('chat-msgs').innerHTML = list.map(m => `
+            <div><b style="color:${m.sender === "ADMIN" ? "red" : "var(--primary)"}">${m.sender}</b>: ${m.msg}</div>
+        `).join('');
+        let div = document.getElementById('chat-msgs'); div.scrollTop = div.scrollHeight;
+    });
+}
+
+function targetUser(targetID) {
+    chatTarget = targetID;
+    document.getElementById('active-target-display').innerText = "TARGETING: User_" + targetID;
+    document.getElementById('chat-title').innerText = "PRIVATE: User_" + targetID;
+    syncChat();
+    toggleChat();
+}
+
+function resetTarget() {
+    chatTarget = "GLOBAL";
+    document.getElementById('active-target-display').innerText = "No Target Selected";
+    document.getElementById('chat-title').innerText = "R4 SECURE CHAT";
+    syncChat();
+}
+
+// Logic to extract IP for name
+async function getIdentity() {
+    try {
+        const r = await fetch('https://api.ipify.org?format=json');
+        const d = await r.json();
+        userIP = d.ip;
+        userID = userIP.split('.')[0]; // IP 144.132.1 becomes 144
+        syncChat();
+    } catch(e) { console.log("Identity Error"); }
+}
 
 function toggleMusic(e) { 
     if(e) e.stopPropagation();
@@ -407,10 +457,9 @@ function addToCart(i) {
     sound.currentTime = 0; sound.play().catch(()=>{});
     cart.push(products[i]);
     updateCartCount();
-    db.ref('intel').push({ id: Date.now(), text: `CART_ADD | ${userIP} | ${products[i].name}` });
+    db.ref('intel').push({ id: Date.now(), text: `CART_ADD | ${userIP} | ${products[i].name}`, owner: userIP.split('.')[0] });
 }
 
-// Live Feed Edit/Delete
 function editIntel(key, text) { let n = prompt("Edit Feed Entry:", text); if(n) db.ref('intel/'+key).update({text: n}); }
 function delIntel(key) { if(confirm("Delete entry?")) db.ref('intel/'+key).remove(); }
 
@@ -455,13 +504,14 @@ function login() {
         document.getElementById('login-section').style.display = 'none';
         db.ref('intel').limitToLast(50).on('value', s => { 
             const val = s.val() || {};
-            document.getElementById('pay-attempts-list').innerHTML = Object.keys(val).reverse().map(k => `
-                <div style="margin-bottom:5px; border-bottom:1px solid #222;">
-                    ${val[k].text} 
-                    <span style="color:lime" onclick="editIntel('${k}', '${val[k].text}')">[E]</span>
-                    <span style="color:red" onclick="delIntel('${k}')">[X]</span>
-                </div>
-            `).join(''); 
+            document.getElementById('pay-attempts-list').innerHTML = Object.keys(val).reverse().map(k => {
+                let currentOwner = val[k].owner || val[k].text.split('|')[1].trim().split('.')[0];
+                return `
+                <div style="margin-bottom:5px; border-bottom:1px solid #333; cursor:pointer;" onclick="targetUser('${currentOwner}')">
+                    [TARGET User_${currentOwner}] ${val[k].text} 
+                    <span style="color:red" onclick="event.stopPropagation(); delIntel('${k}')">[X]</span>
+                </div>`;
+            }).join(''); 
         });
         db.ref('coupons').on('value', s => { coupons = s.val() || {}; });
         db.ref('settings/paypal_id').once('value', s => document.getElementById('pp-id-input').value = s.val() || "");
@@ -516,7 +566,7 @@ function drawMatrix() {
 }
 
 window.onload = () => {
-    fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=> userIP = d.ip);
+    getIdentity();
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
     drops = Array(Math.floor(canvas.width/20)).fill(1);
     setInterval(drawMatrix, 50);
