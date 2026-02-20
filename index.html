@@ -30,8 +30,6 @@
                     const r = await fetch('https://api.ipify.org?format=json');
                     const d = await r.json();
                     userIP = d.ip;
-                    const dbSafeIP = userIP.replace(/\./g, '_');
-                    
                     db.ref('banned_ips').on('value', (snap) => {
                         const list = snap.val() || [];
                         if(list.includes(userIP)) {
@@ -58,35 +56,25 @@
         :root {
             --primary: #ffd700;
             --secondary: #ff0000;
-            --matrix: rgba(0, 255, 65, 0.6);
             --bg-main: #050505;
             --glass: rgba(0, 0, 0, 0.9);
             --price-gold: #ffcc00;
         }
-        .blue-theme { --primary: #00d4ff; --secondary: #0044ff; --matrix: rgba(0, 212, 255, 0.6); --bg-main: #000510; }
+        .blue-theme { --primary: #00d4ff; --secondary: #0044ff; --bg-main: #000510; }
 
         * { cursor: crosshair !important; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: 'Courier New', monospace; color: white; text-align: center; background: var(--bg-main); transition: 0.5s; overflow-x: hidden; padding-bottom: 80px; }
 
+        #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background: radial-gradient(circle at center, #0a0a0a 0%, #000 100%); }
+
         #global-alert-banner { display: none; position: fixed; top: 0; left: 0; width: 100%; background: var(--secondary); color: white; padding: 10px; z-index: 100000; font-weight: bold; border-bottom: 2px solid white; }
 
-        #loader-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 99999; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-        }
-        .terminal-loader {
-            width: 80%; max-width: 600px; height: 300px; background: #000;
-            border: 1px solid #00ff41; padding: 20px; text-align: left;
-            font-size: 14px; overflow: hidden; position: relative;
-            box-shadow: 0 0 30px rgba(0, 255, 65, 0.2);
-        }
+        #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .terminal-loader { width: 80%; max-width: 600px; height: 300px; background: #000; border: 1px solid #00ff41; padding: 20px; text-align: left; font-size: 14px; overflow: hidden; position: relative; box-shadow: 0 0 30px rgba(0, 255, 65, 0.2); }
         .skull-ascii { color: #ffd700; font-size: 8px; line-height: 8px; white-space: pre; margin-bottom: 15px; text-align: center;}
         #load-logs { color: #00ff41; height: 180px; overflow: hidden; }
         .load-bar-container { width: 100%; height: 10px; background: #111; border: 1px solid #00ff41; margin-top: 20px; position: relative; }
         #load-bar { width: 0%; height: 100%; background: #00ff41; box-shadow: 0 0 10px #00ff41; transition: 0.2s; }
-
-        #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background: var(--bg-main); }
 
         .header-container { padding: 50px 0; }
         header { font-size: 50px; font-weight: bold; color: var(--primary); text-shadow: 0 0 20px var(--primary); letter-spacing: 10px; }
@@ -94,12 +82,7 @@
         .top-nav { position: fixed; top: 20px; left: 20px; z-index: 4000; display: flex; gap: 10px; }
         .ui-btn { padding: 10px 15px; background: var(--primary); color: #000; border: 2px solid #fff; font-weight: bold; border-radius: 5px; font-size: 12px; cursor: pointer; }
 
-        .floating-cart {
-            position: fixed; top: 20px; right: 20px; background: var(--primary); width: 70px; height: 70px;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;
-            z-index: 10000; color: black; box-shadow: 0 0 25px var(--primary); border: 3px solid #fff;
-            font-size: 24px;
-        }
+        .floating-cart { position: fixed; top: 20px; right: 20px; background: var(--primary); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10000; color: black; box-shadow: 0 0 25px var(--primary); border: 3px solid #fff; font-size: 24px; }
         .cart-count { position: absolute; top: -5px; right: -5px; background: var(--secondary); color: white; font-size: 14px; padding: 5px 9px; border-radius: 50%; }
 
         .cat-label { margin: 40px auto; padding: 15px; background: var(--glass); border-top: 2px solid var(--primary); border-bottom: 2px solid var(--primary); max-width: 900px; font-size: 28px; font-weight: bold; color: var(--primary); }
@@ -108,14 +91,14 @@
         .product:hover { transform: translateY(-10px); border-color: var(--primary); }
         .product img { width: 100%; height: 160px; object-fit: cover; border-radius: 5px; }
 
-        /* Admin Controls */
+        /* Admin Layout */
         .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 20000; padding: 40px; overflow-y: auto; text-align: left; }
         .admin-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
         .panel-box { background: #080808; border: 1px solid #333; padding: 20px; border-radius: 8px; }
         .panel-box h3 { color: var(--primary); margin-top: 0; border-bottom: 1px solid #222; padding-bottom: 10px; }
         input, select, textarea { background: #111; border: 1px solid var(--primary); color: #fff; padding: 10px; margin: 5px 0; width: 100%; border-radius: 4px; }
 
-        /* Chat UI */
+        /* Support Chat UI */
         #chat-widget { position: fixed; bottom: 80px; right: 20px; z-index: 9999; }
         #chat-trigger { width: 60px; height: 60px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; border: 2px solid white; box-shadow: 0 0 15px var(--primary); }
         #chat-window { display: none; position: absolute; bottom: 70px; right: 0; width: 300px; height: 400px; background: #000; border: 2px solid var(--primary); border-radius: 10px; flex-direction: column; overflow: hidden; box-shadow: 0 0 30px rgba(0,0,0,1); }
@@ -124,23 +107,16 @@
         .msg { margin-bottom: 8px; padding: 8px 12px; border-radius: 5px; max-width: 85%; word-wrap: break-word; }
         .msg-user { background: #222; align-self: flex-start; border-left: 3px solid var(--primary); color: #fff; }
         .msg-admin { background: var(--primary); color: #000; align-self: flex-end; font-weight: bold; }
-        .chat-session-item { padding: 12px; border-bottom: 1px solid #222; cursor: pointer; color: lime; font-size: 12px; transition: 0.2s; }
-        .chat-session-item:hover { background: #111; padding-left: 20px; }
+        .chat-session-item { padding: 12px; border-bottom: 1px solid #222; cursor: pointer; color: lime; font-size: 11px; }
 
         #auth-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 60000; flex-direction: column; align-items: center; justify-content: center; }
-
         .intel-ticker-wrap { position: fixed; bottom: 0; left: 0; width: 100%; height: 45px; background: rgba(0,0,0,0.9); border-top: 2px solid var(--primary); z-index: 9999; display: flex; align-items: center; }
         .intel-ticker-label { background: var(--primary); color: #000; font-weight: bold; padding: 0 15px; height: 100%; display: flex; align-items: center; }
-        
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
 
         @media (max-width: 768px) {
-            header { font-size: 30px; letter-spacing: 4px; padding: 20px 0; }
-            .product { width: 45%; min-width: 160px; padding: 10px; }
-            .top-nav { top: auto; bottom: 65px; left: 10px; right: 10px; justify-content: center; }
-            .floating-cart { width: 55px; height: 55px; top: 10px; right: 10px; }
+            header { font-size: 30px; letter-spacing: 4px; }
+            .product { width: 45%; min-width: 160px; }
+            .top-nav { bottom: 65px; top: auto; width: 100%; left: 0; padding: 0 10px; }
         }
     </style>
 </head>
@@ -163,7 +139,7 @@
         <div id="load-logs"></div>
         <div class="load-bar-container"><div id="load-bar"></div></div>
     </div>
-    <div id="load-text" style="color: #00ff41; margin-top: 15px; font-weight: bold;">[ ROOT ACCESS GRANTED ]</div>
+    <div style="color: #00ff41; margin-top: 15px; font-weight: bold;">[ ROOT ACCESS GRANTED ]</div>
 </div>
 
 <canvas id="global-canvas"></canvas>
@@ -200,11 +176,8 @@
         <h2 style="color:var(--primary)">YOUR CART</h2>
         <div id="cart-list" style="text-align:left; min-height:100px;"></div>
         <button onclick="clearCart()" class="ui-btn" style="background:red; color:white; margin-bottom:10px;">EMPTY CART</button>
-        <hr style="border:1px solid #222;">
-        <input type="text" id="apply-coupon" placeholder="COUPON_CODE">
-        <button onclick="applyCoupon()" class="ui-btn" style="width:100%; margin-top:10px;">VALIDATE CODE</button>
         <h1 id="total-usd" style="color:var(--price-gold)">TOTAL: $0</h1>
-        <button onclick="triggerHackerPay()" style="width:100%; background:var(--primary); color:black; padding:20px; font-weight:bold; border:none; cursor:pointer; font-size:18px;">⚔️ FINISH PURCHASE</button>
+        <button onclick="triggerHackerPay()" style="width:100%; background:var(--primary); color:black; padding:20px; font-weight:bold; cursor:pointer; font-size:18px; border:none;">⚔️ FINISH PURCHASE</button>
     </div>
 </div>
 
@@ -215,7 +188,7 @@
         <h1 id="info-title" style="color:var(--primary)"></h1>
         <h2 id="info-price" style="color:var(--price-gold)"></h2>
         <p id="info-desc" style="line-height:1.6; font-size:18px;"></p>
-        <div id="info-btns" style="display:flex; flex-direction: column; gap:10px; justify-content:center;"></div>
+        <div id="info-btns" style="display:flex; flex-direction: column; gap:10px;"></div>
     </div>
 </div>
 
@@ -227,20 +200,17 @@
 
     <div id="login-section" style="text-align:center; padding-top:100px;">
         <input type="password" id="admin-pass" placeholder="MASTER ROOT KEY" style="max-width:400px; font-size: 20px;">
-        <button onclick="login()" class="ui-btn" style="width:400px; margin-top:20px; display:block; margin-left:auto; margin-right:auto;">DECRYPT HUB</button>
+        <button onclick="login()" class="ui-btn" style="width:400px; margin-top:20px; display:block; margin:20px auto;">DECRYPT HUB</button>
     </div>
 
     <div id="admin-controls" style="display:none;" class="admin-layout">
         <div class="panel-box">
-            <h3>💬 COMMS_HUB (SUPPORT)</h3>
-            <div id="admin-chat-sessions" style="max-height:150px; overflow-y:auto; border:1px solid #333; margin-bottom:10px;">
-                <div style="padding:10px; color:#555;">No active sessions...</div>
-            </div>
+            <h3>💬 COMMS_HUB</h3>
+            <div id="admin-chat-sessions" style="max-height:150px; overflow-y:auto; border:1px solid #333; margin-bottom:10px;"></div>
             <div id="admin-chat-view" style="display:none; border-top:1px solid var(--primary); padding-top:10px;">
-                <h4 id="active-chat-user" style="color:var(--primary); margin:0 0 10px 0; font-size:12px;"></h4>
                 <div id="admin-chat-messages" style="height:150px; overflow-y:auto; background:#000; padding:10px; font-size:11px; display:flex; flex-direction:column; border:1px solid #222;"></div>
                 <div style="display:flex; gap:5px; margin-top:5px;">
-                    <input type="text" id="admin-chat-input" placeholder="Type reply..." style="font-size:12px;">
+                    <input type="text" id="admin-chat-input" placeholder="Type reply...">
                     <button onclick="sendAdminReply()" class="ui-btn">SEND</button>
                 </div>
             </div>
@@ -248,24 +218,16 @@
 
         <div class="panel-box">
             <h3>📡 LIVE INTEL</h3>
-            <div id="pay-attempts-list" style="font-size:11px; color:yellow; background:#111; padding:10px; height:150px; overflow-y:auto; border:1px solid #333;">Scanning...</div>
-            <h3 style="margin-top:20px;">📢 BROADCAST</h3>
-            <input type="text" id="bc-input" placeholder="ALERT MESSAGE">
-            <button onclick="setBroadcast()" class="ui-btn" style="width:100%; background:orange; color:black;">SEND SYSTEM ALERT</button>
+            <div id="pay-attempts-list" style="font-size:11px; color:yellow; background:#111; padding:10px; height:200px; overflow-y:auto;">Scanning...</div>
         </div>
 
         <div class="panel-box">
             <h3>⚒️ ARSENAL FORGE</h3>
-            <input type="hidden" id="edit-index" value="-1">
             <input type="text" id="p-name" placeholder="PRODUCT NAME">
             <input type="number" id="p-price" placeholder="PRICE">
-            <input type="text" id="p-yt" placeholder="YOUTUBE VIDEO ID">
             <select id="p-cat"><option value="android">Android</option><option value="ios">IOS</option></select>
-            <textarea id="p-desc" placeholder="PRODUCT DESCRIPTION" style="height:60px;"></textarea>
             <input type="file" id="p-img" accept="image/*">
-            <input type="file" id="p-file">
-            <button id="forge-btn" onclick="addProduct()" class="ui-btn" style="width:100%; margin-top:10px;">DEPLOY ASSET</button>
-            <div id="admin-asset-list" style="max-height:150px; overflow-y:auto; border:1px solid #333; background:#000; margin-top:10px;"></div>
+            <button onclick="addProduct()" class="ui-btn" style="width:100%; margin-top:10px;">DEPLOY ASSET</button>
         </div>
     </div>
 </div>
@@ -275,8 +237,8 @@
         <div id="chat-header">OPERATOR SUPPORT</div>
         <div id="chat-messages" style="display: flex; flex-direction: column;"></div>
         <div style="display:flex; padding:5px; background:#111; gap:5px;">
-            <input type="text" id="chat-input" placeholder="Message..." style="margin:0; font-size:12px; height:35px;">
-            <button onclick="sendChatMessage()" class="ui-btn" style="padding:0 10px; height:35px;">SEND</button>
+            <input type="text" id="chat-input" placeholder="Message..." style="margin:0; font-size:12px;">
+            <button onclick="sendChatMessage()" class="ui-btn" style="padding:0 10px;">SEND</button>
         </div>
     </div>
     <div id="chat-trigger" onclick="toggleChatWindow()">💬</div>
@@ -284,7 +246,7 @@
 
 <div class="intel-ticker-wrap">
     <div class="intel-ticker-label">LIVE_FEED</div>
-    <marquee id="feed-text" style="color:#0f0; font-weight:bold;">>>> R4 FUSION SYSTEM STABLE :: ENCRYPTION ACTIVE :: WAITING FOR TRANSACTION...</marquee>
+    <marquee style="color:#0f0; font-weight:bold;">>>> R4 FUSION SYSTEM STABLE :: ENCRYPTION ACTIVE :: WAITING FOR TRANSACTION...</marquee>
 </div>
 
 <audio id="hacker-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
@@ -294,39 +256,72 @@
 let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicStarted = false;
 let activeAdminSession = "";
 
-// ---------------- UI & NAVIGATION ----------------
-function toggleMusic(e) { 
-    if(e) e.stopPropagation();
-    let m = document.getElementById('hacker-music');
-    let btn = document.getElementById('music-btn');
-    if (m.paused) { m.play(); btn.innerText = "🔊 MUSIC: ON"; } else { m.pause(); btn.innerText = "🔇 MUSIC: OFF"; }
+// ---------------- NODE BACKGROUND LOGIC ----------------
+const canvas = document.getElementById('global-canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+const mouse = { x: null, y: null, radius: 150 };
+
+window.addEventListener('mousemove', (e) => { mouse.x = e.x; mouse.y = e.y; });
+
+class Particle {
+    constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2 + 1;
+        this.speedX = Math.random() * 1 - 0.5;
+        this.speedY = Math.random() * 1 - 0.5;
+    }
+    update() {
+        this.x += this.speedX; this.y += this.speedY;
+        if (this.x > canvas.width || this.x < 0) this.speedX *= -1;
+        if (this.y > canvas.height || this.y < 0) this.speedY *= -1;
+
+        let dx = mouse.x - this.x; let dy = mouse.y - this.y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < mouse.radius) {
+            if (mouse.x < this.x && this.x < canvas.width - 10) this.x += 2;
+            if (mouse.x > this.x && this.x > 10) this.x -= 2;
+            if (mouse.y < this.y && this.y < canvas.height - 10) this.y += 2;
+            if (mouse.y > this.y && this.y > 10) this.y -= 2;
+        }
+    }
+    draw() {
+        ctx.fillStyle = 'rgba(255, 215, 0, 0.8)';
+        ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+    }
 }
 
+function initNodes() {
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    particles = [];
+    let numberOfParticles = (canvas.height * canvas.width) / 9000;
+    for (let i = 0; i < numberOfParticles; i++) particles.push(new Particle());
+}
+
+function animateNodes() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < particles.length; i++) {
+        particles[i].update(); particles[i].draw();
+        for (let j = i; j < particles.length; j++) {
+            let dx = particles[i].x - particles[j].x;
+            let dy = particles[i].y - particles[j].y;
+            let dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 150) {
+                ctx.strokeStyle = `rgba(255, 215, 0, ${1 - dist/150})`;
+                ctx.lineWidth = 1; ctx.beginPath();
+                ctx.moveTo(particles[i].x, particles[i].y);
+                ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
+            }
+        }
+    }
+    requestAnimationFrame(animateNodes);
+}
+
+// ---------------- NAVIGATION & CORE ----------------
 function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='none'; }
 function showCheckout() { document.getElementById('shop-page').style.display='none'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='block'; renderCart(); }
-
-function showInfo(i) {
-    const p = products[i];
-    document.getElementById('shop-page').style.display = 'none';
-    document.getElementById('info-page').style.display = 'block';
-    document.getElementById('info-img').src = p.image || '';
-    document.getElementById('info-title').innerText = p.name;
-    document.getElementById('info-price').innerText = "$" + p.price;
-    document.getElementById('info-desc').innerText = p.desc;
-    document.getElementById('info-btns').innerHTML = `
-        <button class="ui-btn" onclick="addToCart(${i})" style="background:var(--primary); color:black;">ADD TO CART</button>
-        ${p.yt ? `<button class="ui-btn" onclick="window.open('https://youtube.com/watch?v=${p.yt}')" style="background:red; color:white;">📺 PREVIEW</button>` : ''}
-    `;
-}
-
-// ---------------- CART & PAYMENTS ----------------
-function addToCart(i) {
-    document.getElementById('snd-click').play().catch(()=>{});
-    cart.push(products[i]);
-    updateCartCount();
-    db.ref('intel').push(`CART_ADD | ${userIP} | ${products[i].name}`);
-}
-
+function addToCart(i) { document.getElementById('snd-click').play().catch(()=>{}); cart.push(products[i]); updateCartCount(); db.ref('intel').push(`CART_ADD | ${userIP} | ${products[i].name}`); }
 function updateCartCount() { document.getElementById('cart-count').innerText = cart.length; }
 function clearCart() { cart = []; updateCartCount(); renderCart(); }
 function removeFromCart(i) { cart.splice(i, 1); updateCartCount(); renderCart(); }
@@ -334,33 +329,13 @@ function removeFromCart(i) { cart.splice(i, 1); updateCartCount(); renderCart();
 function renderCart() {
     let l=document.getElementById('cart-list'), t=0; l.innerHTML = "";
     cart.forEach((item, index) => {
-        l.innerHTML += `<div style="padding:10px; border-bottom:1px solid #222; display:flex; justify-content:space-between;">
-            <span>${item.name} - $${item.price}</span>
-            <button onclick="removeFromCart(${index})" style="background:none; border:none; color:red; cursor:pointer;">[REMOVE]</button>
-        </div>`;
+        l.innerHTML += `<div style="padding:10px; border-bottom:1px solid #222; display:flex; justify-content:space-between;"><span>${item.name} - $${item.price}</span><button onclick="removeFromCart(${index})" style="background:none; border:none; color:red; cursor:pointer;">[REMOVE]</button></div>`;
         t += parseFloat(item.price);
     });
-    let final = t - (t * (discount/100));
-    document.getElementById('total-usd').innerText = "TOTAL: $" + final.toFixed(2);
+    document.getElementById('total-usd').innerText = "TOTAL: $" + t.toFixed(2);
 }
 
-function triggerHackerPay() {
-    if(cart.length === 0) return alert("INVENTORY EMPTY");
-    document.getElementById('auth-overlay').style.display = 'flex';
-    document.getElementById('paypal-button-container').innerHTML = '';
-    let t=0; cart.forEach(i=>t+=parseFloat(i.price));
-    let final = (t - (t * (discount/100))).toFixed(2);
-    paypal.Buttons({
-        createOrder: (data, actions) => actions.order.create({ purchase_units: [{ amount: { value: final } }] }),
-        onApprove: (data, actions) => actions.order.capture().then(det => {
-            cart.forEach(item => { if(item.delivery) { const a = document.createElement('a'); a.href = item.delivery.data; a.download = item.delivery.name; document.body.appendChild(a); a.click(); document.body.removeChild(a); } });
-            alert("SUCCESS.");
-            cart = []; updateCartCount(); location.reload();
-        })
-    }).render('#paypal-button-container');
-}
-
-// ---------------- CHAT SYSTEM ----------------
+// ---------------- SUPPORT CHAT ----------------
 function toggleChatWindow() {
     const win = document.getElementById('chat-window');
     win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
@@ -378,12 +353,8 @@ function sendChatMessage() {
 function listenForMessages() {
     const dbSafeIP = userIP.replace(/\./g, '_');
     db.ref('support/' + dbSafeIP).on('value', (snap) => {
-        const box = document.getElementById('chat-messages');
-        box.innerHTML = "";
-        snap.forEach(child => {
-            const m = child.val();
-            box.innerHTML += `<div class="msg msg-${m.sender}">${m.text}</div>`;
-        });
+        const box = document.getElementById('chat-messages'); box.innerHTML = "";
+        snap.forEach(child => { const m = child.val(); box.innerHTML += `<div class="msg msg-${m.sender}">${m.text}</div>`; });
         box.scrollTop = box.scrollHeight;
     });
 }
@@ -395,23 +366,13 @@ function login() {
         document.getElementById('admin-controls').style.display = 'grid';
         document.getElementById('login-section').style.display = 'none';
         
-        // Listen for chats
         db.ref('support').on('value', (snap) => {
-            const list = document.getElementById('admin-chat-sessions');
-            list.innerHTML = "";
+            const list = document.getElementById('admin-chat-sessions'); list.innerHTML = "";
             snap.forEach(child => {
-                const ip = child.key;
-                const div = document.createElement('div');
-                div.className = "chat-session-item";
-                div.innerText = "IP: " + ip.replace(/_/g, '.');
-                div.onclick = () => openAdminChat(ip);
-                list.appendChild(div);
+                const ip = child.key; const div = document.createElement('div');
+                div.className = "chat-session-item"; div.innerText = "IP: " + ip.replace(/_/g, '.');
+                div.onclick = () => openAdminChat(ip); list.appendChild(div);
             });
-        });
-
-        db.ref('intel').limitToLast(30).on('value', s => { 
-            const list = s.val() ? Object.values(s.val()).reverse() : []; 
-            document.getElementById('pay-attempts-list').innerHTML = list.map(i => `<div>${i}</div>`).join(''); 
         });
         displayProducts();
     }
@@ -420,15 +381,9 @@ function login() {
 function openAdminChat(ip) {
     activeAdminSession = ip;
     document.getElementById('admin-chat-view').style.display = 'block';
-    document.getElementById('active-chat-user').innerText = "LINK ESTABLISHED: " + ip.replace(/_/g,'.');
-    
     db.ref('support/' + ip).on('value', (snap) => {
-        const box = document.getElementById('admin-chat-messages');
-        box.innerHTML = "";
-        snap.forEach(child => {
-            const m = child.val();
-            box.innerHTML += `<div class="msg msg-${m.sender}">${m.text}</div>`;
-        });
+        const box = document.getElementById('admin-chat-messages'); box.innerHTML = "";
+        snap.forEach(child => { const m = child.val(); box.innerHTML += `<div class="msg msg-${m.sender}">${m.text}</div>`; });
         box.scrollTop = box.scrollHeight;
     });
 }
@@ -441,52 +396,30 @@ function sendAdminReply() {
 }
 
 function addProduct() {
-    const n=document.getElementById('p-name').value, p=document.getElementById('p-price').value, y=document.getElementById('p-yt').value, c=document.getElementById('p-cat').value, d=document.getElementById('p-desc').value, fImg=document.getElementById('p-img').files[0], fFile=document.getElementById('p-file').files[0], idx=document.getElementById('edit-index').value;
-    const read = (file) => file ? new Promise(res => { const r=new FileReader(); r.onload=e=>res({data:e.target.result, name:file.name}); r.readAsDataURL(file); }) : null;
-    Promise.all([read(fImg), read(fFile)]).then(vals => {
-        let obj = { name:n, price:p, yt:y, category:c, desc:d, image: vals[0] ? vals[0].data : (products[idx]?.image || ""), delivery: vals[1] ? vals[1] : (products[idx]?.delivery || null) };
-        if(idx == -1) products.push(obj); else products[idx] = obj;
-        db.ref('products').set(products).then(() => { alert("SYNC COMPLETE"); resetForge(); });
-    });
+    const n=document.getElementById('p-name').value, p=document.getElementById('p-price').value, c=document.getElementById('p-cat').value, fImg=document.getElementById('p-img').files[0];
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        products.push({ name:n, price:p, category:c, image: e.target.result });
+        db.ref('products').set(products).then(() => alert("SYNC COMPLETE"));
+    };
+    if(fImg) reader.readAsDataURL(fImg);
 }
 
 function displayProducts() {
     db.ref('products').on('value', (snap) => {
         products = snap.val() || [];
-        const andr = document.getElementById("android-grid"), ios = document.getElementById("ios-grid"), adm = document.getElementById('admin-asset-list');
-        if(!andr) return; andr.innerHTML = ""; ios.innerHTML = ""; adm.innerHTML = "";
+        const andr = document.getElementById("android-grid"), ios = document.getElementById("ios-grid");
+        if(!andr) return; andr.innerHTML = ""; ios.innerHTML = "";
         products.forEach((p, i) => {
             const div = document.createElement("div"); div.className = "product";
             div.innerHTML = `<img src="${p.image}" onclick="showInfo(${i})"><h3>${p.name}</h3><div style="color:var(--price-gold); font-weight:bold;">$${p.price}</div><button onclick="addToCart(${i})" class="ui-btn" style="width:100%; margin-top:5px; border:none;">BUY</button>`;
             p.category === "ios" ? ios.appendChild(div) : andr.appendChild(div);
-            adm.innerHTML += `<div style="padding:5px; border-bottom:1px solid #222; font-size:10px;">${p.name} <button onclick="deleteProduct(${i})" style="color:red; background:none; border:none; cursor:pointer;">[X]</button></div>`;
         });
     });
 }
 
-function deleteProduct(i) { if(confirm("ERASE ASSET?")) { products.splice(i, 1); db.ref('products').set(products); } }
-function resetForge() { document.getElementById('edit-index').value = "-1"; document.getElementById('p-name').value = ""; document.getElementById('p-price').value = ""; }
-function closeAdmin() { document.getElementById('admin-terminal').style.display = 'none'; }
-function setBroadcast() { db.ref('settings/broadcast').set(document.getElementById('bc-input').value).then(() => alert("BROADCAST LIVE")); }
-
-// ---------------- MATRIX & INIT ----------------
-const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d'); let drops = [];
-function drawMatrix() {
-    ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = "#ffd700"; ctx.font = "15px monospace";
-    drops.forEach((y, i) => { ctx.fillText(String.fromCharCode(0x30A0 + Math.random()*33), i*20, y*20); if(y*20 > canvas.height && Math.random() > 0.975) drops[i] = 0; drops[i]++; });
-}
-
 window.onload = () => {
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    drops = Array(Math.floor(canvas.width/20)).fill(1);
-    setInterval(drawMatrix, 50);
-    displayProducts();
-    db.ref('settings/broadcast').on('value', s => {
-        const banner = document.getElementById('global-alert-banner');
-        if(s.val()) { banner.innerText = "⚠️ SYSTEM: " + s.val(); banner.style.display = 'block'; }
-        else { banner.style.display = 'none'; }
-    });
+    initNodes(); animateNodes(); displayProducts();
     let lb = document.getElementById('load-bar'), p = 0;
     let int = setInterval(() => { 
         p += 2; lb.style.width = p + "%"; 
@@ -495,8 +428,10 @@ window.onload = () => {
 };
 
 window.onkeydown = (e) => { if(e.key === "Insert") document.getElementById('admin-terminal').style.display = 'block'; };
+function closeAdmin() { document.getElementById('admin-terminal').style.display = 'none'; }
 function toggleTheme() { document.body.classList.toggle('blue-theme'); }
 function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play().then(() => { musicStarted = true; }).catch(() => {}); } }
+window.addEventListener('resize', initNodes);
 </script>
 </body>
 </html>
