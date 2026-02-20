@@ -91,14 +91,12 @@
         .product:hover { transform: translateY(-10px); border-color: var(--primary); }
         .product img { width: 100%; height: 160px; object-fit: cover; border-radius: 5px; }
 
-        /* Admin Layout */
         .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 20000; padding: 40px; overflow-y: auto; text-align: left; }
         .admin-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
         .panel-box { background: #080808; border: 1px solid #333; padding: 20px; border-radius: 8px; }
         .panel-box h3 { color: var(--primary); margin-top: 0; border-bottom: 1px solid #222; padding-bottom: 10px; }
         input, select, textarea { background: #111; border: 1px solid var(--primary); color: #fff; padding: 10px; margin: 5px 0; width: 100%; border-radius: 4px; }
 
-        /* Support Chat UI */
         #chat-widget { position: fixed; bottom: 80px; right: 20px; z-index: 9999; }
         #chat-trigger { width: 60px; height: 60px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; border: 2px solid white; box-shadow: 0 0 15px var(--primary); }
         #chat-window { display: none; position: absolute; bottom: 70px; right: 0; width: 300px; height: 400px; background: #000; border: 2px solid var(--primary); border-radius: 10px; flex-direction: column; overflow: hidden; box-shadow: 0 0 30px rgba(0,0,0,1); }
@@ -205,6 +203,13 @@
 
     <div id="admin-controls" style="display:none;" class="admin-layout">
         <div class="panel-box">
+            <h3>📡 LIVE FEED MANAGER</h3>
+            <input type="text" id="feed-input" placeholder="Enter Alert Text...">
+            <button onclick="addFeedMessage()" class="ui-btn" style="width:100%; margin-top:5px;">ADD TO FEED</button>
+            <div id="admin-feed-list" style="margin-top:15px; max-height:150px; overflow-y:auto; border:1px solid #333; font-size:11px;"></div>
+        </div>
+
+        <div class="panel-box">
             <h3>💬 COMMS_HUB</h3>
             <div id="admin-chat-sessions" style="max-height:150px; overflow-y:auto; border:1px solid #333; margin-bottom:10px;"></div>
             <div id="admin-chat-view" style="display:none; border-top:1px solid var(--primary); padding-top:10px;">
@@ -214,11 +219,6 @@
                     <button onclick="sendAdminReply()" class="ui-btn">SEND</button>
                 </div>
             </div>
-        </div>
-
-        <div class="panel-box">
-            <h3>📡 LIVE INTEL</h3>
-            <div id="pay-attempts-list" style="font-size:11px; color:yellow; background:#111; padding:10px; height:200px; overflow-y:auto;">Scanning...</div>
         </div>
 
         <div class="panel-box">
@@ -246,14 +246,14 @@
 
 <div class="intel-ticker-wrap">
     <div class="intel-ticker-label">LIVE_FEED</div>
-    <marquee style="color:#0f0; font-weight:bold;">>>> R4 FUSION SYSTEM STABLE :: ENCRYPTION ACTIVE :: WAITING FOR TRANSACTION...</marquee>
+    <marquee id="main-ticker" style="color:#0f0; font-weight:bold;"></marquee>
 </div>
 
 <audio id="hacker-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
 <audio id="snd-click" src="https://www.myinstants.com/media/sounds/sword-slash.mp3"></audio>
 
 <script>
-let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicStarted = false;
+let products = [], cart = [], isAdmin = false, musicStarted = false;
 let activeAdminSession = "";
 
 // ---------------- NODE BACKGROUND LOGIC ----------------
@@ -321,7 +321,7 @@ function animateNodes() {
 // ---------------- NAVIGATION & CORE ----------------
 function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='none'; }
 function showCheckout() { document.getElementById('shop-page').style.display='none'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='block'; renderCart(); }
-function addToCart(i) { document.getElementById('snd-click').play().catch(()=>{}); cart.push(products[i]); updateCartCount(); db.ref('intel').push(`CART_ADD | ${userIP} | ${products[i].name}`); }
+function addToCart(i) { document.getElementById('snd-click').play().catch(()=>{}); cart.push(products[i]); updateCartCount(); }
 function updateCartCount() { document.getElementById('cart-count').innerText = cart.length; }
 function clearCart() { cart = []; updateCartCount(); renderCart(); }
 function removeFromCart(i) { cart.splice(i, 1); updateCartCount(); renderCart(); }
@@ -333,6 +333,35 @@ function renderCart() {
         t += parseFloat(item.price);
     });
     document.getElementById('total-usd').innerText = "TOTAL: $" + t.toFixed(2);
+}
+
+// ---------------- LIVE FEED LOGIC ----------------
+function addFeedMessage() {
+    const text = document.getElementById('feed-input').value;
+    if(!text) return;
+    db.ref('live_feed').push(text);
+    document.getElementById('feed-input').value = "";
+}
+
+function deleteFeedMessage(key) {
+    db.ref('live_feed/' + key).remove();
+}
+
+function listenToFeed() {
+    db.ref('live_feed').on('value', (snap) => {
+        const marquee = document.getElementById('main-ticker');
+        const adminList = document.getElementById('admin-feed-list');
+        let fullText = " >>> R4 SYSTEM ACTIVE :: ";
+        adminList.innerHTML = "";
+        
+        snap.forEach(child => {
+            const val = child.val();
+            const key = child.key;
+            fullText += `${val} :: `;
+            adminList.innerHTML += `<div style="padding:5px; border-bottom:1px solid #222; display:flex; justify-content:space-between;"><span>${val}</span><button onclick="deleteFeedMessage('${key}')" style="color:red; background:none; border:none; cursor:pointer;">[DELETE]</button></div>`;
+        });
+        marquee.innerText = fullText;
+    });
 }
 
 // ---------------- SUPPORT CHAT ----------------
@@ -388,13 +417,6 @@ function openAdminChat(ip) {
     });
 }
 
-function sendAdminReply() {
-    const msg = document.getElementById('admin-chat-input').value;
-    if(!msg || !activeAdminSession) return;
-    db.ref('support/' + activeAdminSession).push({ sender: 'admin', text: msg, timestamp: Date.now() });
-    document.getElementById('admin-chat-input').value = "";
-}
-
 function addProduct() {
     const n=document.getElementById('p-name').value, p=document.getElementById('p-price').value, c=document.getElementById('p-cat').value, fImg=document.getElementById('p-img').files[0];
     const reader = new FileReader();
@@ -419,7 +441,7 @@ function displayProducts() {
 }
 
 window.onload = () => {
-    initNodes(); animateNodes(); displayProducts();
+    initNodes(); animateNodes(); displayProducts(); listenToFeed();
     let lb = document.getElementById('load-bar'), p = 0;
     let int = setInterval(() => { 
         p += 2; lb.style.width = p + "%"; 
