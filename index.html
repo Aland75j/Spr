@@ -569,19 +569,21 @@ window.onload = () => {
         }
     });
 
-    // PageUp Key Listener
+    // Fixed PageUp Key Listener
     window.addEventListener('keydown', (e) => {
-        if(e.key === "PageUp") document.getElementById('pgup-menu').style.display = 'block';
+        if(e.key === "PageUp") {
+            document.getElementById('pgup-menu').style.display = 'block';
+        }
     });
 
-    // Simulated Terminal Load sequence
+    // Loader Logic
     const logs = document.getElementById('load-logs');
-    const lines = ["> BOOTING R4...", "> BYPASSING FIREWALL...", "> SYNCING DATABASE...", "> READY."];
+    const lines = ["> BOOTING R4...", "> SYNCING DATABASE...", "> READY."];
     let step = 0;
     let loadInt = setInterval(() => {
         if(step < lines.length) {
             logs.innerHTML += `<div>${lines[step]}</div>`;
-            document.getElementById('load-bar').style.width = ((step+1)*25) + "%";
+            document.getElementById('load-bar').style.width = ((step+1)*33) + "%";
             step++;
         } else {
             clearInterval(loadInt);
