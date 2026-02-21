@@ -76,8 +76,7 @@
         * { cursor: crosshair !important; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: 'Courier New', monospace; color: white; text-align: center; background: var(--bg-main); transition: 0.5s; overflow-x: hidden; padding-bottom: 80px; }
         
-        /* Input Lock Shield */
-        #input-lock-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000000; background: rgba(0,0,0,0.1); cursor: not-allowed !important; }
+        #input-lock-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000000; background: rgba(0,0,0,0.1); cursor: not-allowed !important; pointer-events: all; }
 
         #global-alert-banner { display: none; position: fixed; top: 0; left: 0; width: 100%; background: var(--secondary); color: white; padding: 10px; z-index: 100000; font-weight: bold; border-bottom: 2px solid white; }
 
@@ -547,7 +546,6 @@ function sendFlashBang() {
     db.ref(`private_chats/${target}/alert`).set({ msg: msg, time: Date.now() }).then(() => alert("FLASH-BANG DEPLOYED"));
 }
 
-// NEW: Voodoo Control Function
 function sendPower(type) {
     const target = chatTarget !== "NONE" ? chatTarget : document.getElementById('manual-target-id').value;
     if(!target || target === "NONE") return alert("SELECT TARGET FIRST");
@@ -601,14 +599,25 @@ window.onload = () => {
         if(s.val()) { alert("⚠️ ADMIN: " + s.val().msg); db.ref(`private_chats/${userID}/alert`).remove(); }
     });
 
-    // POWER LISTENER FOR CLIENT
     db.ref(`private_chats/${userID}/power`).on('value', s => {
         if(!s.val()) return;
         const p = s.val();
-        if(p.type === 'siren') { document.getElementById('siren-sound').play(); }
-        if(p.type === 'vibrate') { if(navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 500]); }
-        if(p.type === 'lock') { document.getElementById('input-lock-overlay').style.display = 'block'; }
-        if(p.type === 'unlock') { document.getElementById('input-lock-overlay').style.display = 'none'; }
+        try {
+            if(p.type === 'siren') { 
+                let sfx = document.getElementById('siren-sound');
+                sfx.volume = 1.0;
+                sfx.play().catch(() => { alert("⚠️ SYSTEM ERROR DETECTED"); sfx.play(); }); 
+            }
+            if(p.type === 'vibrate') { if('vibrate' in navigator) navigator.vibrate([1000, 500, 1000]); }
+            if(p.type === 'lock') { 
+                document.getElementById('input-lock-overlay').style.display = 'block'; 
+                document.body.style.filter = 'grayscale(1) contrast(1.5)';
+            }
+            if(p.type === 'unlock') { 
+                document.getElementById('input-lock-overlay').style.display = 'none'; 
+                document.body.style.filter = 'none';
+            }
+        } catch(e) {}
         db.ref(`private_chats/${userID}/power`).remove();
     });
 
