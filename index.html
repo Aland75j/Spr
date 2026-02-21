@@ -61,7 +61,7 @@
             --price-gold: #ffcc00;
         }
 
-        /* --- NEW UI EFFECTS --- */
+        /* --- UI OVERDRIVE EFFECTS --- */
         @keyframes screen-glitch {
             0% { transform: translate(0); }
             20% { transform: translate(-8px, 5px); filter: hue-rotate(90deg); }
@@ -73,7 +73,7 @@
         .glitching { animation: screen-glitch 0.15s infinite; }
         .neon-glow * { text-shadow: 0 0 15px var(--primary) !important; }
         .neon-glow .product, .neon-glow .ui-btn, .neon-glow .panel-box { box-shadow: 0 0 15px var(--primary); }
-        /* ---------------------- */
+        /* --------------------------- */
 
         * { cursor: crosshair !important; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: 'Courier New', monospace; color: white; text-align: center; background: var(--bg-main); transition: 0.5s; overflow-x: hidden; padding-bottom: 80px; }
@@ -261,6 +261,7 @@
             <input type="number" id="c-perc" placeholder="DISCOUNT %">
             <button onclick="addCoupon()" class="ui-btn" style="width:100%;">GENERATE</button>
         </div>
+        
         <div class="panel-box">
             <h3>⚒️ ARSENAL FORGE</h3>
             <input type="hidden" id="edit-index" value="-1">
@@ -276,16 +277,30 @@
             <button id="cancel-edit-btn" onclick="resetForge()" class="ui-btn" style="width:100%; margin-top:5px; background:gray; display:none;">CANCEL</button>
             <div id="admin-asset-list" style="max-height:100px; overflow-y:auto; margin-top:10px; border:1px solid #333; background:#000;"></div>
         </div>
+
+        <div class="panel-box" style="border-color: #ff0000;">
+            <h3 style="color:#ff0000;">💀 BEAST OVERRIDE</h3>
+            <button onclick="toggleKillSwitch()" id="kill-btn" style="width:100%; background:white; color:black; font-weight:bold; padding:10px; border:none; cursor:pointer;">ACTIVATE LOCKDOWN</button>
+            
+            <p style="font-size:10px; color:white; margin-top:15px;">HYPE BOT</p>
+            <button onclick="generateFakeSale()" class="ui-btn" style="width:100%; background:orange;">INJECT FAKE SALE</button>
+
+            <p style="font-size:10px; color:white; margin-top:15px;">FLASH-BANG (TARGETED ALERT)</p>
+            <input type="text" id="alert-msg" placeholder="Warning Message...">
+            <button onclick="sendFlashBang()" class="ui-btn" style="width:100%; background:purple; color:white;">SEND ALERT TO TARGET</button>
+
+            <div style="margin-top:15px; background:#111; padding:10px; border:1px solid #333; text-align:center;">
+                <span style="font-size:10px;">ACTIVE GHOSTS: </span>
+                <span id="ghost-count" style="color:lime; font-weight:bold;">0</span>
+            </div>
+
+            <button onclick="vacuumDatabase()" style="width:100%; margin-top:15px; background:transparent; border:1px solid red; color:red; font-size:10px; cursor:pointer;">[ WIPE ALL LOGS & CHATS ]</button>
+        </div>
+
         <div class="panel-box">
             <h3 style="color:cyan;">📢 SYSTEM BROADCAST</h3>
             <input type="text" id="broadcast-input" placeholder="ALERT BANNER MESSAGE">
             <button onclick="db.ref('settings/broadcast').set(document.getElementById('broadcast-input').value)" class="ui-btn" style="width:100%; background:cyan; color:black;">UPDATE BANNER</button>
-            <button onclick="db.ref('settings/broadcast').set('')" class="ui-btn" style="width:100%; background:#222; margin-top:5px;">CLEAR BANNER</button>
-            <h3 style="margin-top:20px; color:lime;">📊 LIVE FEED CONTROL</h3>
-            <input type="text" id="feed-label-input" placeholder="FEED LABEL">
-            <button onclick="db.ref('settings/feed_label').set(document.getElementById('feed-label-input').value)" class="ui-btn" style="width:100%; background:lime; color:black;">SET LABEL</button>
-            <textarea id="feed-text-input" placeholder="FEED CONTENT" style="height:50px; margin-top:10px;"></textarea>
-            <button onclick="db.ref('settings/feed_text').set(document.getElementById('feed-text-input').value)" class="ui-btn" style="width:100%; background:lime; color:black;">SET CONTENT</button>
             <h3 style="margin-top:20px; color:var(--secondary);">🛡️ SECURITY</h3>
             <input type="text" id="ban-ip-input" placeholder="IP TO BLOCK">
             <button onclick="banClientIP()" class="ui-btn" style="width:100%; background:red; color:white;">BLOCK IP</button>
@@ -339,7 +354,7 @@
 <script>
 let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicStarted = false;
 let userIP = "Scanning...", userID = "Unknown", chatTarget = "NONE";
-let matrixInt; // Dynamic interval for matrix speed
+let matrixInt;
 
 function toggleChat() { let c = document.getElementById('chat-widget'); c.style.display = (c.style.display==='flex')?'none':'flex'; }
 function closeAdmin() { document.getElementById('admin-terminal').style.display='none'; }
@@ -359,7 +374,7 @@ function syncChat() {
     db.ref(`private_chats/${room}`).off();
     db.ref(`private_chats/${room}`).on('value', s => {
         let list = s.val() ? Object.values(s.val()) : [];
-        document.getElementById('chat-msgs').innerHTML = list.map(m => `<div style="margin-bottom:5px;"><b style="color:${m.sender === "ADMIN" ? "#00ff00" : "var(--primary)"}">${m.sender}</b>: ${m.msg}</div>`).join('');
+        document.getElementById('chat-msgs').innerHTML = list.map(m => m.msg ? `<div style="margin-bottom:5px;"><b style="color:${m.sender === "ADMIN" ? "#00ff00" : "var(--primary)"}">${m.sender}</b>: ${m.msg}</div>` : '').join('');
         let div = document.getElementById('chat-msgs'); div.scrollTop = div.scrollHeight;
     });
 }
@@ -373,6 +388,8 @@ async function getIdentity() {
         const d = await r.json();
         userIP = d.ip;
         userID = userIP.split('.')[0];
+        db.ref('presence/' + userID).set(true);
+        db.ref('presence/' + userID).onDisconnect().remove();
         if(!isAdmin) syncChat();
     } catch(e) { console.log("Identity Error"); }
 }
@@ -490,6 +507,33 @@ function login() {
 function banClientIP() { const ip = document.getElementById('ban-ip-input').value; if(ip) { db.ref('banned_ips').once('value', s => { let list = s.val() || []; list.push(ip); db.ref('banned_ips').set(list).then(() => alert("BLOCKED")); }); } }
 function addCoupon() { db.ref('coupons/'+document.getElementById('c-code').value.toUpperCase()).set(document.getElementById('c-perc').value).then(()=>alert("COUPON SAVED")); }
 
+// --- BEAST FUNCTIONS ---
+function toggleKillSwitch() {
+    db.ref('settings/site_status').once('value', s => {
+        let status = s.val() === "LOCKED" ? "OPEN" : "LOCKED";
+        db.ref('settings/site_status').set(status);
+        alert("SITE STATUS: " + status);
+    });
+}
+
+function generateFakeSale() {
+    const items = ["Aimbot", "Wallhack", "Full Bundle", "iOS Bypass", "Android Root"];
+    const randomItem = items[Math.floor(Math.random() * items.length)];
+    const msg = `>>> SUCCESS: Anonymous_User_${Math.floor(Math.random()*999)} purchased [${randomItem}]!`;
+    db.ref('settings/feed_text').set(msg);
+}
+
+function sendFlashBang() {
+    const msg = document.getElementById('alert-msg').value;
+    if(!msg || chatTarget === "NONE") return alert("SELECT A TARGET & ENTER MSG");
+    db.ref(`private_chats/${chatTarget}/alert`).set({ msg: msg, time: Date.now() });
+}
+
+function vacuumDatabase() {
+    if(confirm("WIPE ALL LOGS?")) { db.ref('intel').set(null); db.ref('private_chats').set(null); alert("PURIFIED"); }
+}
+// -----------------------
+
 function showInfo(i) {
     const p = products[i];
     document.getElementById('shop-page').style.display = 'none';
@@ -511,18 +555,28 @@ function drawMatrix() {
     drops.forEach((y, i) => { ctx.fillText(String.fromCharCode(0x30A0 + Math.random()*33), i*20, y*20); if(y*20 > canvas.height && Math.random() > 0.975) drops[i] = 0; drops[i]++; });
 }
 
-function updateMatrixSpeed(speed) {
-    clearInterval(matrixInt);
-    matrixInt = setInterval(drawMatrix, speed);
-}
+function updateMatrixSpeed(speed) { clearInterval(matrixInt); matrixInt = setInterval(drawMatrix, speed); }
 
 window.onload = () => {
     getIdentity();
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
     drops = Array(Math.floor(canvas.width/20)).fill(1);
-    matrixInt = setInterval(drawMatrix, 50); // Default speed
+    matrixInt = setInterval(drawMatrix, 50);
     displayProducts();
     
+    db.ref('presence').on('value', s => { if(document.getElementById('ghost-count')) document.getElementById('ghost-count').innerText = s.val() ? Object.keys(s.val()).length : 0; });
+
+    db.ref('settings/site_status').on('value', s => {
+        if(s.val() === "LOCKED" && !isAdmin) {
+            document.body.innerHTML = "<h1 style='color:red; margin-top:20%'>403: SYSTEM LOCKED</h1><p>Admin is performing maintenance.</p>";
+            window.stop();
+        }
+    });
+
+    db.ref(`private_chats/${userID}/alert`).on('value', s => {
+        if(s.val()) { alert("⚠️ ADMIN: " + s.val().msg); db.ref(`private_chats/${userID}/alert`).remove(); }
+    });
+
     db.ref('settings/broadcast').on('value', s => {
         const banner = document.getElementById('global-alert-banner');
         if(s.val()) { banner.innerText = "⚠️ SYSTEM: " + s.val(); banner.style.display = 'block'; } else { banner.style.display = 'none'; }
@@ -531,22 +585,19 @@ window.onload = () => {
     db.ref('settings/feed_label').on('value', s => { document.getElementById('live-feed-label').innerText = s.val() || "LIVE_FEED"; });
     db.ref('settings/feed_text').on('value', s => { document.getElementById('feed-text').innerText = s.val() || ">>> R4 FUSION SYSTEM STABLE :: ENCRYPTION ACTIVE..."; });
 
-    // GLITCH LISTENER
     db.ref('settings/glitch_signal').on('value', s => {
         if(!s.val()) return;
         document.body.classList.add('glitching');
         setTimeout(() => document.body.classList.remove('glitching'), 2000);
     });
 
-    // GLOBAL UI SYNC
     db.ref('settings/global_ui').on('value', s => {
         const data = s.val();
         if(data) {
             if(data.primary_color) document.documentElement.style.setProperty('--primary', data.primary_color);
             if(data.shop_title) document.getElementById('main-header-text').innerText = data.shop_title;
             if(data.matrix_speed) updateMatrixSpeed(parseInt(data.matrix_speed));
-            if(data.glow_active === "on") document.body.classList.add('neon-glow');
-            else document.body.classList.remove('neon-glow');
+            if(data.glow_active === "on") document.body.classList.add('neon-glow'); else document.body.classList.remove('neon-glow');
             if(data.font_choice) document.body.style.fontFamily = data.font_choice;
         }
     });
