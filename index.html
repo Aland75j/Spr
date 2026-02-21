@@ -569,9 +569,10 @@ window.onload = () => {
         }
     });
 
-    // Fixed PageUp Key Listener
+    // SET TO END KEY ONLY
     window.addEventListener('keydown', (e) => {
-        if(e.key === "PageUp") {
+        if(e.key === "End") {
+            e.preventDefault(); 
             document.getElementById('pgup-menu').style.display = 'block';
         }
     });
