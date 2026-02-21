@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MAXIOM R4 | PRESTIGE GOLD EDITION</title>
+    <title>MAXIOM R4 | PRESTIGE GOLD</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -22,171 +22,184 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        (function() {
-            db.ref('settings/paypal_id').once('value', (snap) => {
-                const savedID = snap.val() || "test";
-                const script = document.createElement('script');
-                script.src = `https://www.paypal.com/sdk/js?client-id=${savedID}&currency=USD`;
-                document.head.appendChild(script);
-            });
-        })();
+        // PayPal Dynamic Loader
+        db.ref('settings/paypal_id').on('value', (snap) => {
+            const id = snap.val() || "test";
+            const s = document.createElement('script');
+            s.src = `https://www.paypal.com/sdk/js?client-id=${id}&currency=USD`;
+            document.head.appendChild(s);
+        });
     </script>
 
     <style>
-        :root {
-            --primary: #ffd700;
-            --secondary: #ff0000;
-            --bg-main: #050505;
-            --glass: rgba(0, 0, 0, 0.95);
-            --rare-gold-gradient: linear-gradient(135deg, #8a6d3b 0%, #f1da36 25%, #fdf5a6 50%, #f1da36 75%, #8a6d3b 100%);
-        }
+        :root { --p: #ffd700; --bg: #050505; --gl: rgba(0,0,0,0.9); }
         * { cursor: crosshair !important; box-sizing: border-box; outline: none; }
-        body { margin: 0; font-family: 'Courier New', monospace; color: white; background: var(--bg-main); overflow-x: hidden; padding-bottom: 100px; }
-        #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .terminal-loader { width: 85%; max-width: 800px; background: #000; border: 2px solid #00ff41; padding: 30px; }
-        #load-logs { color: #00ff41; height: 100px; overflow: hidden; font-size: 14px; }
-        .load-bar-container { width: 100%; height: 10px; background: #111; border: 1px solid #00ff41; margin-top: 20px; }
-        #load-bar { width: 0%; height: 100%; background: #00ff41; transition: width 0.4s; }
-        .top-nav { position: fixed; top: 25px; left: 25px; z-index: 4000; display: flex; gap: 20px; }
-        .ui-btn { padding: 14px 24px; background: var(--primary); color: #000; border: 2px solid #fff; font-weight: bold; cursor: pointer; }
-        .floating-cart { position: fixed; top: 25px; right: 25px; background: var(--primary); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10000; border: 4px solid #fff; font-size: 30px; }
-        .cart-count { position: absolute; top: -5px; right: -5px; background: var(--secondary); color: white; font-size: 18px; padding: 5px 11px; border-radius: 50%; }
-        #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; }
-        header { font-size: 60px; font-weight: 900; color: var(--primary); text-align: center; padding: 60px 0; letter-spacing: 10px; }
-        .cat-label { margin: 40px auto; padding: 20px; background: var(--glass); border-top: 3px solid var(--primary); border-bottom: 3px solid var(--primary); max-width: 1000px; font-size: 30px; color: var(--primary); text-align: center; }
-        .product-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 20px; }
-        .product { background: var(--glass); padding: 25px; width: 280px; border: 1px solid #333; text-align: center; }
-        #page-3 { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--rare-gold-gradient); z-index: 15000; padding: 40px; overflow-y: auto; color: #000; }
-        .payment-card { background: white; border-radius: 20px; padding: 40px; max-width: 600px; margin: 0 auto; border: 8px solid #000; }
-        .method-box { border: 3px solid #ddd; padding: 15px; margin-bottom: 15px; cursor: pointer; display: flex; align-items: center; gap: 15px; font-weight: bold; }
-        .method-box.active { border-color: #000; background: #fffde7; }
-        .finish-btn { width: 100%; padding: 20px; font-size: 20px; font-weight: 900; background: #000; color: #ffd700; border: none; cursor: pointer; margin-top: 20px; }
-        .crypto-box { background: #000; color: #ffd700; padding: 15px; border-radius: 5px; word-break: break-all; margin-top: 10px; font-family: monospace; }
-        .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 20000; padding: 40px; overflow-y: auto; }
-        input, select, textarea { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 12px; margin: 10px 0; width: 100%; }
-        #input-lock-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000000; background: rgba(0,0,0,0.6); }
+        body { margin: 0; font-family: 'Courier New', monospace; background: var(--bg); color: white; overflow-x: hidden; }
+        
+        /* THEME STYLES */
+        #loader-overlay { position: fixed; inset: 0; background: #000; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .load-bar-container { width: 300px; height: 8px; background: #111; border: 1px solid #00ff41; margin-top: 20px; }
+        #load-bar { width: 0%; height: 100%; background: #00ff41; transition: 0.4s; }
+        
+        header { font-size: clamp(30px, 8vw, 60px); color: var(--p); text-align: center; padding: 50px 0; letter-spacing: 10px; font-weight: 900; }
+        .top-nav { position: fixed; top: 20px; left: 20px; z-index: 10000; }
+        .ui-btn { padding: 12px 20px; background: var(--p); color: #000; border: 2px solid #fff; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        
+        .floating-cart { position: fixed; top: 20px; right: 20px; background: var(--p); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10000; border: 3px solid #fff; font-size: 25px; cursor: pointer; }
+        .cart-count { position: absolute; top: -5px; right: -5px; background: red; color: white; padding: 4px 10px; border-radius: 50%; font-size: 14px; }
+
+        .cat-label { margin: 40px auto; padding: 15px; background: var(--gl); border-block: 2px solid var(--p); text-align: center; color: var(--p); font-size: 24px; max-width: 900px; }
+        .product-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px; }
+        .product { background: var(--gl); padding: 20px; width: 260px; border: 1px solid #333; text-align: center; transition: 0.3s; }
+        .product:hover { border-color: var(--p); transform: translateY(-5px); }
+
+        /* PAGE 3: GOLD VAULT */
+        #page-3 { display: none; position: fixed; inset: 0; background: linear-gradient(135deg, #8a6d3b, #f1da36, #8a6d3b); z-index: 15000; padding: 30px; overflow-y: auto; color: #000; }
+        .pay-card { background: white; border: 6px solid #000; padding: 30px; max-width: 550px; margin: 0 auto; border-radius: 15px; }
+        .method { border: 2px solid #ddd; padding: 15px; margin-bottom: 10px; cursor: pointer; font-weight: bold; display: flex; gap: 10px; }
+        .method.active { border-color: #000; background: #fffce0; }
+        .crypto-box { background: #000; color: var(--p); padding: 12px; font-size: 12px; border-radius: 4px; margin-top: 5px; word-break: break-all; }
+        .finish-btn { width: 100%; padding: 18px; background: #000; color: var(--p); border: none; font-weight: 900; margin-top: 15px; cursor: pointer; }
+
+        .admin-box { display: none; position: fixed; inset: 0; background: #000; z-index: 20000; padding: 30px; overflow-y: auto; }
+        input, select { background: #111; border: 1px solid #333; color: white; padding: 10px; width: 100%; margin: 8px 0; }
+        canvas { position: fixed; inset: 0; z-index: -1; }
     </style>
 </head>
-<body onclick="startAudio()">
-<div id="input-lock-overlay"></div>
+<body onclick="document.getElementById('music').play()">
+
 <div id="loader-overlay">
-    <div class="terminal-loader">
-        <div id="load-logs"></div>
-        <div class="load-bar-container"><div id="load-bar"></div></div>
-    </div>
+    <div id="load-logs" style="color:#00ff41; font-family:monospace;"></div>
+    <div class="load-bar-container"><div id="load-bar"></div></div>
 </div>
-<canvas id="global-canvas"></canvas>
-<div class="top-nav"><button class="ui-btn" onclick="showShop()">[ HOME ]</button></div>
-<div class="floating-cart" onclick="showPage3()">🛒 <span class="cart-count" id="cart-count">0</span></div>
-<header>SPR SHOP ARK R4</header>
-<div id="shop-page">
+
+<canvas id="matrix"></canvas>
+
+<div class="top-nav"><button class="ui-btn" onclick="showPage('shop')">HOME</button></div>
+<div class="floating-cart" onclick="showPage('vault')">🛒<span class="cart-count" id="count">0</span></div>
+
+<header>ARK R4 PRESTIGE</header>
+
+<div id="shop">
     <div class="cat-label">ANDROID MODULES</div>
-    <div id="android-grid" class="product-grid"></div>
+    <div id="a-grid" class="product-grid"></div>
     <div class="cat-label">IOS MODULES</div>
-    <div id="ios-grid" class="product-grid"></div>
+    <div id="i-grid" class="product-grid"></div>
 </div>
+
 <div id="page-3">
-    <div class="payment-card">
-        <button onclick="showShop()" style="background:none; border:none; cursor:pointer; font-weight:bold;">⬅ BACK</button>
-        <h1 style="text-align:center;">CHECKOUT</h1>
-        <div id="cart-summary" style="margin: 20px 0; border-top: 1px solid #000; padding-top: 10px;"></div>
-        <h2 id="p3-total" style="text-align:center; font-size:40px;">$0.00</h2>
-        <div class="method-box active" id="btn-pay-paypal" onclick="selectMethod('paypal')">🔵 PAYPAL</div>
-        <div id="paypal-area"><div id="paypal-button-container"></div></div>
-        <div class="method-box" id="btn-pay-cc" onclick="selectMethod('cc')">💳 CREDIT CARD</div>
-        <div id="cc-area" style="display:none;">
+    <div class="pay-card">
+        <h2 style="text-align:center">SECURE CHECKOUT</h2>
+        <div id="summary" style="margin:20px 0; border-bottom:1px solid #000"></div>
+        <h1 id="total" style="text-align:center">$0.00</h1>
+
+        <div class="method active" id="m-paypal" onclick="sel('paypal')">🔵 PAYPAL</div>
+        <div id="p-area"><div id="paypal-button-container"></div></div>
+
+        <div class="method" id="m-cc" onclick="sel('cc')">💳 CREDIT CARD</div>
+        <div id="c-area" style="display:none">
             <input type="text" placeholder="CARD NUMBER">
-            <div style="display:flex; gap:10px;"><input type="text" placeholder="MM/YY"><input type="text" placeholder="CVC"></div>
-            <button class="finish-btn" onclick="alert('PROCESSING...')">FINISH PAYMENT</button>
+            <button class="finish-btn" onclick="alert('REDIRECTING...')">FINISH PAYMENT</button>
         </div>
-        <div class="method-box" id="btn-pay-crypto" onclick="selectMethod('crypto')">₿ CRYPTO</div>
-        <div id="crypto-area" style="display:none;">
-            <p>BTC ADDRESS:</p><div class="crypto-box" id="btc-disp">...</div>
-            <p>LTC ADDRESS:</p><div class="crypto-box" id="ltc-disp">...</div>
-            <button class="finish-btn" onclick="alert('CONFIRMING...')">I HAVE SENT PAYMENT</button>
+
+        <div class="method" id="m-crypto" onclick="sel('crypto')">₿ CRYPTO</div>
+        <div id="y-area" style="display:none">
+            <p>BTC:</p><div class="crypto-box" id="btc">...</div>
+            <p>LTC:</p><div class="crypto-box" id="ltc">...</div>
+            <button class="finish-btn" onclick="alert('WAITING FOR NETWORK...')">I HAVE SENT</button>
         </div>
+        <button onclick="showPage('shop')" style="margin-top:20px; width:100%; background:none; border:none; cursor:pointer">BACK TO SHOP</button>
     </div>
 </div>
-<div class="admin-box" id="admin-terminal">
-    <h2 style="color:red;">ROOT COMMAND</h2>
-    <div id="login-section">
-        <input type="password" id="admin-pass" placeholder="MASTER KEY">
-        <button class="ui-btn" onclick="login()">DECRYPT</button>
-    </div>
-    <div id="admin-controls" style="display:none;">
+
+<div class="admin-box" id="admin">
+    <h2 style="color:red">ADMIN ACCESS</h2>
+    <input type="password" id="pass" placeholder="KEY">
+    <button class="ui-btn" onclick="auth()">DECRYPT</button>
+    <div id="controls" style="display:none; margin-top:30px">
         <h3>WALLETS</h3>
-        <input type="text" id="wallet-btc" placeholder="BTC">
-        <input type="text" id="wallet-ltc" placeholder="LTC">
-        <input type="text" id="wallet-paypal" placeholder="PAYPAL ID">
-        <button class="ui-btn" onclick="saveWallets()">SAVE</button>
-        <h3>ADD PRODUCT</h3>
-        <input type="text" id="p-name" placeholder="NAME"><input type="number" id="p-price" placeholder="PRICE">
-        <select id="p-cat"><option value="android">Android</option><option value="ios">iOS</option></select>
-        <button class="ui-btn" onclick="addProduct()">DEPLOY</button>
+        <input id="w-btc" placeholder="BTC">
+        <input id="w-ltc" placeholder="LTC">
+        <input id="w-pp" placeholder="PAYPAL ID">
+        <button class="ui-btn" onclick="saveW()">SAVE SETTINGS</button>
+        <h3>INVENTORY</h3>
+        <input id="n" placeholder="NAME"><input type="number" id="pr" placeholder="PRICE">
+        <select id="ca"><option value="android">Android</option><option value="ios">iOS</option></select>
+        <button class="ui-btn" onclick="addP()">ADD PRODUCT</button>
     </div>
-    <button class="ui-btn" onclick="document.getElementById('admin-terminal').style.display='none'" style="margin-top:50px;">CLOSE</button>
+    <button onclick="document.getElementById('admin').style.display='none'" style="color:white; margin-top:40px">EXIT</button>
 </div>
-<audio id="hacker-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
+
+<audio id="music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
+
 <script>
-let products = [], cart = [];
-function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('page-3').style.display='none'; }
-function showPage3() { if(cart.length===0) return; document.getElementById('shop-page').style.display='none'; document.getElementById('page-3').style.display='block'; renderP3(); }
-function selectMethod(m) {
-    document.getElementById('paypal-area').style.display = (m==='paypal')?'block':'none';
-    document.getElementById('cc-area').style.display = (m==='cc')?'block':'none';
-    document.getElementById('crypto-area').style.display = (m==='crypto')?'block':'none';
-    document.querySelectorAll('.method-box').forEach(el=>el.classList.remove('active'));
-    document.getElementById('btn-pay-'+m).classList.add('active');
+let items = [], basket = [];
+function showPage(p) {
+    document.getElementById('shop').style.display = p==='shop'?'block':'none';
+    document.getElementById('page-3').style.display = p==='vault'?'block':'none';
+    if(p==='vault') renderVault();
 }
-function renderP3() {
-    let t=0, h=""; cart.forEach(i=>{ h+=`<div>${i.name} - $${i.price}</div>`; t+=parseFloat(i.price); });
-    document.getElementById('cart-summary').innerHTML = h;
-    document.getElementById('p3-total').innerText = "$"+t.toFixed(2);
-    db.ref('settings/wallets').once('value', s=>{
+function sel(m) {
+    ['p-area','c-area','y-area'].forEach(id=>document.getElementById(id).style.display='none');
+    ['m-paypal','m-cc','m-crypto'].forEach(id=>document.getElementById(id).classList.remove('active'));
+    document.getElementById(m==='paypal'?'p-area':m==='cc'?'c-area':'y-area').style.display='block';
+    document.getElementById('m-'+m).classList.add('active');
+}
+function renderVault() {
+    let t=0, h=""; basket.forEach(i=>{ h+=`<div>${i.name} - $${i.price}</div>`; t+=parseFloat(i.price); });
+    document.getElementById('summary').innerHTML = h;
+    document.getElementById('total').innerText = "$"+t.toFixed(2);
+    db.ref('settings/wallets').once('value', s => {
         const w = s.val() || {};
-        document.getElementById('btc-disp').innerText = w.btc || "N/A";
-        document.getElementById('ltc-disp').innerText = w.ltc || "N/A";
+        document.getElementById('btc').innerText = w.btc || "N/A";
+        document.getElementById('ltc').innerText = w.ltc || "N/A";
     });
 }
-function login() {
-    if(document.getElementById('admin-pass').value === "spartytop1") {
-        document.getElementById('admin-controls').style.display = 'block';
-        document.getElementById('login-section').style.display = 'none';
-        db.ref('settings/wallets').once('value', s=>{
+function auth() {
+    if(document.getElementById('pass').value === "spartytop1") {
+        document.getElementById('controls').style.display = 'block';
+        db.ref('settings/wallets').once('value', s => {
             const w = s.val() || {};
-            document.getElementById('wallet-btc').value = w.btc || "";
-            document.getElementById('wallet-ltc').value = w.ltc || "";
-            document.getElementById('wallet-paypal').value = w.paypal || "";
+            document.getElementById('w-btc').value = w.btc || "";
+            document.getElementById('w-ltc').value = w.ltc || "";
+            document.getElementById('w-pp').value = w.pp || "";
         });
     }
 }
-function saveWallets() {
-    db.ref('settings/wallets').set({ btc: document.getElementById('wallet-btc').value, ltc: document.getElementById('wallet-ltc').value, paypal: document.getElementById('wallet-paypal').value });
-    alert("SAVED");
+function saveW() {
+    db.ref('settings/wallets').set({
+        btc: document.getElementById('w-btc').value,
+        ltc: document.getElementById('w-ltc').value,
+        pp: document.getElementById('w-pp').value
+    });
+    db.ref('settings/paypal_id').set(document.getElementById('w-pp').value);
+    alert("SYSTEM UPDATED");
 }
-function addProduct() {
-    products.push({ name: document.getElementById('p-name').value, price: document.getElementById('p-price').value, category: document.getElementById('p-cat').value });
-    db.ref('products').set(products);
+function addP() {
+    items.push({name: document.getElementById('n').value, price: document.getElementById('pr').value, category: document.getElementById('ca').value});
+    db.ref('products').set(items);
 }
-const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d');
-let drops = []; function initMatrix() { canvas.width=window.innerWidth; canvas.height=window.innerHeight; drops=Array(Math.floor(canvas.width/20)).fill(1); }
-function drawMatrix() { ctx.fillStyle="rgba(0,0,0,0.05)"; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.fillStyle="#ffd700"; drops.forEach((d,i)=>{ ctx.fillText(String.fromCharCode(Math.random()*128), i*20, d*20); if(d*20>canvas.height && Math.random()>0.975) drops[i]=0; drops[i]++; }); }
+
+// Matrix & Load
+const c = document.getElementById('matrix'); const x = c.getContext('2d');
+let d = []; function init() { c.width=window.innerWidth; c.height=window.innerHeight; d=Array(Math.floor(c.width/20)).fill(1); }
+function draw() { x.fillStyle="rgba(0,0,0,0.05)"; x.fillRect(0,0,c.width,c.height); x.fillStyle="#ffd700"; d.forEach((y,i)=>{ x.fillText(String.fromCharCode(Math.random()*128), i*20, y*20); if(y*20>c.height && Math.random()>0.975) d[i]=0; d[i]++; }); }
 window.onload = () => {
-    initMatrix(); setInterval(drawMatrix, 50);
-    db.ref('products').on('value', s=>{
-        products = s.val() || []; const aG=document.getElementById("android-grid"), iG=document.getElementById("ios-grid");
-        aG.innerHTML = ""; iG.innerHTML = "";
-        products.forEach((p,i)=>{
-            const d=document.createElement("div"); d.className="product";
-            d.innerHTML=`<h3>${p.name}</h3><b>$${p.price}</b><br><button onclick="cart.push(products[${i}]); document.getElementById('cart-count').innerText=cart.length">ADD</button>`;
-            p.category==="ios"?iG.appendChild(d):aG.appendChild(d);
+    init(); setInterval(draw, 50);
+    db.ref('products').on('value', s => {
+        items = s.val() || [];
+        const ag = document.getElementById('a-grid'), ig = document.getElementById('i-grid');
+        ag.innerHTML = ""; ig.innerHTML = "";
+        items.forEach((p, i) => {
+            const div = document.createElement('div'); div.className='product';
+            div.innerHTML = `<h3>${p.name}</h3><b>$${p.price}</b><br><br><button class="ui-btn" onclick="basket.push(items[${i}]); document.getElementById('count').innerText=basket.length">ADD</button>`;
+            p.category === 'ios' ? ig.appendChild(div) : ag.appendChild(div);
         });
     });
-    window.addEventListener('keydown', e=>{ if(e.key==="End") document.getElementById('admin-terminal').style.display='block'; });
-    let step=0, l=document.getElementById('load-logs');
-    let loop=setInterval(()=>{ if(step<5){ l.innerHTML+="<div>SYNCING...</div>"; document.getElementById('load-bar').style.width=(step+1)*20+"%"; step++; } else { clearInterval(loop); document.getElementById('loader-overlay').style.display='none'; } }, 300);
+    window.addEventListener('keydown', e => { if(e.key === 'End') document.getElementById('admin').style.display='block'; });
+    let s=0; const l=document.getElementById('load-logs');
+    let t=setInterval(()=>{ if(s<5){ l.innerHTML+="> SYNCING MODULE...<br>"; document.getElementById('load-bar').style.width=(s+1)*20+"%"; s++; } else { clearInterval(t); document.getElementById('loader-overlay').style.display='none'; }}, 300);
 };
-function startAudio() { document.getElementById('hacker-music').play().catch(()=>{}); }
 </script>
 </body>
 </html>
