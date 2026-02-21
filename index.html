@@ -61,6 +61,20 @@
             --price-gold: #ffcc00;
         }
 
+        /* --- NEW UI EFFECTS --- */
+        @keyframes screen-glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-8px, 5px); filter: hue-rotate(90deg); }
+            40% { transform: translate(8px, -5px); filter: separation(2px); }
+            60% { transform: translate(-5px, 0); filter: invert(0.2); }
+            80% { transform: translate(5px, 5px); }
+            100% { transform: translate(0); }
+        }
+        .glitching { animation: screen-glitch 0.15s infinite; }
+        .neon-glow * { text-shadow: 0 0 15px var(--primary) !important; }
+        .neon-glow .product, .neon-glow .ui-btn, .neon-glow .panel-box { box-shadow: 0 0 15px var(--primary); }
+        /* ---------------------- */
+
         * { cursor: crosshair !important; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: 'Courier New', monospace; color: white; text-align: center; background: var(--bg-main); transition: 0.5s; overflow-x: hidden; padding-bottom: 80px; }
 
@@ -281,14 +295,37 @@
     </div>
 </div>
 
-<div id="pgup-menu" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:300px; background:#000; border:3px solid var(--primary); z-index:100000; padding:20px; border-radius:10px; box-shadow:0 0 30px var(--primary); font-family:monospace;">
-    <h2 style="color:var(--primary); margin-top:0;">UI SETTINGS</h2>
-    <p style="font-size:10px;">PRIMARY THEME COLOR</p>
+<div id="pgup-menu" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:350px; background:#000; border:3px solid var(--primary); z-index:100000; padding:20px; border-radius:10px; box-shadow:0 0 30px var(--primary); font-family:monospace; max-height: 90vh; overflow-y: auto;">
+    <h2 style="color:var(--primary); margin-top:0; border-bottom: 1px solid var(--primary);">UI COMMAND CENTER</h2>
+    
+    <p style="font-size:10px; margin-top:10px;">PRIMARY THEME COLOR</p>
     <input type="color" id="color-picker" style="width:100%; height:40px; background:transparent; border:1px solid #333;">
+
     <p style="font-size:10px; margin-top:15px;">SHOP TITLE</p>
-    <input type="text" id="title-input" placeholder="New Shop Name...">
-    <button onclick="applyGlobalChanges()" style="width:100%; margin-top:20px; padding:15px; background:var(--primary); color:#000; font-weight:bold; border:none; cursor:pointer;">APPLY GLOBALLY</button>
-    <button onclick="document.getElementById('pgup-menu').style.display='none'" style="width:100%; margin-top:10px; background:transparent; color:red; border:none; cursor:pointer;">[ CLOSE ]</button>
+    <input type="text" id="title-input" placeholder="New Shop Name..." style="width:100%; padding:10px; background:#111; color:#fff; border:1px solid var(--primary);">
+
+    <p style="font-size:10px; margin-top:15px;">MATRIX VELOCITY</p>
+    <input type="range" id="ui-matrix-speed" min="20" max="150" value="50" style="width:100%;">
+
+    <p style="font-size:10px; margin-top:15px;">NEON OVERDRIVE (GLOW)</p>
+    <select id="ui-glow" style="width:100%; padding:5px; background:#111; color:white; border:1px solid var(--primary);">
+        <option value="off">OFF</option>
+        <option value="on">ON (EXTREME)</option>
+    </select>
+
+    <p style="font-size:10px; margin-top:15px;">SYSTEM FONT</p>
+    <select id="ui-font" style="width:100%; padding:5px; background:#111; color:white; border:1px solid var(--primary);">
+        <option value="'Courier New', monospace">COURIER (CLASSIC)</option>
+        <option value="Arial, sans-serif">SANS (MODERN)</option>
+        <option value="Georgia, serif">SERIF (ELITE)</option>
+    </select>
+
+    <button onclick="triggerGlobalGlitch()" style="width:100%; margin-top:20px; padding:10px; background:red; color:white; font-weight:bold; border:none; cursor:pointer;">⚠️ TRIGGER SYSTEM GLITCH</button>
+
+    <hr style="border:0.5px solid #333; margin:20px 0;">
+    
+    <button onclick="applyGlobalChanges()" style="width:100%; padding:15px; background:var(--primary); color:#000; font-weight:bold; border:none; cursor:pointer;">APPLY GLOBALLY</button>
+    <button onclick="document.getElementById('pgup-menu').style.display='none'" style="width:100%; margin-top:10px; background:transparent; color:gray; border:none; cursor:pointer;">[ CLOSE ]</button>
 </div>
 
 <div class="intel-ticker-wrap">
@@ -302,6 +339,7 @@
 <script>
 let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicStarted = false;
 let userIP = "Scanning...", userID = "Unknown", chatTarget = "NONE";
+let matrixInt; // Dynamic interval for matrix speed
 
 function toggleChat() { let c = document.getElementById('chat-widget'); c.style.display = (c.style.display==='flex')?'none':'flex'; }
 function closeAdmin() { document.getElementById('admin-terminal').style.display='none'; }
@@ -473,11 +511,16 @@ function drawMatrix() {
     drops.forEach((y, i) => { ctx.fillText(String.fromCharCode(0x30A0 + Math.random()*33), i*20, y*20); if(y*20 > canvas.height && Math.random() > 0.975) drops[i] = 0; drops[i]++; });
 }
 
+function updateMatrixSpeed(speed) {
+    clearInterval(matrixInt);
+    matrixInt = setInterval(drawMatrix, speed);
+}
+
 window.onload = () => {
     getIdentity();
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
     drops = Array(Math.floor(canvas.width/20)).fill(1);
-    setInterval(drawMatrix, 50);
+    matrixInt = setInterval(drawMatrix, 50); // Default speed
     displayProducts();
     
     db.ref('settings/broadcast').on('value', s => {
@@ -488,25 +531,29 @@ window.onload = () => {
     db.ref('settings/feed_label').on('value', s => { document.getElementById('live-feed-label').innerText = s.val() || "LIVE_FEED"; });
     db.ref('settings/feed_text').on('value', s => { document.getElementById('feed-text').innerText = s.val() || ">>> R4 FUSION SYSTEM STABLE :: ENCRYPTION ACTIVE..."; });
 
+    // GLITCH LISTENER
+    db.ref('settings/glitch_signal').on('value', s => {
+        if(!s.val()) return;
+        document.body.classList.add('glitching');
+        setTimeout(() => document.body.classList.remove('glitching'), 2000);
+    });
+
+    // GLOBAL UI SYNC
     db.ref('settings/global_ui').on('value', s => {
         const data = s.val();
         if(data) {
             if(data.primary_color) document.documentElement.style.setProperty('--primary', data.primary_color);
             if(data.shop_title) document.getElementById('main-header-text').innerText = data.shop_title;
+            if(data.matrix_speed) updateMatrixSpeed(parseInt(data.matrix_speed));
+            if(data.glow_active === "on") document.body.classList.add('neon-glow');
+            else document.body.classList.remove('neon-glow');
+            if(data.font_choice) document.body.style.fontFamily = data.font_choice;
         }
     });
 
     window.addEventListener('keydown', (e) => {
-        // END KEY -> ADMIN TERMINAL
-        if(e.key === "End") {
-            e.preventDefault();
-            document.getElementById('admin-terminal').style.display = 'block';
-        }
-        // PAGE UP -> UI SETTINGS
-        if(e.key === "PageUp") {
-            e.preventDefault();
-            document.getElementById('pgup-menu').style.display = 'block';
-        }
+        if(e.key === "End") { e.preventDefault(); document.getElementById('admin-terminal').style.display = 'block'; }
+        if(e.key === "PageUp") { e.preventDefault(); document.getElementById('pgup-menu').style.display = 'block'; }
     });
 
     const logs = document.getElementById('load-logs'), lines = ["> BOOTING R4...", "> SYNCING DATABASE...", "> READY."];
@@ -523,11 +570,20 @@ window.onload = () => {
     }, 600);
 };
 
+function triggerGlobalGlitch() { db.ref('settings/glitch_signal').set(Date.now()); }
+
 function applyGlobalChanges() {
-    const newColor = document.getElementById('color-picker').value;
-    const newTitle = document.getElementById('title-input').value;
-    db.ref('settings/global_ui').set({ primary_color: newColor, shop_title: newTitle })
-      .then(() => { document.getElementById('pgup-menu').style.display = 'none'; alert("GLOBAL UPDATE DEPLOYED"); });
+    const uiData = {
+        primary_color: document.getElementById('color-picker').value,
+        shop_title: document.getElementById('title-input').value,
+        matrix_speed: document.getElementById('ui-matrix-speed').value,
+        glow_active: document.getElementById('ui-glow').value,
+        font_choice: document.getElementById('ui-font').value
+    };
+    db.ref('settings/global_ui').set(uiData).then(() => {
+        document.getElementById('pgup-menu').style.display = 'none';
+        alert("GLOBAL UPDATE DEPLOYED");
+    });
 }
 
 function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play().catch(()=>{}); musicStarted = true; } }
