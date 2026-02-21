@@ -19,29 +19,10 @@
             appId: "1:221473460329:web:21a278a86cfdcff8b1d2f8",
             measurementId: "G-82WFV6S568"
         };
-        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         (function() {
-            const checkBans = async () => {
-                try {
-                    const r = await fetch('https://api.ipify.org?format=json');
-                    const d = await r.json();
-                    const userIP = d.ip;
-                    db.ref('banned_ips').on('value', (snap) => {
-                        const list = snap.val() || [];
-                        if(list.includes(userIP)) {
-                            window.stop();
-                            document.documentElement.innerHTML = "";
-                            alert("CRITICAL ERROR: ACCESS DENIED");
-                            window.location.href = "about:blank";
-                        }
-                    });
-                } catch(e) { console.warn("Shield Active"); }
-            };
-            checkBans();
-
             db.ref('settings/paypal_id').once('value', (snap) => {
                 const savedID = snap.val() || "test";
                 const script = document.createElement('script');
@@ -59,108 +40,73 @@
             --glass: rgba(0, 0, 0, 0.95);
             --rare-gold-gradient: linear-gradient(135deg, #8a6d3b 0%, #f1da36 25%, #fdf5a6 50%, #f1da36 75%, #8a6d3b 100%);
         }
-
-        @keyframes gold-shimmer {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        * { cursor: crosshair !important; box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        * { cursor: crosshair !important; box-sizing: border-box; outline: none; }
         body { margin: 0; font-family: 'Courier New', monospace; color: white; background: var(--bg-main); overflow-x: hidden; padding-bottom: 100px; }
-        
-        #input-lock-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000000; background: rgba(0,0,0,0.6); }
-
         #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .terminal-loader { width: 85%; max-width: 800px; background: #000; border: 2px solid #00ff41; padding: 30px; }
-        #load-logs { color: #00ff41; height: 150px; overflow: hidden; font-size: 14px; }
+        #load-logs { color: #00ff41; height: 100px; overflow: hidden; font-size: 14px; }
         .load-bar-container { width: 100%; height: 10px; background: #111; border: 1px solid #00ff41; margin-top: 20px; }
         #load-bar { width: 0%; height: 100%; background: #00ff41; transition: width 0.4s; }
-
         .top-nav { position: fixed; top: 25px; left: 25px; z-index: 4000; display: flex; gap: 20px; }
-        .ui-btn { padding: 14px 24px; background: var(--primary); color: #000; border: 2px solid #fff; font-weight: bold; text-transform: uppercase; cursor: pointer; }
-        
+        .ui-btn { padding: 14px 24px; background: var(--primary); color: #000; border: 2px solid #fff; font-weight: bold; cursor: pointer; }
         .floating-cart { position: fixed; top: 25px; right: 25px; background: var(--primary); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10000; border: 4px solid #fff; font-size: 30px; }
-        .cart-count { position: absolute; top: -5px; right: -5px; background: var(--secondary); color: white; font-size: 18px; padding: 5px 11px; border-radius: 50%; border: 2px solid white; }
-
+        .cart-count { position: absolute; top: -5px; right: -5px; background: var(--secondary); color: white; font-size: 18px; padding: 5px 11px; border-radius: 50%; }
         #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; }
         header { font-size: 60px; font-weight: 900; color: var(--primary); text-align: center; padding: 60px 0; letter-spacing: 10px; }
         .cat-label { margin: 40px auto; padding: 20px; background: var(--glass); border-top: 3px solid var(--primary); border-bottom: 3px solid var(--primary); max-width: 1000px; font-size: 30px; color: var(--primary); text-align: center; }
-        
         .product-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 20px; }
         .product { background: var(--glass); padding: 25px; width: 280px; border: 1px solid #333; text-align: center; }
-
-        #page-3 {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--rare-gold-gradient); background-size: 400% 400%;
-            animation: gold-shimmer 15s ease infinite; z-index: 15000; padding: 40px; overflow-y: auto; color: #000;
-        }
-        .payment-card { background: white; border-radius: 20px; padding: 40px; max-width: 600px; margin: 0 auto; border: 8px solid #000; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .method-box { border: 3px solid #ddd; padding: 15px; margin-bottom: 15px; cursor: pointer; display: flex; align-items: center; gap: 15px; }
+        #page-3 { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--rare-gold-gradient); z-index: 15000; padding: 40px; overflow-y: auto; color: #000; }
+        .payment-card { background: white; border-radius: 20px; padding: 40px; max-width: 600px; margin: 0 auto; border: 8px solid #000; }
+        .method-box { border: 3px solid #ddd; padding: 15px; margin-bottom: 15px; cursor: pointer; display: flex; align-items: center; gap: 15px; font-weight: bold; }
         .method-box.active { border-color: #000; background: #fffde7; }
         .finish-btn { width: 100%; padding: 20px; font-size: 20px; font-weight: 900; background: #000; color: #ffd700; border: none; cursor: pointer; margin-top: 20px; }
         .crypto-box { background: #000; color: #ffd700; padding: 15px; border-radius: 5px; word-break: break-all; margin-top: 10px; font-family: monospace; }
-
         .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 20000; padding: 40px; overflow-y: auto; }
         input, select, textarea { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 12px; margin: 10px 0; width: 100%; }
+        #input-lock-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000000; background: rgba(0,0,0,0.6); }
     </style>
 </head>
 <body onclick="startAudio()">
-
 <div id="input-lock-overlay"></div>
-
 <div id="loader-overlay">
     <div class="terminal-loader">
         <div id="load-logs"></div>
         <div class="load-bar-container"><div id="load-bar"></div></div>
     </div>
 </div>
-
 <canvas id="global-canvas"></canvas>
-
-<div class="top-nav">
-    <button class="ui-btn" onclick="showShop()">[ HOME ]</button>
-</div>
-
+<div class="top-nav"><button class="ui-btn" onclick="showShop()">[ HOME ]</button></div>
 <div class="floating-cart" onclick="showPage3()">🛒 <span class="cart-count" id="cart-count">0</span></div>
-
 <header>SPR SHOP ARK R4</header>
-
 <div id="shop-page">
     <div class="cat-label">ANDROID MODULES</div>
     <div id="android-grid" class="product-grid"></div>
     <div class="cat-label">IOS MODULES</div>
     <div id="ios-grid" class="product-grid"></div>
 </div>
-
 <div id="page-3">
     <div class="payment-card">
         <button onclick="showShop()" style="background:none; border:none; cursor:pointer; font-weight:bold;">⬅ BACK</button>
         <h1 style="text-align:center;">CHECKOUT</h1>
         <div id="cart-summary" style="margin: 20px 0; border-top: 1px solid #000; padding-top: 10px;"></div>
         <h2 id="p3-total" style="text-align:center; font-size:40px;">$0.00</h2>
-
-        <div class="method-box active" id="btn-pay-paypal" onclick="selectMethod('paypal')">🔵 <b>PAYPAL</b></div>
+        <div class="method-box active" id="btn-pay-paypal" onclick="selectMethod('paypal')">🔵 PAYPAL</div>
         <div id="paypal-area"><div id="paypal-button-container"></div></div>
-
-        <div class="method-box" id="btn-pay-cc" onclick="selectMethod('cc')">💳 <b>CREDIT CARD</b></div>
+        <div class="method-box" id="btn-pay-cc" onclick="selectMethod('cc')">💳 CREDIT CARD</div>
         <div id="cc-area" style="display:none;">
             <input type="text" placeholder="CARD NUMBER">
             <div style="display:flex; gap:10px;"><input type="text" placeholder="MM/YY"><input type="text" placeholder="CVC"></div>
             <button class="finish-btn" onclick="alert('PROCESSING...')">FINISH PAYMENT</button>
         </div>
-
-        <div class="method-box" id="btn-pay-crypto" onclick="selectMethod('crypto')">₿ <b>CRYPTO</b></div>
+        <div class="method-box" id="btn-pay-crypto" onclick="selectMethod('crypto')">₿ CRYPTO</div>
         <div id="crypto-area" style="display:none;">
-            <p>BTC ADDRESS:</p>
-            <div class="crypto-box" id="btc-disp">...</div>
-            <p>LTC ADDRESS:</p>
-            <div class="crypto-box" id="ltc-disp">...</div>
-            <button class="finish-btn" onclick="alert('CONFIRMING ON BLOCKCHAIN...')">I HAVE SENT PAYMENT</button>
+            <p>BTC ADDRESS:</p><div class="crypto-box" id="btc-disp">...</div>
+            <p>LTC ADDRESS:</p><div class="crypto-box" id="ltc-disp">...</div>
+            <button class="finish-btn" onclick="alert('CONFIRMING...')">I HAVE SENT PAYMENT</button>
         </div>
     </div>
 </div>
-
 <div class="admin-box" id="admin-terminal">
     <h2 style="color:red;">ROOT COMMAND</h2>
     <div id="login-section">
@@ -174,20 +120,15 @@
         <input type="text" id="wallet-paypal" placeholder="PAYPAL ID">
         <button class="ui-btn" onclick="saveWallets()">SAVE</button>
         <h3>ADD PRODUCT</h3>
-        <input type="text" id="p-name" placeholder="NAME">
-        <input type="number" id="p-price" placeholder="PRICE">
+        <input type="text" id="p-name" placeholder="NAME"><input type="number" id="p-price" placeholder="PRICE">
         <select id="p-cat"><option value="android">Android</option><option value="ios">iOS</option></select>
         <button class="ui-btn" onclick="addProduct()">DEPLOY</button>
-        <div id="admin-list" style="margin-top:20px;"></div>
     </div>
     <button class="ui-btn" onclick="document.getElementById('admin-terminal').style.display='none'" style="margin-top:50px;">CLOSE</button>
 </div>
-
 <audio id="hacker-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
-
 <script>
 let products = [], cart = [];
-
 function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('page-3').style.display='none'; }
 function showPage3() { if(cart.length===0) return; document.getElementById('shop-page').style.display='none'; document.getElementById('page-3').style.display='block'; renderP3(); }
 function selectMethod(m) {
@@ -197,10 +138,8 @@ function selectMethod(m) {
     document.querySelectorAll('.method-box').forEach(el=>el.classList.remove('active'));
     document.getElementById('btn-pay-'+m).classList.add('active');
 }
-
 function renderP3() {
-    let t=0, h="";
-    cart.forEach(i=>{ h+=`<div>${i.name} - $${i.price}</div>`; t+=parseFloat(i.price); });
+    let t=0, h=""; cart.forEach(i=>{ h+=`<div>${i.name} - $${i.price}</div>`; t+=parseFloat(i.price); });
     document.getElementById('cart-summary').innerHTML = h;
     document.getElementById('p3-total').innerText = "$"+t.toFixed(2);
     db.ref('settings/wallets').once('value', s=>{
@@ -209,7 +148,6 @@ function renderP3() {
         document.getElementById('ltc-disp').innerText = w.ltc || "N/A";
     });
 }
-
 function login() {
     if(document.getElementById('admin-pass').value === "spartytop1") {
         document.getElementById('admin-controls').style.display = 'block';
@@ -222,36 +160,21 @@ function login() {
         });
     }
 }
-
 function saveWallets() {
-    db.ref('settings/wallets').set({
-        btc: document.getElementById('wallet-btc').value,
-        ltc: document.getElementById('wallet-ltc').value,
-        paypal: document.getElementById('wallet-paypal').value
-    });
+    db.ref('settings/wallets').set({ btc: document.getElementById('wallet-btc').value, ltc: document.getElementById('wallet-ltc').value, paypal: document.getElementById('wallet-paypal').value });
     alert("SAVED");
 }
-
 function addProduct() {
-    products.push({
-        name: document.getElementById('p-name').value,
-        price: document.getElementById('p-price').value,
-        category: document.getElementById('p-cat').value
-    });
+    products.push({ name: document.getElementById('p-name').value, price: document.getElementById('p-price').value, category: document.getElementById('p-cat').value });
     db.ref('products').set(products);
 }
-
-const canvas = document.getElementById('global-canvas');
-const ctx = canvas.getContext('2d');
-let drops = [];
-function initMatrix() { canvas.width=window.innerWidth; canvas.height=window.innerHeight; drops=Array(Math.floor(canvas.width/20)).fill(1); }
+const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d');
+let drops = []; function initMatrix() { canvas.width=window.innerWidth; canvas.height=window.innerHeight; drops=Array(Math.floor(canvas.width/20)).fill(1); }
 function drawMatrix() { ctx.fillStyle="rgba(0,0,0,0.05)"; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.fillStyle="#ffd700"; drops.forEach((d,i)=>{ ctx.fillText(String.fromCharCode(Math.random()*128), i*20, d*20); if(d*20>canvas.height && Math.random()>0.975) drops[i]=0; drops[i]++; }); }
-
 window.onload = () => {
     initMatrix(); setInterval(drawMatrix, 50);
     db.ref('products').on('value', s=>{
-        products = s.val() || [];
-        const aG=document.getElementById("android-grid"), iG=document.getElementById("ios-grid");
+        products = s.val() || []; const aG=document.getElementById("android-grid"), iG=document.getElementById("ios-grid");
         aG.innerHTML = ""; iG.innerHTML = "";
         products.forEach((p,i)=>{
             const d=document.createElement("div"); d.className="product";
@@ -263,7 +186,6 @@ window.onload = () => {
     let step=0, l=document.getElementById('load-logs');
     let loop=setInterval(()=>{ if(step<5){ l.innerHTML+="<div>SYNCING...</div>"; document.getElementById('load-bar').style.width=(step+1)*20+"%"; step++; } else { clearInterval(loop); document.getElementById('loader-overlay').style.display='none'; } }, 300);
 };
-
 function startAudio() { document.getElementById('hacker-music').play().catch(()=>{}); }
 </script>
 </body>
