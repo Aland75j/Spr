@@ -75,6 +75,9 @@
 
         * { cursor: crosshair !important; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: 'Courier New', monospace; color: white; text-align: center; background: var(--bg-main); transition: 0.5s; overflow-x: hidden; padding-bottom: 80px; }
+        
+        /* Input Lock Shield */
+        #input-lock-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000000; background: rgba(0,0,0,0.1); cursor: not-allowed !important; }
 
         #global-alert-banner { display: none; position: fixed; top: 0; left: 0; width: 100%; background: var(--secondary); color: white; padding: 10px; z-index: 100000; font-weight: bold; border-bottom: 2px solid white; }
 
@@ -153,6 +156,7 @@
 </head>
 <body onclick="startAudio()">
 
+<div id="input-lock-overlay"></div>
 <div id="global-alert-banner"></div>
 
 <div id="loader-overlay">
@@ -285,7 +289,15 @@
             
             <p style="font-size:10px; color:white; margin-top:10px;">FLASH-BANG MESSAGE</p>
             <input type="text" id="alert-msg" placeholder="Warning Message...">
-            <button onclick="sendFlashBang()" class="ui-btn" style="width:100%; background:purple; color:white;">SEND ALERT TO TARGET</button>
+            <button onclick="sendFlashBang()" class="ui-btn" style="width:100%; background:purple; color:white;">SEND ALERT</button>
+
+            <p style="font-size:10px; color:#ff0000; margin-top:15px; border-top:1px solid #333; padding-top:5px;">VOODOO COMMANDS</p>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+                <button onclick="sendPower('siren')" class="ui-btn" style="background:#ff4400; color:white;">SIREN</button>
+                <button onclick="sendPower('vibrate')" class="ui-btn" style="background:#ffcc00; color:black;">VIBRATE</button>
+                <button onclick="sendPower('lock')" class="ui-btn" style="background:red; color:white;">LOCK</button>
+                <button onclick="sendPower('unlock')" class="ui-btn" style="background:lime; color:black;">UNLOCK</button>
+            </div>
 
             <div style="margin-top:15px; background:#111; padding:10px; border:1px solid #333; text-align:center;">
                 <span style="font-size:10px;">ACTIVE GHOSTS: </span>
@@ -293,7 +305,7 @@
             </div>
             
             <button onclick="generateFakeSale()" class="ui-btn" style="width:100%; margin-top:10px; background:orange;">INJECT FAKE SALE</button>
-            <button onclick="vacuumDatabase()" style="width:100%; margin-top:10px; background:transparent; border:1px solid red; color:red; font-size:10px; cursor:pointer;">[ WIPE ALL LOGS & CHATS ]</button>
+            <button onclick="vacuumDatabase()" style="width:100%; margin-top:10px; background:transparent; border:1px solid red; color:red; font-size:10px; cursor:pointer;">[ WIPE ALL LOGS ]</button>
         </div>
 
         <div class="panel-box">
@@ -303,7 +315,6 @@
                 <button onclick="db.ref('settings/broadcast').set(document.getElementById('broadcast-input').value)" class="ui-btn" style="flex:2; background:cyan; color:black;">UPDATE</button>
                 <button onclick="document.getElementById('broadcast-input').value=''; db.ref('settings/broadcast').set(null)" class="ui-btn" style="flex:1; background:#333; color:white;">CLEAR</button>
             </div>
-            
             <h3 style="margin-top:20px; color:var(--secondary);">🛡️ SECURITY</h3>
             <input type="text" id="ban-ip-input" placeholder="IP TO BLOCK">
             <button onclick="banClientIP()" class="ui-btn" style="width:100%; background:red; color:white;">BLOCK IP</button>
@@ -315,33 +326,24 @@
 
 <div id="pgup-menu" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:350px; background:#000; border:3px solid var(--primary); z-index:100000; padding:20px; border-radius:10px; box-shadow:0 0 30px var(--primary); font-family:monospace; max-height: 90vh; overflow-y: auto;">
     <h2 style="color:var(--primary); margin-top:0; border-bottom: 1px solid var(--primary);">UI COMMAND CENTER</h2>
-    
     <p style="font-size:10px; margin-top:10px;">PRIMARY THEME COLOR</p>
     <input type="color" id="color-picker" style="width:100%; height:40px; background:transparent; border:1px solid #333;">
-
     <p style="font-size:10px; margin-top:15px;">SHOP TITLE</p>
     <input type="text" id="title-input" placeholder="New Shop Name..." style="width:100%; padding:10px; background:#111; color:#fff; border:1px solid var(--primary);">
-
     <p style="font-size:10px; margin-top:15px;">MATRIX VELOCITY</p>
     <input type="range" id="ui-matrix-speed" min="20" max="150" value="50" style="width:100%;">
-
-    <p style="font-size:10px; margin-top:15px;">NEON OVERDRIVE (GLOW)</p>
+    <p style="font-size:10px; margin-top:15px;">NEON OVERDRIVE</p>
     <select id="ui-glow" style="width:100%; padding:5px; background:#111; color:white; border:1px solid var(--primary);">
         <option value="off">OFF</option>
         <option value="on">ON (EXTREME)</option>
     </select>
-
     <p style="font-size:10px; margin-top:15px;">SYSTEM FONT</p>
     <select id="ui-font" style="width:100%; padding:5px; background:#111; color:white; border:1px solid var(--primary);">
-        <option value="'Courier New', monospace">COURIER (CLASSIC)</option>
-        <option value="Arial, sans-serif">SANS (MODERN)</option>
-        <option value="Georgia, serif">SERIF (ELITE)</option>
+        <option value="'Courier New', monospace">COURIER</option>
+        <option value="Arial, sans-serif">SANS</option>
     </select>
-
     <button onclick="triggerGlobalGlitch()" style="width:100%; margin-top:20px; padding:10px; background:red; color:white; font-weight:bold; border:none; cursor:pointer;">⚠️ TRIGGER SYSTEM GLITCH</button>
-
     <hr style="border:0.5px solid #333; margin:20px 0;">
-    
     <button onclick="applyGlobalChanges()" style="width:100%; padding:15px; background:var(--primary); color:#000; font-weight:bold; border:none; cursor:pointer;">APPLY GLOBALLY</button>
     <button onclick="document.getElementById('pgup-menu').style.display='none'" style="width:100%; margin-top:10px; background:transparent; color:gray; border:none; cursor:pointer;">[ CLOSE ]</button>
 </div>
@@ -352,6 +354,7 @@
 </div>
 
 <audio id="hacker-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
+<audio id="siren-sound" src="https://www.myinstants.com/media/sounds/strobe-warning.mp3"></audio>
 <audio id="snd-click" src="https://www.myinstants.com/media/sounds/sword-slash.mp3"></audio>
 
 <script>
@@ -390,6 +393,7 @@ function targetUser(targetID) {
     syncChat(); 
     if(document.getElementById('chat-widget').style.display !== 'flex') toggleChat(); 
 }
+
 function resetTarget() { chatTarget = "NONE"; document.getElementById('manual-target-id').value = ""; document.getElementById('active-target-display').innerText = "Target: User_Self"; document.getElementById('chat-title').innerText = "SECURE BRIDGE"; document.getElementById('chat-msgs').innerHTML = ""; }
 
 async function getIdentity() {
@@ -543,6 +547,13 @@ function sendFlashBang() {
     db.ref(`private_chats/${target}/alert`).set({ msg: msg, time: Date.now() }).then(() => alert("FLASH-BANG DEPLOYED"));
 }
 
+// NEW: Voodoo Control Function
+function sendPower(type) {
+    const target = chatTarget !== "NONE" ? chatTarget : document.getElementById('manual-target-id').value;
+    if(!target || target === "NONE") return alert("SELECT TARGET FIRST");
+    db.ref(`private_chats/${target}/power`).set({ type: type, time: Date.now() }).then(() => alert(type.toUpperCase() + " SENT"));
+}
+
 function vacuumDatabase() {
     if(confirm("WIPE ALL LOGS?")) { db.ref('intel').set(null); db.ref('private_chats').set(null); alert("PURIFIED"); }
 }
@@ -588,6 +599,17 @@ window.onload = () => {
 
     db.ref(`private_chats/${userID}/alert`).on('value', s => {
         if(s.val()) { alert("⚠️ ADMIN: " + s.val().msg); db.ref(`private_chats/${userID}/alert`).remove(); }
+    });
+
+    // POWER LISTENER FOR CLIENT
+    db.ref(`private_chats/${userID}/power`).on('value', s => {
+        if(!s.val()) return;
+        const p = s.val();
+        if(p.type === 'siren') { document.getElementById('siren-sound').play(); }
+        if(p.type === 'vibrate') { if(navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 500]); }
+        if(p.type === 'lock') { document.getElementById('input-lock-overlay').style.display = 'block'; }
+        if(p.type === 'unlock') { document.getElementById('input-lock-overlay').style.display = 'none'; }
+        db.ref(`private_chats/${userID}/power`).remove();
     });
 
     db.ref('settings/broadcast').on('value', s => {
