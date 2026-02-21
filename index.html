@@ -118,7 +118,9 @@
         .panel-box { background: #080808; border: 1px solid #333; padding: 20px; border-radius: 8px; }
         .panel-box h3 { color: var(--primary); margin-top: 0; border-bottom: 1px solid #222; padding-bottom: 10px; }
         input, select, textarea { background: #111; border: 1px solid var(--primary); color: #fff; padding: 10px; margin: 5px 0; width: 100%; border-radius: 4px; }
-        <body onclick="startAudio()">
+    </style>
+</head>
+<body onclick="startAudio()">
 
 <div id="input-lock-overlay"></div>
 <div id="global-alert-banner"></div>
@@ -138,7 +140,6 @@
         <div id="load-logs"></div>
         <div class="load-bar-container"><div id="load-bar"></div></div>
     </div>
-    <div id="load-text" style="color: #00ff41; margin-top: 15px; font-weight: bold;">[ ROOT ACCESS GRANTED ]</div>
 </div>
 
 <canvas id="global-canvas"></canvas>
@@ -149,31 +150,22 @@
         <div id="p3-total" style="color:var(--price-gold); font-size:24px; margin-bottom:20px; border-bottom:1px solid #222; padding-bottom:10px;">TOTAL: $0.00</div>
         
         <div class="p3-method" id="btn-p3-pp" onclick="selectP3Method('paypal')">🔵 PAYPAL / DEBIT</div>
-        <div id="p3-paypal-area" style="display:none; margin-bottom:15px;">
-            <div id="paypal-button-container-p3"></div>
-        </div>
+        <div id="p3-paypal-area" style="display:none; margin-bottom:15px;"><div id="paypal-button-container-p3"></div></div>
 
         <div class="p3-method" id="btn-p3-cc" onclick="selectP3Method('cc')">💳 CREDIT CARD (STRIPE)</div>
         <div id="p3-cc-area" style="display:none; margin-bottom:15px;">
             <input type="text" placeholder="CARD NUMBER">
-            <div style="display:flex; gap:5px;">
-                <input type="text" placeholder="MM/YY">
-                <input type="text" placeholder="CVC">
-            </div>
+            <div style="display:flex; gap:5px;"><input type="text" placeholder="MM/YY"><input type="text" placeholder="CVC"></div>
             <button class="ui-btn" style="width:100%; margin-top:10px;" onclick="alert('STRIPE BRIDGE CONNECTING...')">AUTHORIZE CARD</button>
         </div>
 
         <div class="p3-method" id="btn-p3-crypto" onclick="selectP3Method('crypto')">₿ CRYPTOCURRENCY</div>
         <div id="p3-crypto-area" style="display:none; text-align:left;">
-            <p style="font-size:10px; color:gray;">SEND EXACT AMOUNT TO ADDRESS BELOW:</p>
-            <label style="font-size:10px; color:white;">BTC ADDRESS:</label>
-            <div class="crypto-box" id="p3-btc">FETCHING...</div>
-            <label style="font-size:10px; color:white; margin-top:10px; display:block;">LTC ADDRESS:</label>
-            <div class="crypto-box" id="p3-ltc">FETCHING...</div>
-            <button class="ui-btn" style="width:100%; margin-top:15px; background:var(--primary); color:black;" onclick="alert('TRANSACTION LOGGED. AWAITING BLOCKCHAIN CONFIRMATION.')">I HAVE SENT PAYMENT</button>
+            <label style="font-size:10px;">BTC ADDRESS:</label><div class="crypto-box" id="p3-btc">FETCHING...</div>
+            <label style="font-size:10px; margin-top:10px; display:block;">LTC ADDRESS:</label><div class="crypto-box" id="p3-ltc">FETCHING...</div>
+            <button class="ui-btn" style="width:100%; margin-top:15px;" onclick="alert('LOGGED. AWAITING CONFIRMATION.')">I HAVE SENT PAYMENT</button>
         </div>
-
-        <button onclick="showShop()" class="ui-btn" style="background:none; border:none; color:gray; margin-top:20px; width:100%;">⬅ ABORT TRANSACTION</button>
+        <button onclick="showShop()" class="ui-btn" style="background:none; border:none; color:gray; margin-top:20px; width:100%;">⬅ ABORT</button>
     </div>
 </div>
 
@@ -193,111 +185,76 @@
 
 <div class="floating-cart" onclick="showCheckout()">🛒 <span class="cart-count" id="cart-count">0</span></div>
 
-<div class="header-container">
-    <header id="main-header-text" onclick="showShop()" style="cursor:pointer;">SPR SHOP ARK R4</header>
-</div>
+<div class="header-container"><header id="main-header-text" onclick="showShop()" style="cursor:pointer;">SPR SHOP ARK R4</header></div>
 
 <div id="shop-page">
-    <div class="cat-label">ANDROID CHEATS</div>
-    <div id="android-grid" class="product-grid"></div>
-    <div class="cat-label">IOS CHEATS</div>
-    <div id="ios-grid" class="product-grid"></div>
+    <div class="cat-label">ANDROID CHEATS</div><div id="android-grid" class="product-grid"></div>
+    <div class="cat-label">IOS CHEATS</div><div id="ios-grid" class="product-grid"></div>
 </div>
 
 <div id="checkout-page" style="display:none; padding:50px;">
-    <button onclick="showShop()" class="ui-btn">⬅ RETURN TO SHOP</button>
+    <button onclick="showShop()" class="ui-btn">⬅ RETURN</button>
     <div style="max-width:600px; margin:40px auto; background:var(--glass); padding:30px; border:2px solid var(--primary);">
         <h2 style="color:var(--primary)">YOUR CART</h2>
         <div id="cart-list" style="text-align:left; min-height:100px;"></div>
-        <button onclick="clearCart()" class="ui-btn" style="background:red; color:white; margin-bottom:10px;">EMPTY CART</button>
-        <hr style="border:1px solid #222;">
         <input type="text" id="apply-coupon" placeholder="COUPON_CODE">
-        <button onclick="applyCoupon()" class="ui-btn" style="width:100%; margin-top:10px;">VALIDATE CODE</button>
+        <button onclick="applyCoupon()" class="ui-btn" style="width:100%; margin-top:10px;">VALIDATE</button>
         <h1 id="total-usd" style="color:var(--price-gold)">TOTAL: $0</h1>
-        <button onclick="triggerHackerPay()" style="width:100%; background:var(--primary); color:black; padding:20px; font-weight:bold; border:none; cursor:pointer; font-size:18px;">⚔️ FINISH PURCHASE</button>
+        <button onclick="triggerHackerPay()" style="width:100%; background:var(--primary); color:black; padding:20px; font-weight:bold; border:none; font-size:18px;">⚔️ FINISH PURCHASE</button>
     </div>
 </div>
 
 <div id="info-page" style="display:none; padding:50px;">
     <button onclick="showShop()" class="ui-btn">⬅ BACK</button>
-    <div style="max-width: 800px; margin: 40px auto; background: var(--glass); border: 2px solid var(--primary); padding: 30px; border-radius: 15px;">
-        <img id="info-img" style="width:100%; border-radius:10px; margin-bottom:20px; object-fit: contain;">
+    <div style="max-width: 800px; margin: 40px auto; background: var(--glass); border: 2px solid var(--primary); padding: 30px;">
+        <img id="info-img" style="width:100%; border-radius:10px;">
         <h1 id="info-title" style="color:var(--primary)"></h1>
         <h2 id="info-price" style="color:var(--price-gold)"></h2>
-        <p id="info-desc" style="line-height:1.6; font-size:18px;"></p>
-        <div id="info-btns" style="display:flex; flex-direction: column; gap:10px; justify-content:center;"></div>
+        <p id="info-desc"></p>
+        <div id="info-btns"></div>
     </div>
 </div>
 
 <div class="admin-box" id="admin-terminal">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-        <h2 style="color:var(--secondary); margin:0;">R4_COMMAND_HUB</h2>
-        <button onclick="closeAdmin()" class="ui-btn" style="background:red;">EXIT_ROOT</button>
+        <h2 style="color:var(--secondary);">R4_COMMAND_HUB</h2>
+        <button onclick="closeAdmin()" class="ui-btn" style="background:red;">EXIT</button>
     </div>
-
     <div id="login-section" style="text-align:center; padding-top:100px;">
-        <input type="password" id="admin-pass" placeholder="MASTER ROOT KEY" style="max-width:400px; font-size: 20px;">
-        <button onclick="login()" class="ui-btn" style="width:400px; margin-top:20px; display:block; margin-left:auto; margin-right:auto;">DECRYPT HUB</button>
+        <input type="password" id="admin-pass" placeholder="MASTER ROOT KEY">
+        <button onclick="login()" class="ui-btn" style="width:100%; margin-top:20px;">DECRYPT</button>
     </div>
-
     <div id="admin-controls" style="display:none;" class="admin-layout">
         <div class="panel-box">
-            <h3 style="color:lime;">💰 SYSTEM 3 WALLETS</h3>
-            <p style="font-size:10px; color:white;">BTC WALLET ADDRESS:</p>
-            <input type="text" id="adm-btc" placeholder="bc1q...">
-            <p style="font-size:10px; color:white;">LTC WALLET ADDRESS:</p>
-            <input type="text" id="adm-ltc" placeholder="L1...">
-            <button onclick="saveWallets()" class="ui-btn" style="width:100%; background:lime; color:black;">UPDATE WALLETS</button>
-            
-            <h3 style="margin-top:20px;">📡 INTEL</h3>
-            <div id="pay-attempts-list" style="font-size:11px; color:yellow; background:#111; padding:10px; height:150px; overflow-y:auto; border:1px solid #333;">Scanning...</div>
+            <h3 style="color:lime;">💰 WALLET HUB</h3>
+            <input type="text" id="adm-btc" placeholder="BTC ADDR"><input type="text" id="adm-ltc" placeholder="LTC ADDR">
+            <button onclick="saveWallets()" class="ui-btn" style="width:100%; background:lime; color:black;">SAVE WALLETS</button>
+            <div id="pay-attempts-list" style="font-size:11px; color:yellow; margin-top:10px; height:100px; overflow-y:auto;"></div>
         </div>
         <div class="panel-box">
-            <h3>⚒️ ARSENAL FORGE</h3>
+            <h3>⚒️ ARSENAL</h3>
             <input type="hidden" id="edit-index" value="-1">
-            <input type="text" id="p-name" placeholder="PRODUCT NAME">
-            <input type="number" id="p-price" placeholder="PRICE">
-            <input type="text" id="p-yt" placeholder="YOUTUBE VIDEO ID">
+            <input type="text" id="p-name" placeholder="NAME"><input type="number" id="p-price" placeholder="PRICE">
             <select id="p-cat"><option value="android">Android</option><option value="ios">IOS</option></select>
-            <textarea id="p-desc" placeholder="PRODUCT DESCRIPTION" style="height:60px;"></textarea>
-            <label style="font-size:10px; color:var(--primary);">Image & File:</label>
-            <input type="file" id="p-img" accept="image/*">
-            <input type="file" id="p-file">
-            <button id="forge-btn" onclick="addProduct()" class="ui-btn" style="width:100%; margin-top:5px;">DEPLOY ASSET</button>
-            <button id="cancel-edit-btn" onclick="resetForge()" class="ui-btn" style="width:100%; margin-top:5px; background:gray; display:none;">CANCEL</button>
-            <div id="admin-asset-list" style="max-height:100px; overflow-y:auto; margin-top:10px; border:1px solid #333; background:#000;"></div>
+            <textarea id="p-desc" placeholder="DESC"></textarea>
+            <input type="file" id="p-img"><input type="file" id="p-file">
+            <button onclick="addProduct()" class="ui-btn" style="width:100%;">DEPLOY</button>
+            <div id="admin-asset-list"></div>
         </div>
-
-        <div class="panel-box" style="border-color: #ff0000;">
-            <h3 style="color:#ff0000;">💀 BEAST OVERRIDE</h3>
-            <button onclick="toggleKillSwitch()" id="kill-btn" style="width:100%; background:white; color:black; font-weight:bold; padding:10px; border:none; cursor:pointer;">ACTIVATE LOCKDOWN</button>
-            <p style="font-size:10px; color:white; margin-top:15px;">TARGET CONTROL</p>
-            <input type="text" id="manual-target-id" placeholder="Enter ID" oninput="chatTarget = this.value; document.getElementById('active-target-display').innerText = 'Target: User_' + this.value;">
-            <button onclick="sendFlashBang()" class="ui-btn" style="width:100%; background:purple; color:white;">SEND ALERT</button>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:10px;">
-                <button onclick="sendPower('siren')" class="ui-btn" style="background:#ff4400; color:white;">SIREN</button>
-                <button onclick="sendPower('vibrate')" class="ui-btn" style="background:#ffcc00; color:black;">VIBE</button>
-                <button onclick="sendPower('lock')" class="ui-btn" style="background:red; color:white;">LOCK</button>
-                <button onclick="sendPower('unlock')" class="ui-btn" style="background:lime; color:black;">UNLK</button>
-            </div>
-            <button onclick="generateFakeSale()" class="ui-btn" style="width:100%; margin-top:10px; background:orange;">INJECT FAKE SALE</button>
+        <div class="panel-box">
+            <h3 style="color:red;">💀 OVERRIDE</h3>
+            <button onclick="toggleKillSwitch()" class="ui-btn" style="width:100%; background:white;">KILLSWITCH</button>
+            <input type="text" id="manual-target-id" placeholder="TARGET ID">
+            <button onclick="sendFlashBang()" class="ui-btn" style="width:100%; background:purple;">ALERT</button>
+            <button onclick="sendPower('lock')" class="ui-btn">LOCK</button>
+            <button onclick="sendPower('unlock')" class="ui-btn">UNLK</button>
         </div>
     </div>
-</div>
-
-<div id="pgup-menu" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:350px; background:#000; border:3px solid var(--primary); z-index:100000; padding:20px; border-radius:10px;">
-    <h2 style="color:var(--primary); margin-top:0; border-bottom: 1px solid var(--primary);">UI COMMAND CENTER</h2>
-    <p style="font-size:10px;">THEME COLOR</p>
-    <input type="color" id="color-picker">
-    <p style="font-size:10px;">SHOP TITLE</p>
-    <input type="text" id="title-input">
-    <button onclick="applyGlobalChanges()" style="width:100%; padding:15px; background:var(--primary); color:#000; font-weight:bold; border:none; margin-top:20px;">APPLY GLOBALLY</button>
-    <button onclick="document.getElementById('pgup-menu').style.display='none'" style="width:100%; margin-top:10px; background:transparent; color:gray; border:none;">[ CLOSE ]</button>
 </div>
 
 <div class="intel-ticker-wrap">
     <div class="intel-ticker-label" id="live-feed-label">LIVE_FEED</div>
-    <marquee id="feed-text" style="color:#0f0; font-weight:bold;">>>> R4 FUSION SYSTEM STABLE :: ENCRYPTION ACTIVE...</marquee>
+    <marquee id="feed-text">>>> R4 SYSTEM ACTIVE...</marquee>
 </div>
 
 <audio id="hacker-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
@@ -308,11 +265,10 @@
 let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicStarted = false;
 let userIP = "Scanning...", userID = "Unknown", chatTarget = "NONE", matrixInt;
 
-// --- SYSTEM 3 LOGIC ---
 function renderPage3() {
     let t = 0; cart.forEach(i => t += parseFloat(i.price));
     let final = (t - (t * (discount/100))).toFixed(2);
-    document.getElementById('p3-total').innerText = "PAYMENT TOTAL: $" + final;
+    document.getElementById('p3-total').innerText = "TOTAL: $" + final;
     db.ref('settings/wallets').once('value', s => {
         const w = s.val() || { btc: "bc1q_not_set", ltc: "L_not_set" };
         document.getElementById('p3-btc').innerText = w.btc;
@@ -322,10 +278,7 @@ function renderPage3() {
 
 function selectP3Method(m) {
     ['p3-paypal-area', 'p3-cc-area', 'p3-crypto-area'].forEach(id => document.getElementById(id).style.display = 'none');
-    ['btn-p3-pp', 'btn-p3-cc', 'btn-p3-crypto'].forEach(id => document.getElementById(id).classList.remove('active'));
     document.getElementById('p3-' + m + '-area').style.display = 'block';
-    document.getElementById('btn-p3-' + (m === 'paypal' ? 'pp' : m)).classList.add('active');
-    
     if(m === 'paypal') {
         document.getElementById('paypal-button-container-p3').innerHTML = '';
         let t = 0; cart.forEach(i => t += parseFloat(i.price));
@@ -338,27 +291,21 @@ function selectP3Method(m) {
 }
 
 function saveWallets() {
-    const btc = document.getElementById('adm-btc').value;
-    const ltc = document.getElementById('adm-ltc').value;
-    db.ref('settings/wallets').set({ btc, ltc }).then(() => alert("WALLETS DEPLOYED TO PAGE 3"));
+    db.ref('settings/wallets').set({ btc: document.getElementById('adm-btc').value, ltc: document.getElementById('adm-ltc').value }).then(() => alert("WALLETS UPDATED"));
 }
 
 function triggerHackerPay() {
-    if(cart.length === 0) return alert("INVENTORY EMPTY");
+    if(cart.length === 0) return alert("EMPTY");
     document.getElementById('checkout-page').style.display = 'none';
     document.getElementById('page-3').style.display = 'block';
     renderPage3();
 }
 
 function showShop() { 
-    document.getElementById('shop-page').style.display='block'; 
-    document.getElementById('info-page').style.display='none'; 
-    document.getElementById('checkout-page').style.display='none'; 
-    document.getElementById('page-3').style.display='none'; 
+    ['shop-page', 'info-page', 'checkout-page', 'page-3'].forEach(id => document.getElementById(id).style.display = id === 'shop-page' ? 'block' : 'none');
     broadcastGhostData(); 
 }
 
-// --- YOUR ORIGINAL CORE FUNCTIONS (RETAINED) ---
 function toggleChat() { let c = document.getElementById('chat-widget'); c.style.display = (c.style.display==='flex')?'none':'flex'; }
 function closeAdmin() { document.getElementById('admin-terminal').style.display='none'; }
 function sendChat() {
@@ -372,12 +319,12 @@ function syncChat() {
     let room = isAdmin ? chatTarget : userID;
     db.ref(`private_chats/${room}`).on('value', s => {
         let list = s.val() ? Object.values(s.val()) : [];
-        document.getElementById('chat-msgs').innerHTML = list.map(m => m.msg ? `<div><b style="color:${m.sender === "ADMIN" ? "#00ff00" : "var(--primary)"}">${m.sender}</b>: ${m.msg}</div>` : '').join('');
+        document.getElementById('chat-msgs').innerHTML = list.map(m => m.msg ? `<div><b>${m.sender}</b>: ${m.msg}</div>` : '').join('');
         document.getElementById('chat-msgs').scrollTop = document.getElementById('chat-msgs').scrollHeight;
     });
 }
 
-function targetUser(targetID) { chatTarget = targetID; document.getElementById('manual-target-id').value = targetID; syncChat(); toggleChat(); }
+function targetUser(t) { chatTarget = t; syncChat(); }
 
 async function getIdentity() {
     try {
@@ -392,55 +339,46 @@ async function getIdentity() {
 
 function broadcastGhostData() {
     if(isAdmin || userID === "Unknown") return;
-    let page = document.getElementById('checkout-page').style.display !== 'none' ? "CHECKOUT" : "SHOP";
-    db.ref(`ghost_tracking/${userID}`).update({ pageName: page, lastActive: Date.now() });
+    db.ref(`ghost_tracking/${userID}`).update({ pageName: "ACTIVE", lastActive: Date.now() });
 }
 
 function displayProducts() {
     db.ref('products').on('value', (snap) => {
         products = snap.val() || [];
         const android = document.getElementById("android-grid"), ios = document.getElementById("ios-grid");
-        if(!android) return;
-        android.innerHTML = ""; ios.innerHTML = "";
+        if(!android) return; android.innerHTML = ""; ios.innerHTML = "";
         products.forEach((p, i) => {
             if(!p) return;
             const div = document.createElement("div"); div.className = "product";
-            div.innerHTML = `<img src="${p.image || ''}" onclick="showInfo(${i})"><h3>${p.name}</h3><div style="color:var(--price-gold); font-weight:bold;">$${p.price}</div><button onclick="addToCart(${i})" style="width:100%; background:var(--primary); border:none; padding:10px; cursor:pointer;">ADD TO CART</button>`;
+            div.innerHTML = `<img src="${p.image || ''}" onclick="showInfo(${i})"><h3>${p.name}</h3><div style="color:gold;">$${p.price}</div><button onclick="addToCart(${i})" class="ui-btn" style="width:100%;">ADD</button>`;
             p.category === "ios" ? ios.appendChild(div) : android.appendChild(div);
         });
     });
 }
 
-function addToCart(i) {
-    document.getElementById('snd-click').play().catch(()=>{});
-    cart.push(products[i]); document.getElementById('cart-count').innerText = cart.length;
+function showInfo(i) {
+    const p = products[i];
+    document.getElementById('shop-page').style.display = 'none';
+    document.getElementById('info-page').style.display = 'block';
+    document.getElementById('info-img').src = p.image || '';
+    document.getElementById('info-title').innerText = p.name;
+    document.getElementById('info-price').innerText = "$" + p.price;
+    document.getElementById('info-desc').innerText = p.desc;
+    document.getElementById('info-btns').innerHTML = `<button class="ui-btn" onclick="addToCart(${i})">ADD TO CART</button>`;
 }
 
-function renderCart() {
-    let l=document.getElementById('cart-list'), t=0; l.innerHTML = "";
-    cart.forEach((item, index) => {
-        l.innerHTML += `<div style="padding:10px; border-bottom:1px solid #222; display:flex; justify-content:space-between;"><span>${item.name} - $${item.price}</span><button onclick="cart.splice(${index},1); renderCart();" style="color:red; background:none; border:none;">[X]</button></div>`;
-        t += parseFloat(item.price);
-    });
-    document.getElementById('total-usd').innerText = "TOTAL: $" + (t - (t * (discount/100))).toFixed(2);
-}
+function addToCart(i) { document.getElementById('snd-click').play().catch(()=>{}); cart.push(products[i]); document.getElementById('cart-count').innerText = cart.length; }
 
 function login() {
     if(document.getElementById('admin-pass').value === "spartytop1") {
-        isAdmin = true;
-        document.getElementById('admin-controls').style.display = 'grid';
-        document.getElementById('login-section').style.display = 'none';
-        db.ref('intel').on('value', s => {
-            const val = s.val() || {};
-            document.getElementById('pay-attempts-list').innerHTML = Object.keys(val).reverse().map(k => `<div>${val[k].text} <button onclick="targetUser('${val[k].owner}')">BRIDGE</button></div>`).join('');
-        });
+        isAdmin = true; document.getElementById('admin-controls').style.display = 'grid'; document.getElementById('login-section').style.display = 'none';
     }
 }
 
 const canvas = document.getElementById('global-canvas'), ctx = canvas.getContext('2d'); let drops = [];
 function drawMatrix() {
     ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary');
+    ctx.fillStyle = "#ffd700";
     drops.forEach((y, i) => { ctx.fillText(String.fromCharCode(0x30A0 + Math.random()*33), i*20, y*20); if(y*20 > canvas.height && Math.random() > 0.975) drops[i] = 0; drops[i]++; });
 }
 
@@ -448,24 +386,14 @@ window.onload = () => {
     getIdentity();
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
     drops = Array(Math.floor(canvas.width/20)).fill(1);
-    matrixInt = setInterval(drawMatrix, 50);
+    setInterval(drawMatrix, 50);
     displayProducts();
-    
-    db.ref('settings/global_ui').on('value', s => {
-        const data = s.val(); if(data) {
-            if(data.primary_color) document.documentElement.style.setProperty('--primary', data.primary_color);
-            if(data.shop_title) document.getElementById('main-header-text').innerText = data.shop_title;
-        }
-    });
-
-    window.addEventListener('keydown', (e) => {
-        if(e.key === "End") document.getElementById('admin-terminal').style.display = 'block';
-    });
-    
+    window.addEventListener('keydown', (e) => { if(e.key === "End") document.getElementById('admin-terminal').style.display = 'block'; });
     setTimeout(() => document.getElementById('loader-overlay').style.display='none', 2000);
 };
 
 function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play(); musicStarted = true; } }
+function toggleMusic(e) { if(e) e.stopPropagation(); let m = document.getElementById('hacker-music'); if(m.paused) m.play(); else m.pause(); }
 </script>
 </body>
 </html>
