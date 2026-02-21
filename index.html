@@ -61,7 +61,6 @@
             --price-gold: #ffcc00;
         }
 
-        /* --- UI OVERDRIVE EFFECTS --- */
         @keyframes screen-glitch {
             0% { transform: translate(0); }
             20% { transform: translate(-8px, 5px); filter: hue-rotate(90deg); }
@@ -73,7 +72,6 @@
         .glitching { animation: screen-glitch 0.15s infinite; }
         .neon-glow * { text-shadow: 0 0 15px var(--primary) !important; }
         .neon-glow .product, .neon-glow .ui-btn, .neon-glow .panel-box { box-shadow: 0 0 15px var(--primary); }
-        /* --------------------------- */
 
         * { cursor: crosshair !important; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: 'Courier New', monospace; color: white; text-align: center; background: var(--bg-main); transition: 0.5s; overflow-x: hidden; padding-bottom: 80px; }
@@ -282,10 +280,10 @@
             <h3 style="color:#ff0000;">💀 BEAST OVERRIDE</h3>
             <button onclick="toggleKillSwitch()" id="kill-btn" style="width:100%; background:white; color:black; font-weight:bold; padding:10px; border:none; cursor:pointer;">ACTIVATE LOCKDOWN</button>
             
-            <p style="font-size:10px; color:white; margin-top:15px;">HYPE BOT</p>
-            <button onclick="generateFakeSale()" class="ui-btn" style="width:100%; background:orange;">INJECT FAKE SALE</button>
-
-            <p style="font-size:10px; color:white; margin-top:15px;">FLASH-BANG (TARGETED ALERT)</p>
+            <p style="font-size:10px; color:white; margin-top:15px;">TARGET CONTROL (MANUAL ID)</p>
+            <input type="text" id="manual-target-id" placeholder="Enter ID (e.g. 192)" oninput="chatTarget = this.value; document.getElementById('active-target-display').innerText = 'Target: User_' + this.value;">
+            
+            <p style="font-size:10px; color:white; margin-top:10px;">FLASH-BANG MESSAGE</p>
             <input type="text" id="alert-msg" placeholder="Warning Message...">
             <button onclick="sendFlashBang()" class="ui-btn" style="width:100%; background:purple; color:white;">SEND ALERT TO TARGET</button>
 
@@ -293,8 +291,9 @@
                 <span style="font-size:10px;">ACTIVE GHOSTS: </span>
                 <span id="ghost-count" style="color:lime; font-weight:bold;">0</span>
             </div>
-
-            <button onclick="vacuumDatabase()" style="width:100%; margin-top:15px; background:transparent; border:1px solid red; color:red; font-size:10px; cursor:pointer;">[ WIPE ALL LOGS & CHATS ]</button>
+            
+            <button onclick="generateFakeSale()" class="ui-btn" style="width:100%; margin-top:10px; background:orange;">INJECT FAKE SALE</button>
+            <button onclick="vacuumDatabase()" style="width:100%; margin-top:10px; background:transparent; border:1px solid red; color:red; font-size:10px; cursor:pointer;">[ WIPE ALL LOGS & CHATS ]</button>
         </div>
 
         <div class="panel-box">
@@ -379,8 +378,15 @@ function syncChat() {
     });
 }
 
-function targetUser(targetID) { chatTarget = targetID; document.getElementById('active-target-display').innerText = "Target: User_" + targetID; document.getElementById('chat-title').innerText = "BRIDGE: User_" + targetID; syncChat(); if(document.getElementById('chat-widget').style.display !== 'flex') toggleChat(); }
-function resetTarget() { chatTarget = "NONE"; document.getElementById('active-target-display').innerText = "Target: User_Self"; document.getElementById('chat-title').innerText = "SECURE BRIDGE"; document.getElementById('chat-msgs').innerHTML = ""; }
+function targetUser(targetID) { 
+    chatTarget = targetID; 
+    document.getElementById('manual-target-id').value = targetID;
+    document.getElementById('active-target-display').innerText = "Target: User_" + targetID; 
+    document.getElementById('chat-title').innerText = "BRIDGE: User_" + targetID; 
+    syncChat(); 
+    if(document.getElementById('chat-widget').style.display !== 'flex') toggleChat(); 
+}
+function resetTarget() { chatTarget = "NONE"; document.getElementById('manual-target-id').value = ""; document.getElementById('active-target-display').innerText = "Target: User_Self"; document.getElementById('chat-title').innerText = "SECURE BRIDGE"; document.getElementById('chat-msgs').innerHTML = ""; }
 
 async function getIdentity() {
     try {
@@ -492,11 +498,16 @@ function login() {
         isAdmin = true;
         document.getElementById('admin-controls').style.display = 'grid';
         document.getElementById('login-section').style.display = 'none';
+        
         db.ref('intel').limitToLast(50).on('value', s => { 
             const val = s.val() || {};
             document.getElementById('pay-attempts-list').innerHTML = Object.keys(val).reverse().map(k => {
-                let currentOwner = val[k].owner || val[k].text.split('|')[1].trim().split('.')[0];
-                return `<div style="margin-bottom:5px; border-bottom:1px solid #333; cursor:pointer;" onclick="targetUser('${currentOwner}')">[BRIDGE] User_${currentOwner}: ${val[k].text}</div>`;
+                let txt = val[k].text || "";
+                let extractedID = txt.includes('|') ? txt.split('|')[1].trim().split('.')[0] : "UNK";
+                return `<div style="margin-bottom:5px; border-bottom:1px solid #333; cursor:pointer; color:yellow;" 
+                        onclick="targetUser('${extractedID}')">
+                        [BRIDGE] User_${extractedID}: ${txt}
+                        </div>`;
             }).join(''); 
         });
         db.ref('coupons').on('value', s => { coupons = s.val() || {}; });
@@ -507,7 +518,7 @@ function login() {
 function banClientIP() { const ip = document.getElementById('ban-ip-input').value; if(ip) { db.ref('banned_ips').once('value', s => { let list = s.val() || []; list.push(ip); db.ref('banned_ips').set(list).then(() => alert("BLOCKED")); }); } }
 function addCoupon() { db.ref('coupons/'+document.getElementById('c-code').value.toUpperCase()).set(document.getElementById('c-perc').value).then(()=>alert("COUPON SAVED")); }
 
-// --- BEAST FUNCTIONS ---
+// --- CORRECTED BEAST FUNCTIONS ---
 function toggleKillSwitch() {
     db.ref('settings/site_status').once('value', s => {
         let status = s.val() === "LOCKED" ? "OPEN" : "LOCKED";
@@ -518,21 +529,20 @@ function toggleKillSwitch() {
 
 function generateFakeSale() {
     const items = ["Aimbot", "Wallhack", "Full Bundle", "iOS Bypass", "Android Root"];
-    const randomItem = items[Math.floor(Math.random() * items.length)];
-    const msg = `>>> SUCCESS: Anonymous_User_${Math.floor(Math.random()*999)} purchased [${randomItem}]!`;
+    const msg = `>>> SUCCESS: Anonymous_User_${Math.floor(Math.random()*999)} purchased [${items[Math.floor(Math.random()*items.length)]}]!`;
     db.ref('settings/feed_text').set(msg);
 }
 
 function sendFlashBang() {
     const msg = document.getElementById('alert-msg').value;
-    if(!msg || chatTarget === "NONE") return alert("SELECT A TARGET & ENTER MSG");
-    db.ref(`private_chats/${chatTarget}/alert`).set({ msg: msg, time: Date.now() });
+    const target = chatTarget !== "NONE" ? chatTarget : document.getElementById('manual-target-id').value;
+    if(!msg || !target || target === "" || target === "NONE") return alert("NO TARGET SELECTED");
+    db.ref(`private_chats/${target}/alert`).set({ msg: msg, time: Date.now() }).then(() => alert("FLASH-BANG DEPLOYED"));
 }
 
 function vacuumDatabase() {
     if(confirm("WIPE ALL LOGS?")) { db.ref('intel').set(null); db.ref('private_chats').set(null); alert("PURIFIED"); }
 }
-// -----------------------
 
 function showInfo(i) {
     const p = products[i];
