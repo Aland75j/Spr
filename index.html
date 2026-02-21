@@ -171,7 +171,6 @@
 
 <div class="top-nav">
     <button class="ui-btn" id="music-btn" onclick="toggleMusic(event)">🔊 MUSIC: ON</button>
-    <button class="ui-btn" onclick="toggleTheme()">🌀 MODE</button>
     <button class="ui-btn" onclick="toggleChat()">💬 CHAT</button>
 </div>
 
@@ -243,13 +242,11 @@
             <h3>📡 INTEL (CLICK TO BRIDGE)</h3>
             <div id="pay-attempts-list" style="font-size:11px; color:yellow; background:#111; padding:10px; height:150px; overflow-y:auto; border:1px solid #333;">Scanning...</div>
             <button onclick="db.ref('intel').set(null)" class="ui-btn" style="width:100%; background:red; margin-top:5px;">WIPE INTEL</button>
-            
             <h3 style="margin-top:20px;">🎟️ COUPONS</h3>
             <input type="text" id="c-code" placeholder="CODE">
             <input type="number" id="c-perc" placeholder="DISCOUNT %">
             <button onclick="addCoupon()" class="ui-btn" style="width:100%;">GENERATE</button>
         </div>
-
         <div class="panel-box">
             <h3>⚒️ ARSENAL FORGE</h3>
             <input type="hidden" id="edit-index" value="-1">
@@ -265,20 +262,16 @@
             <button id="cancel-edit-btn" onclick="resetForge()" class="ui-btn" style="width:100%; margin-top:5px; background:gray; display:none;">CANCEL</button>
             <div id="admin-asset-list" style="max-height:100px; overflow-y:auto; margin-top:10px; border:1px solid #333; background:#000;"></div>
         </div>
-
         <div class="panel-box">
             <h3 style="color:cyan;">📢 SYSTEM BROADCAST</h3>
             <input type="text" id="broadcast-input" placeholder="ALERT BANNER MESSAGE">
             <button onclick="db.ref('settings/broadcast').set(document.getElementById('broadcast-input').value)" class="ui-btn" style="width:100%; background:cyan; color:black;">UPDATE BANNER</button>
             <button onclick="db.ref('settings/broadcast').set('')" class="ui-btn" style="width:100%; background:#222; margin-top:5px;">CLEAR BANNER</button>
-
             <h3 style="margin-top:20px; color:lime;">📊 LIVE FEED CONTROL</h3>
-            <input type="text" id="feed-label-input" placeholder="FEED LABEL (e.g. LIVE_FEED)">
+            <input type="text" id="feed-label-input" placeholder="FEED LABEL">
             <button onclick="db.ref('settings/feed_label').set(document.getElementById('feed-label-input').value)" class="ui-btn" style="width:100%; background:lime; color:black;">SET LABEL</button>
-            
-            <textarea id="feed-text-input" placeholder="FEED CONTENT MARQUEE TEXT" style="height:50px; margin-top:10px;"></textarea>
+            <textarea id="feed-text-input" placeholder="FEED CONTENT" style="height:50px; margin-top:10px;"></textarea>
             <button onclick="db.ref('settings/feed_text').set(document.getElementById('feed-text-input').value)" class="ui-btn" style="width:100%; background:lime; color:black;">SET CONTENT</button>
-
             <h3 style="margin-top:20px; color:var(--secondary);">🛡️ SECURITY</h3>
             <input type="text" id="ban-ip-input" placeholder="IP TO BLOCK">
             <button onclick="banClientIP()" class="ui-btn" style="width:100%; background:red; color:white;">BLOCK IP</button>
@@ -288,19 +281,19 @@
     </div>
 </div>
 
-<div class="intel-ticker-wrap">
-    <div class="intel-ticker-label" id="live-feed-label">LIVE_FEED</div>
-    <marquee id="feed-text" style="color:#0f0; font-weight:bold;">>>> R4 FUSION SYSTEM STABLE :: ENCRYPTION ACTIVE...</marquee>
-</div>
-
 <div id="pgup-menu" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:300px; background:#000; border:3px solid var(--primary); z-index:100000; padding:20px; border-radius:10px; box-shadow:0 0 30px var(--primary); font-family:monospace;">
     <h2 style="color:var(--primary); margin-top:0;">UI SETTINGS</h2>
     <p style="font-size:10px;">PRIMARY THEME COLOR</p>
     <input type="color" id="color-picker" style="width:100%; height:40px; background:transparent; border:1px solid #333;">
     <p style="font-size:10px; margin-top:15px;">SHOP TITLE</p>
-    <input type="text" id="title-input" placeholder="New Shop Name..." style="width:100%; padding:10px; background:#111; color:#fff; border:1px solid var(--primary);">
+    <input type="text" id="title-input" placeholder="New Shop Name...">
     <button onclick="applyGlobalChanges()" style="width:100%; margin-top:20px; padding:15px; background:var(--primary); color:#000; font-weight:bold; border:none; cursor:pointer;">APPLY GLOBALLY</button>
     <button onclick="document.getElementById('pgup-menu').style.display='none'" style="width:100%; margin-top:10px; background:transparent; color:red; border:none; cursor:pointer;">[ CLOSE ]</button>
+</div>
+
+<div class="intel-ticker-wrap">
+    <div class="intel-ticker-label" id="live-feed-label">LIVE_FEED</div>
+    <marquee id="feed-text" style="color:#0f0; font-weight:bold;">>>> R4 FUSION SYSTEM STABLE :: ENCRYPTION ACTIVE...</marquee>
 </div>
 
 <audio id="hacker-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
@@ -311,17 +304,14 @@ let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, music
 let userIP = "Scanning...", userID = "Unknown", chatTarget = "NONE";
 
 function toggleChat() { let c = document.getElementById('chat-widget'); c.style.display = (c.style.display==='flex')?'none':'flex'; }
+function closeAdmin() { document.getElementById('admin-terminal').style.display='none'; }
 
 function sendChat() {
     let inp = document.getElementById('chat-input');
     if(!inp.value.trim()) return;
     let room = isAdmin ? chatTarget : userID;
     if(room === "NONE") return alert("SELECT A TARGET FIRST");
-    db.ref(`private_chats/${room}`).push({ 
-        sender: isAdmin ? "ADMIN" : `User_${userID}`, 
-        msg: inp.value, 
-        time: Date.now() 
-    });
+    db.ref(`private_chats/${room}`).push({ sender: isAdmin ? "ADMIN" : `User_${userID}`, msg: inp.value, time: Date.now() });
     inp.value = "";
 }
 
@@ -331,27 +321,13 @@ function syncChat() {
     db.ref(`private_chats/${room}`).off();
     db.ref(`private_chats/${room}`).on('value', s => {
         let list = s.val() ? Object.values(s.val()) : [];
-        document.getElementById('chat-msgs').innerHTML = list.map(m => `
-            <div style="margin-bottom:5px;"><b style="color:${m.sender === "ADMIN" ? "#00ff00" : "var(--primary)"}">${m.sender}</b>: ${m.msg}</div>
-        `).join('');
+        document.getElementById('chat-msgs').innerHTML = list.map(m => `<div style="margin-bottom:5px;"><b style="color:${m.sender === "ADMIN" ? "#00ff00" : "var(--primary)"}">${m.sender}</b>: ${m.msg}</div>`).join('');
         let div = document.getElementById('chat-msgs'); div.scrollTop = div.scrollHeight;
     });
 }
 
-function targetUser(targetID) {
-    chatTarget = targetID;
-    document.getElementById('active-target-display').innerText = "Target: User_" + targetID;
-    document.getElementById('chat-title').innerText = "BRIDGE: User_" + targetID;
-    syncChat();
-    toggleChat();
-}
-
-function resetTarget() {
-    chatTarget = "NONE";
-    document.getElementById('active-target-display').innerText = "Target: User_Self";
-    document.getElementById('chat-title').innerText = "SECURE BRIDGE";
-    document.getElementById('chat-msgs').innerHTML = "";
-}
+function targetUser(targetID) { chatTarget = targetID; document.getElementById('active-target-display').innerText = "Target: User_" + targetID; document.getElementById('chat-title').innerText = "BRIDGE: User_" + targetID; syncChat(); if(document.getElementById('chat-widget').style.display !== 'flex') toggleChat(); }
+function resetTarget() { chatTarget = "NONE"; document.getElementById('active-target-display').innerText = "Target: User_Self"; document.getElementById('chat-title').innerText = "SECURE BRIDGE"; document.getElementById('chat-msgs').innerHTML = ""; }
 
 async function getIdentity() {
     try {
@@ -365,8 +341,7 @@ async function getIdentity() {
 
 function toggleMusic(e) { 
     if(e) e.stopPropagation();
-    let m = document.getElementById('hacker-music');
-    let btn = document.getElementById('music-btn');
+    let m = document.getElementById('hacker-music'), btn = document.getElementById('music-btn');
     if (m.paused) { m.play(); btn.innerText = "🔊 MUSIC: ON"; } else { m.pause(); btn.innerText = "🔇 MUSIC: OFF"; }
 }
 
@@ -379,12 +354,7 @@ function displayProducts() {
         products.forEach((p, i) => {
             if(!p) return;
             const div = document.createElement("div"); div.className = "product";
-            div.innerHTML = `
-                <img src="${p.image || ''}" onclick="showInfo(${i})">
-                <h3>${p.name}</h3>
-                <div style="color:var(--price-gold); font-weight:bold; font-size:20px;">$${p.price}</div>
-                <button onclick="addToCart(${i})" style="width:100%; background:var(--primary); margin-top:10px; border:none; padding:10px; cursor:pointer; font-weight:bold;">ADD TO CART</button>
-            `;
+            div.innerHTML = `<img src="${p.image || ''}" onclick="showInfo(${i})"><h3>${p.name}</h3><div style="color:var(--price-gold); font-weight:bold; font-size:20px;">$${p.price}</div><button onclick="addToCart(${i})" style="width:100%; background:var(--primary); margin-top:10px; border:none; padding:10px; cursor:pointer; font-weight:bold;">ADD TO CART</button>`;
             p.category === "ios" ? ios.appendChild(div) : android.appendChild(div);
         });
         if(isAdmin) renderAdminAssets();
@@ -406,15 +376,7 @@ function addProduct() {
 function renderAdminAssets() {
     const list = document.getElementById('admin-asset-list');
     if(!list) return;
-    list.innerHTML = products.map((p, i) => p ? `
-        <div style="border-bottom:1px solid #222; padding:5px; display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:10px; color:white;">${p.name}</span>
-            <div>
-                <button onclick="editProduct(${i})" style="color:lime; background:none; border:1px solid lime; padding:2px; font-size:9px;">E</button>
-                <button onclick="deleteProduct(${i})" style="color:red; background:none; border:1px solid red; margin-left:2px; padding:2px; font-size:9px;">D</button>
-            </div>
-        </div>
-    ` : '').join('');
+    list.innerHTML = products.map((p, i) => p ? `<div style="border-bottom:1px solid #222; padding:5px; display:flex; justify-content:space-between; align-items:center;"><span style="font-size:10px; color:white;">${p.name}</span><div><button onclick="editProduct(${i})" style="color:lime; background:none; border:1px solid lime; padding:2px; font-size:9px;">E</button><button onclick="deleteProduct(${i})" style="color:red; background:none; border:1px solid red; margin-left:2px; padding:2px; font-size:9px;">D</button></div></div>` : '').join('');
 }
 
 function editProduct(i) {
@@ -430,14 +392,7 @@ function editProduct(i) {
 }
 
 function deleteProduct(i) { if(confirm("DELETE ASSET?")) { products.splice(i, 1); db.ref('products').set(products); } }
-
-function resetForge() { 
-    document.getElementById('edit-index').value = "-1"; 
-    document.getElementById('forge-btn').innerText = "DEPLOY ASSET"; 
-    document.getElementById('cancel-edit-btn').style.display = "none";
-    document.getElementById('p-name').value = ""; document.getElementById('p-price').value = ""; 
-    document.getElementById('p-yt').value = ""; document.getElementById('p-desc').value = "";
-}
+function resetForge() { document.getElementById('edit-index').value = "-1"; document.getElementById('forge-btn').innerText = "DEPLOY ASSET"; document.getElementById('cancel-edit-btn').style.display = "none"; document.getElementById('p-name').value = ""; document.getElementById('p-price').value = ""; document.getElementById('p-yt').value = ""; document.getElementById('p-desc').value = ""; }
 
 function addToCart(i) {
     const sound = document.getElementById('snd-click');
@@ -455,10 +410,7 @@ function showCheckout() { document.getElementById('shop-page').style.display='no
 function renderCart() {
     let l=document.getElementById('cart-list'), t=0; l.innerHTML = "";
     cart.forEach((item, index) => {
-        l.innerHTML += `<div style="padding:10px; border-bottom:1px solid #222; display:flex; justify-content:space-between;">
-            <span>${item.name} - $${item.price}</span>
-            <button onclick="removeFromCart(${index})" style="background:none; border:none; color:red; cursor:pointer;">[REMOVE]</button>
-        </div>`;
+        l.innerHTML += `<div style="padding:10px; border-bottom:1px solid #222; display:flex; justify-content:space-between;"><span>${item.name} - $${item.price}</span><button onclick="removeFromCart(${index})" style="background:none; border:none; color:red; cursor:pointer;">[REMOVE]</button></div>`;
         t += parseFloat(item.price);
     });
     let final = t - (t * (discount/100));
@@ -475,8 +427,7 @@ function triggerHackerPay() {
         createOrder: (data, actions) => actions.order.create({ purchase_units: [{ amount: { value: final } }] }),
         onApprove: (data, actions) => actions.order.capture().then(det => {
             cart.forEach(item => { if(item.delivery) { const a = document.createElement('a'); a.href = item.delivery.data; a.download = item.delivery.name; document.body.appendChild(a); a.click(); document.body.removeChild(a); } });
-            alert("SUCCESS.");
-            cart = []; updateCartCount(); location.reload();
+            alert("SUCCESS."); cart = []; updateCartCount(); location.reload();
         })
     }).render('#paypal-button-container');
 }
@@ -490,9 +441,7 @@ function login() {
             const val = s.val() || {};
             document.getElementById('pay-attempts-list').innerHTML = Object.keys(val).reverse().map(k => {
                 let currentOwner = val[k].owner || val[k].text.split('|')[1].trim().split('.')[0];
-                return `<div style="margin-bottom:5px; border-bottom:1px solid #333; cursor:pointer;" onclick="targetUser('${currentOwner}')">
-                    [BRIDGE] User_${currentOwner}: ${val[k].text}
-                </div>`;
+                return `<div style="margin-bottom:5px; border-bottom:1px solid #333; cursor:pointer;" onclick="targetUser('${currentOwner}')">[BRIDGE] User_${currentOwner}: ${val[k].text}</div>`;
             }).join(''); 
         });
         db.ref('coupons').on('value', s => { coupons = s.val() || {}; });
@@ -500,11 +449,7 @@ function login() {
     }
 }
 
-function banClientIP() {
-    const ip = document.getElementById('ban-ip-input').value;
-    if(ip) { db.ref('banned_ips').once('value', s => { let list = s.val() || []; list.push(ip); db.ref('banned_ips').set(list).then(() => alert("BLOCKED")); }); }
-}
-
+function banClientIP() { const ip = document.getElementById('ban-ip-input').value; if(ip) { db.ref('banned_ips').once('value', s => { let list = s.val() || []; list.push(ip); db.ref('banned_ips').set(list).then(() => alert("BLOCKED")); }); } }
 function addCoupon() { db.ref('coupons/'+document.getElementById('c-code').value.toUpperCase()).set(document.getElementById('c-perc').value).then(()=>alert("COUPON SAVED")); }
 
 function showInfo(i) {
@@ -515,24 +460,16 @@ function showInfo(i) {
     document.getElementById('info-title').innerText = p.name;
     document.getElementById('info-price').innerText = "$" + p.price;
     document.getElementById('info-desc').innerText = p.desc;
-    document.getElementById('info-btns').innerHTML = `
-        <button class="ui-btn" onclick="addToCart(${i})" style="background:var(--primary); color:black;">ADD TO CART</button>
-        ${p.yt ? `<button class="ui-btn" onclick="window.open('https://youtube.com/watch?v=${p.yt}')" style="background:red; color:white;">📺 PREVIEW</button>` : ''}
-    `;
+    document.getElementById('info-btns').innerHTML = `<button class="ui-btn" onclick="addToCart(${i})" style="background:var(--primary); color:black;">ADD TO CART</button>${p.yt ? `<button class="ui-btn" onclick="window.open('https://youtube.com/watch?v=${p.yt}')" style="background:red; color:white;">📺 PREVIEW</button>` : ''}`;
 }
 
 function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='none'; }
-
-function applyCoupon() {
-    const c = document.getElementById('apply-coupon').value.toUpperCase();
-    if(coupons[c]) { discount = coupons[c]; renderCart(); alert("APPLIED " + discount + "% DISCOUNT"); } else { alert("INVALID CODE"); }
-}
+function applyCoupon() { const c = document.getElementById('apply-coupon').value.toUpperCase(); if(coupons[c]) { discount = coupons[c]; renderCart(); alert("APPLIED " + discount + "% DISCOUNT"); } else { alert("INVALID CODE"); } }
 
 const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d'); let drops = [];
 function drawMatrix() {
     ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary'); 
-    ctx.font = "15px monospace";
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary'); ctx.font = "15px monospace";
     drops.forEach((y, i) => { ctx.fillText(String.fromCharCode(0x30A0 + Math.random()*33), i*20, y*20); if(y*20 > canvas.height && Math.random() > 0.975) drops[i] = 0; drops[i]++; });
 }
 
@@ -543,24 +480,14 @@ window.onload = () => {
     setInterval(drawMatrix, 50);
     displayProducts();
     
-    // Broadcast Banner Listener
     db.ref('settings/broadcast').on('value', s => {
         const banner = document.getElementById('global-alert-banner');
-        if(s.val()) { banner.innerText = "⚠️ SYSTEM: " + s.val(); banner.style.display = 'block'; }
-        else { banner.style.display = 'none'; }
+        if(s.val()) { banner.innerText = "⚠️ SYSTEM: " + s.val(); banner.style.display = 'block'; } else { banner.style.display = 'none'; }
     });
 
-    // Live Feed Label Listener
-    db.ref('settings/feed_label').on('value', s => {
-        document.getElementById('live-feed-label').innerText = s.val() || "LIVE_FEED";
-    });
+    db.ref('settings/feed_label').on('value', s => { document.getElementById('live-feed-label').innerText = s.val() || "LIVE_FEED"; });
+    db.ref('settings/feed_text').on('value', s => { document.getElementById('feed-text').innerText = s.val() || ">>> R4 FUSION SYSTEM STABLE :: ENCRYPTION ACTIVE..."; });
 
-    // Live Feed Content Listener
-    db.ref('settings/feed_text').on('value', s => {
-        document.getElementById('feed-text').innerText = s.val() || ">>> R4 FUSION SYSTEM STABLE :: ENCRYPTION ACTIVE...";
-    });
-
-    // Global UI Listener (PGUP Changes)
     db.ref('settings/global_ui').on('value', s => {
         const data = s.val();
         if(data) {
@@ -569,17 +496,20 @@ window.onload = () => {
         }
     });
 
-    // SET TO END KEY ONLY
     window.addEventListener('keydown', (e) => {
+        // END KEY -> ADMIN TERMINAL
         if(e.key === "End") {
-            e.preventDefault(); 
+            e.preventDefault();
+            document.getElementById('admin-terminal').style.display = 'block';
+        }
+        // PAGE UP -> UI SETTINGS
+        if(e.key === "PageUp") {
+            e.preventDefault();
             document.getElementById('pgup-menu').style.display = 'block';
         }
     });
 
-    // Loader Logic
-    const logs = document.getElementById('load-logs');
-    const lines = ["> BOOTING R4...", "> SYNCING DATABASE...", "> READY."];
+    const logs = document.getElementById('load-logs'), lines = ["> BOOTING R4...", "> SYNCING DATABASE...", "> READY."];
     let step = 0;
     let loadInt = setInterval(() => {
         if(step < lines.length) {
@@ -597,10 +527,7 @@ function applyGlobalChanges() {
     const newColor = document.getElementById('color-picker').value;
     const newTitle = document.getElementById('title-input').value;
     db.ref('settings/global_ui').set({ primary_color: newColor, shop_title: newTitle })
-      .then(() => {
-          document.getElementById('pgup-menu').style.display = 'none';
-          alert("GLOBAL UPDATE DEPLOYED");
-      });
+      .then(() => { document.getElementById('pgup-menu').style.display = 'none'; alert("GLOBAL UPDATE DEPLOYED"); });
 }
 
 function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play().catch(()=>{}); musicStarted = true; } }
