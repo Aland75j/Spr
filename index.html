@@ -9,10 +9,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <script>
-        /* * ==========================================
-         * SYSTEM CORE CONFIGURATION
-         * ==========================================
-         */
+        /***********************************************************
+         * SYSTEM CONFIGURATION & FIREBASE INITIALIZATION
+         ***********************************************************/
         const firebaseConfig = {
             apiKey: "AIzaSyDE6qMplWktZASB2AjUKuY_dSRCUKiZyOA",
             authDomain: "maxiom-r3.firebaseapp.com",
@@ -24,67 +23,95 @@
             measurementId: "G-82WFV6S568"
         };
         
+        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // SHIELD: IP BLACKLIST & SECURITY
+        /***********************************************************
+         * SECURITY SHIELD: IP MONITORING & BANS
+         ***********************************************************/
         (function() {
-            const checkBans = async () => {
+            const runSecurityCheck = async () => {
                 try {
-                    const r = await fetch('https://api.ipify.org?format=json');
-                    const d = await r.json();
-                    const userIP = d.ip;
-                    db.ref('banned_ips').on('value', (snap) => {
-                        const list = snap.val() || [];
-                        if(list.includes(userIP)) {
+                    const response = await fetch('https://api.ipify.org?format=json');
+                    const data = await response.json();
+                    const currentIP = data.ip;
+                    
+                    // Check against Blacklist
+                    db.ref('banned_ips').on('value', (snapshot) => {
+                        const bannedList = snapshot.val() || [];
+                        if (bannedList.includes(currentIP)) {
                             window.stop();
                             document.documentElement.innerHTML = "";
-                            alert("CRITICAL ERROR: ACCESS DENIED BY SYSTEM ADMINISTRATOR");
+                            document.body.innerHTML = "<h1>ACCESS DENIED</h1>";
+                            alert("CRITICAL ERROR: YOUR IP HAS BEEN BLACKLISTED BY ADMIN.");
                             window.location.href = "about:blank";
                         }
                     });
-                } catch(e) { console.warn("Security Shield: Offline Mode"); }
+                } catch (error) {
+                    console.error("Security Engine Failure: Switching to local safe-mode.");
+                }
             };
-            checkBans();
+            runSecurityCheck();
 
-            // PAYPAL ENGINE INJECTION
+            // Load PayPal API based on Admin Wallet Settings
             db.ref('settings/paypal_id').once('value', (snap) => {
-                const savedID = snap.val() || "test";
-                const script = document.createElement('script');
-                script.src = `https://www.paypal.com/sdk/js?client-id=${savedID}&currency=USD`;
-                document.head.appendChild(script);
+                const livePayPalID = snap.val() || "test";
+                const payPalScript = document.createElement('script');
+                payPalScript.src = `https://www.paypal.com/sdk/js?client-id=${livePayPalID}&currency=USD`;
+                document.head.appendChild(payPalScript);
             });
         })();
     </script>
 
     <style>
-        /* * ==========================================
-         * CSS VARIABLES & THEME TOKENS
-         * ==========================================
-         */
+        /***********************************************************
+         * MASTER STYLING & UI TOKENS
+         ***********************************************************/
         :root {
             --primary: #ffd700;
             --secondary: #ff0000;
-            --matrix: rgba(0, 255, 65, 0.6);
-            --bg-main: #050505;
-            --glass: rgba(0, 0, 0, 0.95);
-            --price-gold: #ffcc00;
+            --bg-black: #050505;
             --terminal-green: #00ff41;
+            --gold-shine: #f1da36;
+            --dark-gold: #8a6d3b;
+            --glass-panel: rgba(0, 0, 0, 0.9);
             --rare-gold-gradient: linear-gradient(135deg, #8a6d3b 0%, #f1da36 25%, #fdf5a6 50%, #f1da36 75%, #8a6d3b 100%);
         }
 
-        /* * ==========================================
-         * ANIMATIONS & FX
-         * ==========================================
-         */
+        /* RESET & BASE */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: crosshair !important;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+        }
+
+        body {
+            background-color: var(--bg-black);
+            font-family: 'Courier New', monospace;
+            color: #ffffff;
+            overflow-x: hidden;
+            padding-bottom: 120px;
+            transition: background 0.6s ease;
+        }
+
+        /* ANIMATIONS */
         @keyframes screen-glitch {
             0% { transform: translate(0); }
-            10% { transform: translate(-4px, 2px); filter: hue-rotate(45deg); }
-            20% { transform: translate(4px, -2px); filter: brightness(1.2); }
-            30% { transform: translate(-2px, 0); }
+            10% { transform: translate(-3px, 1px); filter: hue-rotate(90deg); }
+            20% { transform: translate(3px, -1px); filter: brightness(1.5); }
+            30% { transform: translate(-1px, 2px); }
             100% { transform: translate(0); }
         }
-        .glitching { animation: screen-glitch 0.2s infinite; }
+
+        @keyframes gold-pulse {
+            0% { box-shadow: 0 0 10px var(--primary); }
+            50% { box-shadow: 0 0 30px var(--gold-shine); }
+            100% { box-shadow: 0 0 10px var(--primary); }
+        }
 
         @keyframes gold-shimmer {
             0% { background-position: 0% 50%; }
@@ -92,655 +119,1062 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* * ==========================================
-         * BASE UI STYLING
-         * ==========================================
-         */
-        * { cursor: crosshair !important; box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { margin: 0; font-family: 'Courier New', monospace; color: white; background: var(--bg-main); transition: 0.5s; overflow-x: hidden; padding-bottom: 100px; }
-        
-        #input-lock-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000000; background: rgba(0,0,0,0.6); cursor: not-allowed !important; }
-        #global-alert-banner { display: none; position: fixed; top: 0; left: 0; width: 100%; background: var(--secondary); color: white; padding: 15px; z-index: 100000; font-weight: bold; border-bottom: 3px solid #fff; text-align: center; font-size: 20px; }
+        .glitching {
+            animation: screen-glitch 0.2s infinite;
+        }
 
-        /* * ==========================================
-         * LOADER SYSTEM
-         * ==========================================
-         */
-        #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .terminal-loader { width: 85%; max-width: 800px; background: #000; border: 2px solid var(--terminal-green); padding: 30px; box-shadow: 0 0 50px rgba(0, 255, 65, 0.2); }
-        .skull-ascii { color: var(--primary); font-size: 10px; line-height: 10px; white-space: pre; margin-bottom: 25px; text-align: center; }
-        #load-logs { color: var(--terminal-green); height: 180px; overflow: hidden; font-size: 14px; line-height: 1.5; }
-        .load-bar-container { width: 100%; height: 15px; background: #111; border: 1px solid var(--terminal-green); margin-top: 30px; }
-        #load-bar { width: 0%; height: 100%; background: var(--terminal-green); transition: width 0.4s; box-shadow: 0 0 15px var(--terminal-green); }
+        /* OVERLAYS */
+        #input-lock-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000000;
+            background: rgba(0, 0, 0, 0.8);
+            cursor: not-allowed !important;
+        }
 
-        /* * ==========================================
-         * NAVIGATION & HUD
-         * ==========================================
-         */
-        .top-nav { position: fixed; top: 25px; left: 25px; z-index: 4000; display: flex; gap: 20px; }
-        .ui-btn { padding: 14px 24px; background: var(--primary); color: #000; border: 2px solid #fff; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-family: 'Courier New', monospace; }
-        .ui-btn:hover { background: #fff; transform: translateY(-3px); box-shadow: 0 5px 15px var(--primary); }
-        
-        .floating-cart { position: fixed; top: 25px; right: 25px; background: var(--primary); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10000; box-shadow: 0 0 35px var(--primary); border: 4px solid #fff; font-size: 30px; }
-        .cart-count { position: absolute; top: -5px; right: -5px; background: var(--secondary); color: white; font-size: 18px; padding: 5px 11px; border-radius: 50%; border: 2px solid white; }
+        #global-alert-banner {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: var(--secondary);
+            color: #ffffff;
+            padding: 20px;
+            z-index: 100000;
+            font-weight: 900;
+            text-align: center;
+            border-bottom: 4px solid #fff;
+            font-size: 22px;
+            letter-spacing: 2px;
+        }
 
-        /* * ==========================================
-         * SHOP COMPONENTS
-         * ==========================================
-         */
-        #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background: var(--bg-main); }
-        .header-container { padding: 80px 0; text-align: center; }
-        header { font-size: 65px; font-weight: 900; color: var(--primary); text-shadow: 0 0 35px var(--primary); letter-spacing: 15px; }
-        .cat-label { margin: 60px auto; padding: 25px; background: var(--glass); border-top: 3px solid var(--primary); border-bottom: 3px solid var(--primary); max-width: 1100px; font-size: 35px; font-weight: bold; color: var(--primary); letter-spacing: 8px; text-align: center; }
-        .product-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; padding: 40px; }
-        .product { background: var(--glass); padding: 30px; width: 300px; border: 1px solid #333; border-radius: 15px; transition: 0.4s; position: relative; text-align: center; }
-        .product:hover { transform: scale(1.08); border-color: var(--primary); box-shadow: 0 0 30px rgba(255, 215, 0, 0.2); }
-        .product h3 { font-size: 22px; margin: 15px 0; color: #fff; }
+        /* BOOT SEQUENCE UI */
+        #loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
 
-        /* * ==========================================
-         * PAGE 3: THE GOLDEN GATEWAY
-         * ==========================================
-         */
+        .terminal-loader {
+            width: 90%;
+            max-width: 750px;
+            border: 2px solid var(--terminal-green);
+            padding: 40px;
+            background: #000;
+        }
+
+        .skull-ascii {
+            color: var(--primary);
+            font-size: 10px;
+            line-height: 1.1;
+            white-space: pre;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        #load-logs {
+            color: var(--terminal-green);
+            height: 200px;
+            overflow-y: hidden;
+            font-size: 14px;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            border-top: 1px solid #222;
+            padding-top: 10px;
+        }
+
+        .load-bar-container {
+            width: 100%;
+            height: 20px;
+            background: #111111;
+            border: 1px solid var(--terminal-green);
+        }
+
+        #load-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--terminal-green);
+            transition: width 0.3s ease;
+            box-shadow: 0 0 15px var(--terminal-green);
+        }
+
+        /* HUD & NAVIGATION */
+        .top-nav {
+            position: fixed;
+            top: 25px;
+            left: 25px;
+            z-index: 4000;
+            display: flex;
+            gap: 15px;
+        }
+
+        .ui-btn {
+            padding: 15px 30px;
+            background: var(--primary);
+            color: #000;
+            border: 2px solid #fff;
+            font-weight: 900;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.4s;
+            font-family: inherit;
+        }
+
+        .ui-btn:hover {
+            background: #ffffff;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .floating-cart {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            background: var(--primary);
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10000;
+            border: 5px solid #fff;
+            font-size: 35px;
+            animation: gold-pulse 2s infinite;
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--secondary);
+            color: #fff;
+            font-size: 20px;
+            padding: 6px 14px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+
+        /* HEADER */
+        .header-container {
+            padding: 100px 0 50px 0;
+            text-align: center;
+        }
+
+        header {
+            font-size: 75px;
+            font-weight: 900;
+            color: var(--primary);
+            text-shadow: 0 0 40px var(--primary);
+            letter-spacing: 20px;
+            text-transform: uppercase;
+        }
+
+        /* CATEGORY LABELS */
+        .cat-label {
+            margin: 80px auto 40px auto;
+            padding: 30px;
+            background: var(--glass-panel);
+            border-top: 4px solid var(--primary);
+            border-bottom: 4px solid var(--primary);
+            max-width: 1200px;
+            font-size: 40px;
+            font-weight: 900;
+            color: var(--primary);
+            letter-spacing: 12px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        /* SHOP GRID */
+        #global-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: var(--bg-black);
+        }
+
+        .product-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 50px;
+            padding: 0 50px;
+        }
+
+        .product {
+            background: var(--glass-panel);
+            padding: 40px;
+            width: 340px;
+            border: 1px solid #333;
+            border-radius: 20px;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+            position: relative;
+        }
+
+        .product:hover {
+            transform: scale(1.05);
+            border-color: var(--primary);
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.15);
+        }
+
+        .product h3 {
+            font-size: 26px;
+            margin-bottom: 15px;
+            color: #ffffff;
+        }
+
+        .product .price-tag {
+            color: var(--gold-shine);
+            font-size: 32px;
+            font-weight: 900;
+            margin: 25px 0;
+        }
+
+        /* PAGE 3: THE GOLDEN GATEWAY */
         #page-3 {
             display: none;
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: var(--rare-gold-gradient);
             background-size: 400% 400%;
             animation: gold-shimmer 15s ease infinite;
-            z-index: 15000; padding: 50px; overflow-y: auto; color: #000;
+            z-index: 15000;
+            padding: 50px;
+            overflow-y: auto;
+            color: #000000;
         }
-        .page3-content { max-width: 800px; margin: 0 auto; }
+
+        .page3-content {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
         .payment-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px; padding: 40px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.6); border: 8px solid #000;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 30px;
+            padding: 60px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.7);
+            border: 10px solid #000;
         }
+
         .method-box {
-            border: 3px solid #ddd; border-radius: 12px; padding: 20px; margin-bottom: 20px;
-            cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 20px;
-            background: #fff;
+            border: 4px solid #eeeeee;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            background: #ffffff;
         }
-        .method-box:hover { transform: translateX(10px); border-color: #aa771c; }
-        .method-box.active { border-color: #000; background: #fffde7; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); }
-        .method-icon { font-size: 35px; }
-        .method-info strong { font-size: 20px; display: block; }
+
+        .method-box:hover {
+            border-color: #8a6d3b;
+            transform: translateX(10px);
+        }
+
+        .method-box.active {
+            border-color: #000;
+            background: #fffdf0;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.05);
+        }
+
+        .method-icon {
+            font-size: 45px;
+        }
+
+        .method-info strong {
+            font-size: 22px;
+            display: block;
+            text-transform: uppercase;
+        }
+
+        /* PAYMENT ELEMENTS */
         .crypto-address-box {
-            background: #111; color: #ffd700; padding: 20px; border-radius: 8px;
-            font-family: 'Courier New', monospace; font-size: 14px; word-break: break-all; 
-            margin-top: 15px; border: 2px dashed #ffd700;
+            background: #000;
+            color: var(--primary);
+            padding: 25px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            word-break: break-all;
+            margin-top: 15px;
+            border: 3px dashed var(--primary);
+            text-align: center;
         }
 
-        /* * ==========================================
-         * ADMIN INTERFACE (ROOT)
-         * ==========================================
-         */
-        .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 20000; padding: 50px; overflow-y: auto; text-align: left; }
-        .admin-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 30px; }
-        .panel-box { background: #0d0d0d; border: 1px solid #222; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .panel-box h3 { color: var(--primary); text-transform: uppercase; margin-bottom: 25px; border-bottom: 2px solid #222; padding-bottom: 10px; font-size: 22px; }
-        
-        input, select, textarea { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 15px; margin: 10px 0; width: 100%; border-radius: 8px; font-size: 16px; font-family: 'Courier New', monospace; }
-        input:focus { border-color: var(--primary); }
-        label { color: #888; font-size: 12px; text-transform: uppercase; margin-top: 10px; display: block; }
+        .finish-btn {
+            width: 100%;
+            padding: 30px;
+            font-size: 26px;
+            font-weight: 900;
+            background: #000000;
+            color: var(--primary);
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 6px;
+            margin-top: 40px;
+            transition: 0.4s;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+        }
 
-        /* * ==========================================
-         * RESPONSIVE DESIGN
-         * ==========================================
-         */
-        @media (max-width: 768px) {
-            header { font-size: 38px; letter-spacing: 5px; }
-            .admin-layout { grid-template-columns: 1fr; }
-            #page-3 { padding: 20px; }
-            .payment-card { padding: 20px; }
+        .finish-btn:hover {
+            background: #222;
+            transform: scale(1.03);
+            letter-spacing: 10px;
+        }
+
+        /* ADMIN TERMINAL */
+        .admin-box {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000000;
+            z-index: 20000;
+            padding: 60px;
+            overflow-y: auto;
+        }
+
+        .admin-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 40px;
+        }
+
+        .panel-box {
+            background: #0a0a0a;
+            border: 2px solid #222;
+            padding: 40px;
+            border-radius: 20px;
+        }
+
+        .panel-box h3 {
+            color: var(--primary);
+            text-transform: uppercase;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 15px;
+            font-size: 24px;
+        }
+
+        /* FORMS */
+        label {
+            color: #888;
+            font-size: 13px;
+            text-transform: uppercase;
+            margin-top: 20px;
+            display: block;
+            font-weight: bold;
+        }
+
+        input, select, textarea {
+            background: #151515;
+            border: 1px solid #333;
+            color: #ffffff;
+            padding: 18px;
+            margin: 12px 0;
+            width: 100%;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 850px) {
+            header { font-size: 40px; letter-spacing: 10px; }
+            .cat-label { font-size: 25px; }
+            .product-grid { padding: 0 20px; }
+            .payment-card { padding: 30px; }
         }
     </style>
 </head>
-<body onclick="startAudio()">
+<body onclick="initAudioEngine()">
 
-<div id="input-lock-overlay"></div>
-<div id="global-alert-banner"></div>
+    <div id="input-lock-overlay"></div>
+    <div id="global-alert-banner"></div>
 
-<div id="loader-overlay">
-    <div class="terminal-loader">
-        <div class="skull-ascii">
-    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    @@@@@@@@@@@@@@@#   #@@@@@@@@@@@@@@@@@@@@
-    @@@@@@@@@@@@@@       @@@@@@@@@@@@@@@@@@@
-    @@@@@@@@@@@@@@@#   #@@@@@@@@@@@@@@@@@@@@
-    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    @@@@@@@@@@  @@@@@@@@@@@@  @@@@@@@@@@@@@@
-    @@@@@@@@@@  @@@@@@@@@@@@  @@@@@@@@@@@@@@
-    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    <div id="loader-overlay">
+        <div class="terminal-loader">
+            <div class="skull-ascii">
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @@@@@@@@@@@@@@@      @@@@@@@@      @@@@@@@@@@@@@@@
+    @@@@@@@@@@@@@@@      @@@@@@@@      @@@@@@@@@@@@@@@
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @@@@@@@@@@@@          @@@@@@          @@@@@@@@@@@@
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+            </div>
+            <div id="load-logs"></div>
+            <div class="load-bar-container">
+                <div id="load-bar"></div>
+            </div>
         </div>
-        <div id="load-logs"></div>
-        <div class="load-bar-container"><div id="load-bar"></div></div>
     </div>
-</div>
 
-<canvas id="global-canvas"></canvas>
+    <canvas id="global-canvas"></canvas>
 
-<div class="top-nav">
-    <button class="ui-btn" onclick="showShop()" style="background:#333; color:#fff; border-color:#555;">[ HOME ]</button>
-    <button class="ui-btn" onclick="toggleMusic(event)" id="music-btn">🔊 MUSIC: ON</button>
-</div>
+    <div class="top-nav">
+        <button class="ui-btn" onclick="navigateTo('shop')">[ SYSTEM HOME ]</button>
+        <button class="ui-btn" onclick="toggleAudio()" id="music-toggle-btn">🔊 AUDIO: ON</button>
+    </div>
 
-<div class="floating-cart" onclick="showPage3()">🛒 <span class="cart-count" id="cart-count">0</span></div>
+    <div class="floating-cart" onclick="navigateTo('vault')">
+        🛒 <span class="cart-count" id="cart-count">0</span>
+    </div>
 
-<div class="header-container">
-    <header id="main-header-text">SPR SHOP ARK R4</header>
-</div>
+    <div class="header-container">
+        <header id="main-title">ARK R4 PRESTIGE</header>
+    </div>
 
-<div id="shop-page">
-    <div class="cat-label">ANDROID ELITE MODULES</div>
-    <div id="android-grid" class="product-grid"></div>
-    
-    <div class="cat-label">IOS OVERRIDE MODULES</div>
-    <div id="ios-grid" class="product-grid"></div>
-</div>
-
-<div id="page-3">
-    <div class="page3-content">
-        <div style="text-align: center; margin-bottom: 40px;">
-            <button onclick="showShop()" class="ui-btn" style="background:#000; color:#fff; border-radius: 50px; padding: 15px 40px;">⬅ EXIT TO SHOP</button>
-            <h1 style="font-size: 55px; letter-spacing: 12px; font-weight: 900; margin-top: 30px; text-shadow: 2px 2px 0px #fff;">THE VAULT</h1>
-            <p style="font-weight: bold; font-size: 18px;">PREMIUM ASSET ACQUISITION GATEWAY</p>
-        </div>
-
-        <div class="payment-card">
-            <h2 style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 30px; font-size: 28px;">SECURE CHECKOUT</h2>
-            
-            <div id="cart-summary" style="margin: 20px 0; font-size: 18px; border-left: 5px solid #000; padding-left: 20px;">
-                </div>
-            
-            <h1 id="p3-total" style="text-align: center; font-size: 50px; margin: 30px 0; font-weight: 900; color: #000;">TOTAL: $0.00</h1>
-
-            <div class="method-box active" id="btn-pay-paypal" onclick="selectMethod('paypal')">
-                <div class="method-icon">🔵</div>
-                <div class="method-info">
-                    <strong>PAYPAL / DEBIT CARD</strong>
-                    <small>Instant Delivery via Secure Merchant API</small>
-                </div>
+    <div id="shop-page">
+        <div class="cat-label">ANDROID OVERRIDE MODULES</div>
+        <div id="android-grid" class="product-grid">
             </div>
-            <div id="paypal-area" style="padding: 10px 0;">
-                <div id="paypal-button-container"></div>
+        
+        <div class="cat-label">IOS ARCHITECTURE MODULES</div>
+        <div id="ios-grid" class="product-grid">
+            </div>
+    </div>
+
+    <div id="page-3">
+        <div class="page3-content">
+            <div style="text-align: center; margin-bottom: 50px;">
+                <button onclick="navigateTo('shop')" class="ui-btn" style="background:#000; color:#fff; border-radius: 50px; padding: 15px 50px;">⬅ RETURN TO GRID</button>
+                <h1 style="font-size: 60px; letter-spacing: 15px; font-weight: 900; margin-top: 40px; color: #000;">THE VAULT</h1>
+                <p style="font-weight: 900; font-size: 20px; color: #000;">ENCRYPTED TRANSACTION TERMINAL</p>
             </div>
 
-            <div class="method-box" id="btn-pay-cc" onclick="selectMethod('cc')">
-                <div class="method-icon">💳</div>
-                <div class="method-info">
-                    <strong>DIRECT CARD PAYMENT</strong>
-                    <small>Encrypted Credit/Debit Card Bridge</small>
-                </div>
-            </div>
-            <div id="cc-area" style="display:none; padding: 20px; background: #f9f9f9; border-radius: 10px; margin-bottom: 20px;">
-                <label style="color:#000">CARD NUMBER</label>
-                <input type="text" placeholder="0000 0000 0000 0000" style="background:#fff; color:#000; border: 2px solid #ddd;">
-                <div style="display:flex; gap:20px;">
-                    <div style="flex:1">
-                        <label style="color:#000">EXPIRY</label>
-                        <input type="text" placeholder="MM / YY" style="background:#fff; color:#000; border: 2px solid #ddd;">
+            <div class="payment-card">
+                <h2 style="text-align: center; border-bottom: 5px solid #000; padding-bottom: 20px; margin-bottom: 40px; font-size: 30px;">SECURE CHECKOUT</h2>
+                
+                <div id="cart-summary-list" style="margin: 30px 0; font-size: 20px; border-left: 8px solid #000; padding-left: 30px;">
                     </div>
-                    <div style="flex:1">
-                        <label style="color:#000">CVC</label>
-                        <input type="text" placeholder="123" style="background:#fff; color:#000; border: 2px solid #ddd;">
+                
+                <h1 id="vault-total-display" style="text-align: center; font-size: 60px; margin: 40px 0; font-weight: 900; color: #000;">TOTAL: $0.00</h1>
+
+                <div class="method-box active" id="method-paypal" onclick="switchPaymentMethod('paypal')">
+                    <div class="method-icon">🔵</div>
+                    <div class="method-info">
+                        <strong>PAYPAL / DEBIT CARD</strong>
+                        <small>Instant product delivery after verification</small>
                     </div>
                 </div>
-                <button class="ui-btn" style="width:100%; background:#000; color:#fff; margin-top: 20px;" onclick="alert('Card Processing Service: Connecting...')">AUTHORIZE PAYMENT</button>
-            </div>
+                <div id="container-paypal" class="payment-sub-area">
+                    <div id="paypal-button-container" style="padding: 20px 0;"></div>
+                </div>
 
-            <div class="method-box" id="btn-pay-crypto" onclick="selectMethod('crypto')">
-                <div class="method-icon">₿</div>
-                <div class="method-info">
-                    <strong>CRYPTOCURRENCY</strong>
-                    <small>BTC, LTC, USDT (Manual Verification)</small>
+                <div class="method-box" id="method-cc" onclick="switchPaymentMethod('cc')">
+                    <div class="method-icon">💳</div>
+                    <div class="method-info">
+                        <strong>DIRECT CARD GATEWAY</strong>
+                        <small>Encrypted Credit or Debit Card payment</small>
+                    </div>
+                </div>
+                <div id="container-cc" class="payment-sub-area" style="display:none; padding: 30px; background: #f4f4f4; border-radius: 20px;">
+                    <label style="color:#000">CARDHOLDER NAME</label>
+                    <input type="text" placeholder="FULL NAME" style="background:#fff; color:#000; border: 2px solid #ddd;">
+                    
+                    <label style="color:#000">CARD NUMBER</label>
+                    <input type="text" placeholder="0000 0000 0000 0000" style="background:#fff; color:#000; border: 2px solid #ddd;">
+                    
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <label style="color:#000">EXPIRATION</label>
+                            <input type="text" placeholder="MM / YY" style="background:#fff; color:#000; border: 2px solid #ddd;">
+                        </div>
+                        <div>
+                            <label style="color:#000">CVC</label>
+                            <input type="text" placeholder="123" style="background:#fff; color:#000; border: 2px solid #ddd;">
+                        </div>
+                    </div>
+                    <button class="finish-btn" onclick="executeFinalPayment('STRIPE_CARD')">FINISH PAYMENT</button>
+                </div>
+
+                <div class="method-box" id="method-crypto" onclick="switchPaymentMethod('crypto')">
+                    <div class="method-icon">₿</div>
+                    <div class="method-info">
+                        <strong>CRYPTOCURRENCY ASSETS</strong>
+                        <small>BTC, LTC, or USDT (Manual Confirmation)</small>
+                    </div>
+                </div>
+                <div id="container-crypto" class="payment-sub-area" style="display:none; padding: 30px; background: #f4f4f4; border-radius: 20px;">
+                    <p style="font-weight: 900; margin-bottom: 15px; text-align: center;">TRANSFER FUNDS TO ADDRESS BELOW:</p>
+                    
+                    <label style="color:#000">BITCOIN (BTC) ADDRESS</label>
+                    <div class="crypto-address-box" id="live-btc-address">RETRIEVING...</div>
+                    
+                    <label style="color:#000; margin-top: 20px;">LITECOIN (LTC) ADDRESS</label>
+                    <div class="crypto-address-box" id="live-ltc-address">RETRIEVING...</div>
+                    
+                    <div style="margin-top: 30px; padding: 20px; background: #fff; border: 1px solid #000;">
+                        <p style="font-size: 14px; color: #333; line-height: 1.6;">
+                            <strong>Note:</strong> Once you have sent the payment, click the button below. 
+                            Our system will scan the blockchain for your transaction.
+                        </p>
+                    </div>
+                    <button class="finish-btn" style="background: #f7931a; color: #fff;" onclick="executeFinalPayment('CRYPTO_TRANSFER')">I HAVE SENT PAYMENT</button>
                 </div>
             </div>
-            <div id="crypto-area" style="display:none; padding: 20px; background: #f9f9f9; border-radius: 10px; margin-bottom: 20px;">
-                <p style="font-weight: bold; margin-bottom: 10px;">TRANSFER TOTAL TO ONE OF THE FOLLOWING:</p>
+            
+            <p style="text-align: center; margin-top: 50px; font-weight: 900; letter-spacing: 2px;">SECURED BY ARK R4 END-TO-END ENCRYPTION</p>
+        </div>
+    </div>
+
+    <div class="admin-box" id="admin-root">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--secondary); padding-bottom: 30px; margin-bottom: 60px;">
+            <h2 style="color:var(--secondary); font-size:40px; letter-spacing:10px;">ARK_PRESTIGE_ROOT</h2>
+            <button onclick="toggleAdminView(false)" class="ui-btn" style="background:red; color:white; border:none;">TERMINATE SESSION</button>
+        </div>
+
+        <div id="admin-auth-gate" style="text-align:center; padding-top:15vh;">
+            <h3 style="margin-bottom: 40px; letter-spacing: 5px;">ENTER MASTER SYSTEM KEY</h3>
+            <input type="password" id="master-key-input" placeholder="••••••••••••" style="max-width:700px; height:90px; font-size: 40px; text-align:center; border: 4px solid var(--secondary);">
+            <br>
+            <button onclick="attemptAdminLogin()" class="ui-btn" style="width:700px; height:80px; margin-top:40px; font-size: 25px;">DECRYPT CORE</button>
+        </div>
+
+        <div id="admin-main-controls" style="display:none;" class="admin-layout">
+            
+            <div class="panel-box" style="border-color: var(--primary);">
+                <h3>💰 WALLET COMMAND CENTER</h3>
+                <p style="color: #666; font-size: 13px; margin-bottom: 20px;">These addresses update the Vault (Page 3) instantly.</p>
                 
-                <label style="color:#000">BITCOIN (BTC)</label>
-                <div class="crypto-address-box" id="btc-display">Waiting for Admin...</div>
+                <label>BITCOIN (BTC) ADDRESS</label>
+                <input type="text" id="admin-wallet-btc" placeholder="bc1q...">
                 
-                <label style="color:#000; margin-top: 15px;">LITECOIN (LTC)</label>
-                <div class="crypto-address-box" id="ltc-display">Waiting for Admin...</div>
+                <label>LITECOIN (LTC) ADDRESS</label>
+                <input type="text" id="admin-wallet-ltc" placeholder="L...">
                 
-                <div style="margin-top: 25px; padding: 15px; border: 1px solid #000; background: #fff;">
-                    <p style="font-size: 13px; margin: 0;">After sending, please contact admin with your Transaction ID to receive your download link.</p>
-                </div>
-                <button class="ui-btn" style="width:100%; margin-top: 20px; background:#f7931a; color:#fff; border:none;" onclick="confirmCrypto()">I HAVE SENT THE FUNDS</button>
-            </div>
-        </div>
-        <p style="text-align: center; margin-top: 30px; font-weight: bold;">SECURITY VERIFIED BY ARK R4 ENCRYPTION</p>
-    </div>
-</div>
-
-<div class="admin-box" id="admin-terminal">
-    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--secondary); padding-bottom: 20px; margin-bottom: 50px;">
-        <h2 style="color:var(--secondary); margin:0; font-size:35px; letter-spacing:8px;">ARK_ROOT_COMMAND</h2>
-        <button onclick="closeAdmin()" class="ui-btn" style="background:red; color:white; border:none; padding: 10px 30px;">DISCONNECT</button>
-    </div>
-
-    <div id="login-section" style="text-align:center; padding-top:10vh;">
-        <h3 style="margin-bottom: 30px; letter-spacing: 3px;">ENCRYPTED AUTHENTICATION</h3>
-        <input type="password" id="admin-pass" placeholder="ENTER MASTER ROOT KEY" style="max-width:600px; height:70px; font-size: 30px; text-align:center; border: 2px solid var(--secondary);">
-        <br>
-        <button onclick="login()" class="ui-btn" style="width:600px; height:70px; margin-top:40px; font-size: 22px;">DECRYPT SYSTEM</button>
-    </div>
-
-    <div id="admin-controls" style="display:none;" class="admin-layout">
-        
-        <div class="panel-box" style="border: 2px solid var(--primary);">
-            <h3>💰 WALLET COMMAND CENTER</h3>
-            <p style="font-size:12px; color:#888; margin-bottom: 20px;">Configure addresses for Page 3 Golden Gateway</p>
-            
-            <label>BITCOIN (BTC) RECEIVING ADDRESS</label>
-            <input type="text" id="wallet-btc" placeholder="bc1q...">
-            
-            <label>LITECOIN (LTC) RECEIVING ADDRESS</label>
-            <input type="text" id="wallet-ltc" placeholder="L...">
-            
-            <label>PAYPAL MERCHANT CLIENT ID</label>
-            <input type="text" id="wallet-paypal" placeholder="Enter PayPal App Client ID">
-            
-            <button onclick="saveWallets()" class="ui-btn" style="width:100%; margin-top:20px; height: 60px; font-size: 18px;">UPDATE GLOBAL GATEWAYS</button>
-        </div>
-
-        <div class="panel-box">
-            <h3>⚒️ ARSENAL FORGE</h3>
-            <input type="hidden" id="edit-index" value="-1">
-            
-            <label>ASSET NAME</label>
-            <input type="text" id="p-name" placeholder="e.g. Aimbot Elite v4">
-            
-            <label>VALUATION (USD)</label>
-            <input type="number" id="p-price" placeholder="99.99">
-            
-            <label>TARGET PLATFORM</label>
-            <select id="p-cat">
-                <option value="android">Android Module</option>
-                <option value="ios">iOS Module</option>
-            </select>
-            
-            <label>TECHNICAL DESCRIPTION</label>
-            <textarea id="p-desc" placeholder="Enter specs..." style="height: 120px;"></textarea>
-            
-            <button id="forge-btn" onclick="addProduct()" class="ui-btn" style="width:100%; margin-top: 15px;">DEPLOY TO ARK GRID</button>
-            
-            <div id="admin-asset-list" style="margin-top:30px; border-top: 1px solid #333; padding-top: 20px; max-height: 300px; overflow-y: auto;">
-                </div>
-        </div>
-
-        <div class="panel-box" style="border: 2px solid var(--secondary);">
-            <h3 style="color:var(--secondary);">💀 BEAST OVERRIDE (R4)</h3>
-            <label>ACTIVE TARGET IDENTIFIER</label>
-            <input type="text" id="manual-target-id" placeholder="ENTER USER ID (e.g. 192)">
-            
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top: 20px;">
-                <button onclick="sendPower('siren')" class="ui-btn" style="background:#ff4400; color:white; border:none;">TRIGGER SIREN</button>
-                <button onclick="sendPower('lock')" class="ui-btn" style="background:red; color:white; border:none;">SYSTEM LOCK</button>
-                <button onclick="sendPower('unlock')" class="ui-btn" style="background:lime; color:black; border:none;">SYSTEM UNLOCK</button>
-                <button onclick="sendPower('vibrate')" class="ui-btn" style="background:white; color:black; border:none;">VIBRATE</button>
+                <label>PAYPAL CLIENT ID (MERCHANT)</label>
+                <input type="text" id="admin-wallet-paypal" placeholder="Enter PayPal App ID">
+                
+                <button onclick="updateSystemWallets()" class="ui-btn" style="width:100%; margin-top:30px; height: 70px;">PUSH UPDATES TO VAULT</button>
             </div>
 
-            <label style="margin-top: 30px;">REMOTE FLASH-BANG MESSAGE</label>
-            <input type="text" id="alert-msg" placeholder="Warning message for user...">
-            <button onclick="sendFlashBang()" class="ui-btn" style="width:100%; background:purple; color:white; border:none;">DEPLOY FLASH-BANG</button>
-        </div>
-
-        <div class="panel-box">
-            <h3>📡 LIVE INTEL FEED</h3>
-            <div id="pay-attempts-list" style="background:#000; border:1px solid #222; height:350px; overflow-y:auto; padding:15px; font-size:12px; color: lime; font-family: monospace;">
-                </div>
-            <button onclick="db.ref('intel').set(null)" class="ui-btn" style="width:100%; margin-top: 15px; background: maroon; color: white;">WIPE DATA LOGS</button>
-        </div>
-
-    </div>
-</div>
-
-<audio id="hacker-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
-<audio id="siren-sound" src="https://www.myinstants.com/media/sounds/strobe-warning.mp3"></audio>
-
-<script>
-/* * ==========================================
- * CORE LOGIC ARCHITECTURE
- * ==========================================
- */
-let products = [];
-let cart = [];
-let isAdmin = false;
-let userIP = "Scanning...";
-let userID = "0";
-let musicStarted = false;
-
-// --- PAGE NAVIGATION ---
-function showShop() { 
-    document.getElementById('shop-page').style.display = 'block'; 
-    document.getElementById('page-3').style.display = 'none'; 
-    document.body.style.background = "var(--bg-main)";
-}
-
-function showPage3() {
-    if(cart.length === 0) {
-        alert("YOUR ARSENAL IS EMPTY. ADD MODULES FIRST.");
-        return;
-    }
-    document.getElementById('shop-page').style.display = 'none'; 
-    document.getElementById('page-3').style.display = 'block'; 
-    renderPage3();
-}
-
-function closeAdmin() { 
-    document.getElementById('admin-terminal').style.display = 'none'; 
-}
-
-// --- PAYMENT PAGE (PAGE 3) LOGIC ---
-function selectMethod(m) {
-    // UI Switching
-    document.getElementById('paypal-area').style.display = (m === 'paypal') ? 'block' : 'none';
-    document.getElementById('cc-area').style.display = (m === 'cc') ? 'block' : 'none';
-    document.getElementById('crypto-area').style.display = (m === 'crypto') ? 'block' : 'none';
-    
-    // Toggle Active Class
-    document.getElementById('btn-pay-paypal').classList.toggle('active', m === 'paypal');
-    document.getElementById('btn-pay-cc').classList.toggle('active', m === 'cc');
-    document.getElementById('btn-pay-crypto').classList.toggle('active', m === 'crypto');
-}
-
-function renderPage3() {
-    let total = 0;
-    let summaryHtml = "";
-    
-    cart.forEach(item => { 
-        summaryHtml += `<div style="margin-bottom: 10px;">• ${item.name} <span style="float:right">$${item.price}</span></div>`; 
-        total += parseFloat(item.price); 
-    });
-    
-    document.getElementById('cart-summary').innerHTML = summaryHtml;
-    document.getElementById('p3-total').innerText = "TOTAL: $" + total.toFixed(2);
-    
-    // Load Wallet addresses from Firebase for Page 3
-    db.ref('settings/wallets').once('value', snap => {
-        const wallets = snap.val() || {};
-        document.getElementById('btc-display').innerText = wallets.btc || "ADDRESS NOT CONFIGURED";
-        document.getElementById('ltc-display').innerText = wallets.ltc || "ADDRESS NOT CONFIGURED";
-    });
-}
-
-function confirmCrypto() {
-    alert("TRANSACTION BROADCASTED. Monitoring Blockchain for confirmation. Do not close this session.");
-    db.ref('intel').push({
-        id: Date.now(),
-        owner: userID,
-        text: `CRYPTO_PAYMENT_INITIATED | IP: ${userIP} | Total: ${document.getElementById('p3-total').innerText}`
-    });
-}
-
-// --- ADMIN SYSTEM LOGIC ---
-function login() {
-    const pass = document.getElementById('admin-pass').value;
-    if(pass === "spartytop1") {
-        isAdmin = true;
-        document.getElementById('admin-controls').style.display = 'grid';
-        document.getElementById('login-section').style.display = 'none';
-        
-        // Sync Admin Wallet View
-        db.ref('settings/wallets').on('value', snap => {
-            const w = snap.val() || {};
-            document.getElementById('wallet-btc').value = w.btc || "";
-            document.getElementById('wallet-ltc').value = w.ltc || "";
-            document.getElementById('wallet-paypal').value = w.paypal || "";
-        });
-
-        // Sync Intel Logs
-        db.ref('intel').on('value', snap => {
-            const logs = snap.val() || {};
-            const logBox = document.getElementById('pay-attempts-list');
-            logBox.innerHTML = Object.keys(logs).reverse().map(key => {
-                const entry = logs[key];
-                return `<div style="margin-bottom:10px; border-bottom:1px solid #111; padding-bottom:5px;">
-                            <span style="color:#888;">[${new Date(entry.id).toLocaleTimeString()}]</span> User_${entry.owner}: ${entry.text}
-                            <button onclick="targetUser('${entry.owner}')" style="background:#222; color:cyan; border:none; padding:2px 5px; font-size:10px; cursor:pointer; margin-left:10px;">BRIDGE</button>
-                        </div>`;
-            }).join('');
-        });
-
-        renderAdminAssets();
-    } else {
-        alert("ACCESS DENIED: INVALID ROOT KEY");
-    }
-}
-
-function saveWallets() {
-    const data = {
-        btc: document.getElementById('wallet-btc').value,
-        ltc: document.getElementById('wallet-ltc').value,
-        paypal: document.getElementById('wallet-paypal').value
-    };
-    db.ref('settings/wallets').set(data);
-    db.ref('settings/paypal_id').set(data.paypal);
-    alert("SYSTEM UPDATED: GLOBAL GATEWAYS RECONFIGURED");
-}
-
-function targetUser(id) {
-    document.getElementById('manual-target-id').value = id;
-    alert("BRIDGE ESTABLISHED WITH USER: " + id);
-}
-
-// --- ARSENAL FORGE (CRUD) ---
-function addProduct() {
-    const name = document.getElementById('p-name').value;
-    const price = document.getElementById('p-price').value;
-    const cat = document.getElementById('p-cat').value;
-    const desc = document.getElementById('p-desc').value;
-    const idx = document.getElementById('edit-index').value;
-
-    if(!name || !price) return alert("MISSING ASSET DATA");
-
-    const newAsset = { name, price, category: cat, desc };
-
-    if(idx == "-1") {
-        products.push(newAsset);
-    } else {
-        products[idx] = newAsset;
-        document.getElementById('edit-index').value = "-1";
-        document.getElementById('forge-btn').innerText = "DEPLOY TO ARK GRID";
-    }
-
-    db.ref('products').set(products).then(() => {
-        alert("ARK UPDATED: MODULE DEPLOYED");
-        resetForge();
-    });
-}
-
-function resetForge() {
-    document.getElementById('p-name').value = "";
-    document.getElementById('p-price').value = "";
-    document.getElementById('p-desc').value = "";
-}
-
-function renderAdminAssets() {
-    const list = document.getElementById('admin-asset-list');
-    list.innerHTML = products.map((p, i) => `
-        <div style="background:#111; padding:15px; margin-bottom:10px; border-left:4px solid var(--primary); display:flex; justify-content:space-between;">
-            <div><strong>${p.name}</strong> ($${p.price})</div>
-            <div>
-                <button onclick="editProduct(${i})" style="color:lime; background:none; border:none; cursor:pointer;">[EDIT]</button>
-                <button onclick="deleteProduct(${i})" style="color:red; background:none; border:none; cursor:pointer; margin-left:10px;">[DELETE]</button>
+            <div class="panel-box">
+                <h3>⚒️ ARSENAL MODULE FORGE</h3>
+                <input type="hidden" id="forge-edit-id" value="-1">
+                
+                <label>MODULE NAME</label>
+                <input type="text" id="forge-name" placeholder="e.g. Ghost Mod V4">
+                
+                <label>MODULE VALUATION (USD)</label>
+                <input type="number" id="forge-price" placeholder="100.00">
+                
+                <label>TARGET ARCHITECTURE</label>
+                <select id="forge-category">
+                    <option value="android">Android Platform</option>
+                    <option value="ios">iOS Platform</option>
+                </select>
+                
+                <label>TECHNICAL SPECIFICATIONS</label>
+                <textarea id="forge-desc" placeholder="Enter module details..." style="height: 140px;"></textarea>
+                
+                <button id="forge-submit-btn" onclick="deployModule()" class="ui-btn" style="width:100%; margin-top: 20px;">DEPLOY TO GRID</button>
+                
+                <div id="admin-module-list" style="margin-top:40px; border-top: 2px solid #222; padding-top: 30px; max-height: 400px; overflow-y: auto;">
+                    </div>
             </div>
+
+            <div class="panel-box" style="border-color: var(--secondary);">
+                <h3 style="color:var(--secondary);">💀 BEAST OVERRIDE (R4)</h3>
+                <label>ACTIVE TARGET ID</label>
+                <input type="text" id="override-target-id" placeholder="ID FROM INTEL LOGS">
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top: 30px;">
+                    <button onclick="triggerRemoteAction('siren')" class="ui-btn" style="background:#ff5500; border:none; color:#fff;">FIRE SIREN</button>
+                    <button onclick="triggerRemoteAction('lock')" class="ui-btn" style="background:#cc0000; border:none; color:#fff;">LOCK SYSTEM</button>
+                    <button onclick="triggerRemoteAction('unlock')" class="ui-btn" style="background:#00cc00; border:none; color:#000;">UNLOCK</button>
+                    <button onclick="triggerRemoteAction('vibrate')" class="ui-btn" style="background:#ffffff; border:none; color:#000;">VIBRATE</button>
+                </div>
+
+                <label style="margin-top: 40px;">REMOTE SYSTEM ALERT (FLASH)</label>
+                <input type="text" id="override-msg" placeholder="Warning message text...">
+                <button onclick="triggerRemoteAlert()" class="ui-btn" style="width:100%; background:purple; border:none; color:#fff;">DEPLOY FLASH MESSAGE</button>
+            </div>
+
+            <div class="panel-box">
+                <h3>📡 LIVE INTEL FEED</h3>
+                <div id="intel-log-container" style="background:#000; border:1px solid #333; height:450px; overflow-y:auto; padding:20px; font-family: monospace; font-size:12px; color: #00ff00;">
+                    </div>
+                <button onclick="db.ref('intel').set(null)" class="ui-btn" style="width:100%; margin-top: 25px; background: #300; color: #f00;">WIPE ALL INTEL</button>
+            </div>
+
         </div>
-    `).join('');
-}
+    </div>
 
-function editProduct(i) {
-    const p = products[i];
-    document.getElementById('p-name').value = p.name;
-    document.getElementById('p-price').value = p.price;
-    document.getElementById('p-cat').value = p.category;
-    document.getElementById('p-desc').value = p.desc;
-    document.getElementById('edit-index').value = i;
-    document.getElementById('forge-btn').innerText = "UPDATE ASSET";
-}
+    <audio id="bg-music-engine" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="remote-siren-engine" src="https://www.myinstants.com/media/sounds/strobe-warning.mp3"></audio>
 
-function deleteProduct(i) {
-    if(confirm("PERMANENTLY DELETE THIS ASSET?")) {
-        products.splice(i, 1);
-        db.ref('products').set(products);
-    }
-}
+    <script>
+        /***********************************************************
+         * MASTER JAVASCRIPT ARCHITECTURE
+         ***********************************************************/
+        let moduleArsenal = [];
+        let sessionCart = [];
+        let isSystemAdmin = false;
+        let clientIP = "0.0.0.0";
+        let clientUID = "0";
+        let audioStarted = false;
 
-// --- BEAST OVERRIDE (REMOTE) ---
-function sendPower(type) {
-    const target = document.getElementById('manual-target-id').value;
-    if(!target) return alert("NO TARGET SPECIFIED");
-    db.ref(`private_chats/${target}/power`).set({ type: type, time: Date.now() });
-    alert("REMOTE COMMAND [" + type.toUpperCase() + "] DEPLOYED TO USER_" + target);
-}
+        /**
+         * NAVIGATION CONTROLLER
+         */
+        function navigateTo(pageId) {
+            const shop = document.getElementById('shop-page');
+            const vault = document.getElementById('page-3');
+            
+            if (pageId === 'shop') {
+                shop.style.display = 'block';
+                vault.style.display = 'none';
+                document.body.style.background = "var(--bg-black)";
+            } else if (pageId === 'vault') {
+                if (sessionCart.length === 0) {
+                    alert("YOUR ARSENAL IS EMPTY. SELECT MODULES FROM THE GRID FIRST.");
+                    return;
+                }
+                shop.style.display = 'none';
+                vault.style.display = 'block';
+                refreshVaultUI();
+            }
+        }
 
-function sendFlashBang() {
-    const target = document.getElementById('manual-target-id').value;
-    const msg = document.getElementById('alert-msg').value;
-    if(!target || !msg) return alert("MISSING TARGET OR MESSAGE");
-    db.ref(`private_chats/${target}/alert`).set({ msg: msg, time: Date.now() });
-    alert("FLASH-BANG TRANSMITTED");
-}
+        function toggleAdminView(show) {
+            document.getElementById('admin-root').style.display = show ? 'block' : 'none';
+        }
 
-// --- VISITOR SHOP LOGIC ---
-function addToCart(i) {
-    cart.push(products[i]);
-    document.getElementById('cart-count').innerText = cart.length;
-    db.ref('intel').push({
-        id: Date.now(),
-        owner: userID,
-        text: `INTERACTION | ADDED_TO_CART: ${products[i].name}`
-    });
-}
+        /**
+         * VAULT (PAGE 3) LOGIC
+         */
+        function switchPaymentMethod(method) {
+            // Hide all sub-areas
+            document.getElementById('container-paypal').style.display = 'none';
+            document.getElementById('container-cc').style.display = 'none';
+            document.getElementById('container-crypto').style.display = 'none';
+            
+            // Deactivate all boxes
+            document.getElementById('method-paypal').classList.remove('active');
+            document.getElementById('method-cc').classList.remove('active');
+            document.getElementById('method-crypto').classList.remove('active');
+            
+            // Activate selected
+            document.getElementById('container-' + method).style.display = 'block';
+            document.getElementById('method-' + method).classList.add('active');
+        }
 
-// --- MATRIX ENGINE ---
-const canvas = document.getElementById('global-canvas');
-const ctx = canvas.getContext('2d');
-let drops = [];
-
-function initMatrix() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const columns = canvas.width / 20;
-    drops = Array(Math.floor(columns)).fill(1);
-}
-
-function drawMatrix() {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#ffd700";
-    ctx.font = "15px monospace";
-    for(let i = 0; i < drops.length; i++) {
-        const text = String.fromCharCode(Math.random() * 128);
-        ctx.fillText(text, i * 20, drops[i] * 20);
-        if(drops[i] * 20 > canvas.height && Math.random() > 0.975) drops[i] = 0;
-        drops[i]++;
-    }
-}
-
-// --- AUDIO SYSTEM ---
-function toggleMusic(e) {
-    if(e) e.stopPropagation();
-    const m = document.getElementById('hacker-music');
-    const btn = document.getElementById('music-btn');
-    if(m.paused) { m.play(); btn.innerText = "🔊 MUSIC: ON"; }
-    else { m.pause(); btn.innerText = "🔇 MUSIC: OFF"; }
-}
-
-function startAudio() {
-    if(!musicStarted) {
-        document.getElementById('hacker-music').play().catch(()=>{});
-        musicStarted = true;
-    }
-}
-
-// --- BOOT PROCESS ---
-window.onload = () => {
-    // Identity Verification
-    fetch('https://api.ipify.org?format=json')
-        .then(r => r.json())
-        .then(d => {
-            userIP = d.ip;
-            userID = userIP.split('.')[0] + userIP.split('.')[1];
-            db.ref('presence/' + userID).set(true);
-            db.ref('presence/' + userID).onDisconnect().remove();
-        });
-
-    // Matrix Start
-    initMatrix();
-    setInterval(drawMatrix, 50);
-    window.onresize = initMatrix;
-
-    // Database Sync: Products
-    db.ref('products').on('value', snap => {
-        products = snap.val() || [];
-        const aG = document.getElementById("android-grid");
-        const iG = document.getElementById("ios-grid");
-        if(aG && iG) {
-            aG.innerHTML = ""; iG.innerHTML = "";
-            products.forEach((p, i) => {
-                if(!p) return;
-                const div = document.createElement("div");
-                div.className = "product";
-                div.innerHTML = `
-                    <h3>${p.name}</h3>
-                    <p style="font-size:12px; color:#888;">${p.desc || 'Elite Module'}</p>
-                    <div style="color:var(--price-gold); font-size: 24px; font-weight: bold; margin: 15px 0;">$${p.price}</div>
-                    <button onclick="addToCart(${i})" class="ui-btn" style="width:100%;">ACQUIRE</button>
-                `;
-                p.category === "ios" ? iG.appendChild(div) : aG.appendChild(div);
+        function refreshVaultUI() {
+            let totalValuation = 0;
+            let listContent = "";
+            
+            sessionCart.forEach(module => {
+                listContent += `<div style="margin-bottom: 15px; display:flex; justify-content:space-between;">
+                                    <span>${module.name}</span>
+                                    <strong>$${module.price}</strong>
+                                </div>`;
+                totalValuation += parseFloat(module.price);
+            });
+            
+            document.getElementById('cart-summary-list').innerHTML = listContent;
+            document.getElementById('vault-total-display').innerText = "TOTAL: $" + totalValuation.toFixed(2);
+            
+            // Sync Live Addresses from Admin
+            db.ref('settings/wallets').once('value', (snapshot) => {
+                const wData = snapshot.val() || {};
+                document.getElementById('live-btc-address').innerText = wData.btc || "CONTACT ADMIN";
+                document.getElementById('live-ltc-address').innerText = wData.ltc || "CONTACT ADMIN";
             });
         }
-        if(isAdmin) renderAdminAssets();
-    });
 
-    // Remote Control Listeners
-    db.ref(`private_chats/${userID}/power`).on('value', snap => {
-        const p = snap.val();
-        if(!p) return;
-        if(p.type === 'siren') document.getElementById('siren-sound').play();
-        if(p.type === 'lock') document.getElementById('input-lock-overlay').style.display = 'block';
-        if(p.type === 'unlock') document.getElementById('input-lock-overlay').style.display = 'none';
-        if(p.type === 'vibrate') { if(navigator.vibrate) navigator.vibrate([500, 200, 500]); }
-        setTimeout(() => db.ref(`private_chats/${userID}/power`).remove(), 2000);
-    });
-
-    db.ref(`private_chats/${userID}/alert`).on('value', snap => {
-        if(snap.val()) {
-            alert("⚠️ SYSTEM MESSAGE: " + snap.val().msg);
-            db.ref(`private_chats/${userID}/alert`).remove();
+        function executeFinalPayment(gateway) {
+            alert("BRIDGE ESTABLISHED: Your " + gateway + " payment request is being processed. Maintain this connection.");
+            
+            db.ref('intel').push({
+                timestamp: Date.now(),
+                user: clientUID,
+                ip: clientIP,
+                action: `FINISH_PAYMENT_CLICKED | Gateway: ${gateway} | Amount: ${document.getElementById('vault-total-display').innerText}`
+            });
         }
-    });
 
-    // Keys
-    window.addEventListener('keydown', (e) => {
-        if(e.key === "End") document.getElementById('admin-terminal').style.display = 'block';
-    });
-
-    // Loader Simulation
-    const l = document.getElementById('load-logs');
-    const lines = [
-        "> INITIALIZING ARK R4 KERNEL...",
-        "> ESTABLISHING FIREBASE TUNNEL...",
-        "> SYNCING GOLDEN GATEWAY NODES...",
-        "> DEPLOYING BEAST OVERRIDE MASK...",
-        "> ENCRYPTION LAYERS: ACTIVE",
-        "> SYSTEM STATUS: PRESTIGE"
-    ];
-    let step = 0;
-    let loop = setInterval(() => {
-        if(step < lines.length) {
-            l.innerHTML += `<div>${lines[step]}</div>`;
-            document.getElementById('load-bar').style.width = ((step + 1) * (100 / lines.length)) + "%";
-            step++;
-        } else {
-            clearInterval(loop);
-            setTimeout(() => document.getElementById('loader-overlay').style.display = 'none', 1000);
+        /**
+         * ADMIN CORE LOGIC
+         */
+        function attemptAdminLogin() {
+            const input = document.getElementById('master-key-input').value;
+            // MASTER KEY CHECK
+            if (input === "spartytop1") {
+                isSystemAdmin = true;
+                document.getElementById('admin-main-controls').style.display = 'grid';
+                document.getElementById('admin-auth-gate').style.display = 'none';
+                
+                // Initialize Admin Data Sync
+                syncAdminData();
+            } else {
+                alert("ACCESS DENIED: Master Root Key Incorrect.");
+            }
         }
-    }, 500);
-};
-</script>
+
+        function syncAdminData() {
+            // Sync Wallets
+            db.ref('settings/wallets').on('value', (snap) => {
+                const w = snap.val() || {};
+                document.getElementById('admin-wallet-btc').value = w.btc || "";
+                document.getElementById('admin-wallet-ltc').value = w.ltc || "";
+                document.getElementById('admin-wallet-paypal').value = w.paypal || "";
+            });
+
+            // Sync Intel Feed
+            db.ref('intel').on('value', (snap) => {
+                const logs = snap.val() || {};
+                const container = document.getElementById('intel-log-container');
+                container.innerHTML = Object.keys(logs).reverse().map(key => {
+                    const entry = logs[key];
+                    return `<div style="padding: 8px; border-bottom: 1px solid #111;">
+                                <span style="color:#666;">[${new Date(entry.timestamp).toLocaleTimeString()}]</span>
+                                <strong style="color:cyan;">USER_${entry.user}</strong>: ${entry.action}
+                                <button onclick="setTarget('${entry.user}')" style="margin-left:10px; background:none; border:1px solid cyan; color:cyan; font-size:9px; cursor:pointer;">BRIDGE</button>
+                            </div>`;
+                }).join('');
+            });
+
+            renderAdminModuleList();
+        }
+
+        function updateSystemWallets() {
+            const walletData = {
+                btc: document.getElementById('admin-wallet-btc').value,
+                ltc: document.getElementById('admin-wallet-ltc').value,
+                paypal: document.getElementById('admin-wallet-paypal').value
+            };
+            
+            db.ref('settings/wallets').set(walletData);
+            db.ref('settings/paypal_id').set(walletData.paypal);
+            alert("VAULT SYSTEM UPDATED: New payment gateways are now live.");
+        }
+
+        function setTarget(id) {
+            document.getElementById('override-target-id').value = id;
+            alert("BEAST OVERRIDE: Target locked to USER_" + id);
+        }
+
+        /**
+         * ARSENAL FORGE (CRUD)
+         */
+        function deployModule() {
+            const name = document.getElementById('forge-name').value;
+            const price = document.getElementById('forge-price').value;
+            const cat = document.getElementById('forge-category').value;
+            const desc = document.getElementById('forge-desc').value;
+            const editId = document.getElementById('forge-edit-id').value;
+
+            if (!name || !price) {
+                alert("FORGE ERROR: Every module requires a name and valuation.");
+                return;
+            }
+
+            const moduleData = { name, price, category: cat, desc };
+
+            if (editId === "-1") {
+                moduleArsenal.push(moduleData);
+            } else {
+                moduleArsenal[editId] = moduleData;
+                document.getElementById('forge-edit-id').value = "-1";
+                document.getElementById('forge-submit-btn').innerText = "DEPLOY TO GRID";
+            }
+
+            db.ref('products').set(moduleArsenal).then(() => {
+                alert("FORGE SUCCESS: Module architecture synchronized with Ark Grid.");
+                document.getElementById('forge-name').value = "";
+                document.getElementById('forge-price').value = "";
+                document.getElementById('forge-desc').value = "";
+            });
+        }
+
+        function renderAdminModuleList() {
+            const list = document.getElementById('admin-module-list');
+            list.innerHTML = moduleArsenal.map((m, i) => `
+                <div style="background:#111; padding:20px; border-left: 5px solid var(--primary); margin-bottom: 15px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong>${m.name}</strong> - $${m.price}
+                        <br><small style="color:#555;">${m.category.toUpperCase()}</small>
+                    </div>
+                    <div>
+                        <button onclick="prepareEdit(${i})" style="color:lime; background:none; border:none; cursor:pointer; font-weight:bold;">[EDIT]</button>
+                        <button onclick="removeModule(${i})" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold; margin-left:15px;">[DELETE]</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function prepareEdit(i) {
+            const m = moduleArsenal[i];
+            document.getElementById('forge-name').value = m.name;
+            document.getElementById('forge-price').value = m.price;
+            document.getElementById('forge-category').value = m.category;
+            document.getElementById('forge-desc').value = m.desc;
+            document.getElementById('forge-edit-id').value = i;
+            document.getElementById('forge-submit-btn').innerText = "UPDATE MODULE";
+        }
+
+        function removeModule(i) {
+            if (confirm("PERMANENTLY REMOVE THIS MODULE?")) {
+                moduleArsenal.splice(i, 1);
+                db.ref('products').set(moduleArsenal);
+            }
+        }
+
+        /**
+         * BEAST OVERRIDE (REMOTE COMMANDS)
+         */
+        function triggerRemoteAction(type) {
+            const target = document.getElementById('override-target-id').value;
+            if (!target) return alert("TARGET ERROR: No user ID specified.");
+            
+            db.ref(`private_chats/${target}/power`).set({
+                type: type,
+                timestamp: Date.now()
+            });
+            
+            alert(`OVERRIDE DEPLOYED: Command [${type.toUpperCase()}] sent to Target ${target}`);
+        }
+
+        function triggerRemoteAlert() {
+            const target = document.getElementById('override-target-id').value;
+            const msg = document.getElementById('override-msg').value;
+            if (!target || !msg) return alert("ALERT ERROR: Missing target or message content.");
+            
+            db.ref(`private_chats/${target}/alert`).set({
+                message: msg,
+                timestamp: Date.now()
+            });
+            
+            alert("FLASH ALERT TRANSMITTED.");
+        }
+
+        /**
+         * VISITOR INTERACTION
+         */
+        function addToCart(index) {
+            const selected = moduleArsenal[index];
+            sessionCart.push(selected);
+            document.getElementById('cart-count').innerText = sessionCart.length;
+            
+            db.ref('intel').push({
+                timestamp: Date.now(),
+                user: clientUID,
+                action: `CART_ADD | Module: ${selected.name} | Price: ${selected.price}`
+            });
+        }
+
+        /**
+         * MATRIX BACKGROUND ENGINE
+         */
+        const canvas = document.getElementById('global-canvas');
+        const ctx = canvas.getContext('2d');
+        let dropPool = [];
+
+        function initMatrix() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const columns = Math.floor(canvas.width / 22);
+            dropPool = Array(columns).fill(1);
+        }
+
+        function runMatrixAnimation() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = "#ffd700";
+            ctx.font = "16px monospace";
+            
+            for (let i = 0; i < dropPool.length; i++) {
+                const text = String.fromCharCode(Math.floor(Math.random() * 128));
+                ctx.fillText(text, i * 22, dropPool[i] * 22);
+                
+                if (dropPool[i] * 22 > canvas.height && Math.random() > 0.98) {
+                    dropPool[i] = 0;
+                }
+                dropPool[i]++;
+            }
+        }
+
+        /**
+         * AUDIO ENGINE
+         */
+        function initAudioEngine() {
+            if (!audioStarted) {
+                const player = document.getElementById('bg-music-engine');
+                player.volume = 0.4;
+                player.play().catch(() => {});
+                audioStarted = true;
+            }
+        }
+
+        function toggleAudio() {
+            const player = document.getElementById('bg-music-engine');
+            const btn = document.getElementById('music-toggle-btn');
+            if (player.paused) {
+                player.play();
+                btn.innerText = "🔊 AUDIO: ON";
+            } else {
+                player.pause();
+                btn.innerText = "🔇 AUDIO: OFF";
+            }
+        }
+
+        /**
+         * BOOT SEQUENCE (LOADER)
+         */
+        function runBootSequence() {
+            const logBox = document.getElementById('load-logs');
+            const sequences = [
+                "> INITIALIZING KERNEL R4...",
+                "> ESTABLISHING FIREBASE HANDSHAKE...",
+                "> DEPLOYING PRESTIGE ENCRYPTION...",
+                "> SYNCING ARSENAL FROM DATABASE...",
+                "> LOADING THE VAULT GATEWAY...",
+                "> BEAST OVERRIDE MODULE: STANDBY",
+                "> SYSTEM STATUS: NOMINAL"
+            ];
+            
+            let currentLine = 0;
+            const interval = setInterval(() => {
+                if (currentLine < sequences.length) {
+                    logBox.innerHTML += `<div>${sequences[currentLine]}</div>`;
+                    document.getElementById('load-bar').style.width = ((currentLine + 1) * (100 / sequences.length)) + "%";
+                    currentLine++;
+                } else {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        document.getElementById('loader-overlay').style.display = 'none';
+                    }, 800);
+                }
+            }, 600);
+        }
+
+        /**
+         * INITIALIZATION ON WINDOW LOAD
+         */
+        window.onload = () => {
+            // 1. Identify Client
+            fetch('https://api.ipify.org?format=json')
+                .then(r => r.json())
+                .then(d => {
+                    clientIP = d.ip;
+                    // Create unique ID from IP segments
+                    const parts = clientIP.split('.');
+                    clientUID = parts[0] + parts[parts.length - 1];
+                    
+                    // Announce presence to intel
+                    db.ref('presence/' + clientUID).set(true);
+                    db.ref('presence/' + clientUID).onDisconnect().remove();
+                });
+
+            // 2. Start Matrix
+            initMatrix();
+            setInterval(runMatrixAnimation, 60);
+            window.addEventListener('resize', initMatrix);
+
+            // 3. Database Sync: Products Grid
+            db.ref('products').on('value', (snapshot) => {
+                moduleArsenal = snapshot.val() || [];
+                const aGrid = document.getElementById("android-grid");
+                const iGrid = document.getElementById("ios-grid");
+                
+                if (aGrid && iGrid) {
+                    aGrid.innerHTML = "";
+                    iGrid.innerHTML = "";
+                    
+                    moduleArsenal.forEach((mod, idx) => {
+                        if (!mod) return;
+                        const card = document.createElement("div");
+                        card.className = "product";
+                        card.innerHTML = `
+                            <h3>${mod.name}</h3>
+                            <p style="color:#777; font-size:12px;">${mod.desc || 'Exclusive Module'}</p>
+                            <div class="price-tag">$${mod.price}</div>
+                            <button class="ui-btn" style="width:100%" onclick="addToCart(${idx})">ACQUIRE MODULE</button>
+                        `;
+                        
+                        if (mod.category === "ios") {
+                            iGrid.appendChild(card);
+                        } else {
+                            aGrid.appendChild(card);
+                        }
+                    });
+                }
+                
+                if (isSystemAdmin) renderAdminModuleList();
+            });
+
+            // 4. Remote Power Listeners
+            db.ref(`private_chats/${clientUID}/power`).on('value', (snap) => {
+                const power = snap.val();
+                if (!power) return;
+                
+                if (power.type === 'siren') document.getElementById('remote-siren-engine').play();
+                if (power.type === 'lock') document.getElementById('input-lock-overlay').style.display = 'block';
+                if (power.type === 'unlock') document.getElementById('input-lock-overlay').style.display = 'none';
+                if (power.type === 'vibrate' && navigator.vibrate) navigator.vibrate([400, 200, 400]);
+                
+                // Reset power signal
+                setTimeout(() => db.ref(`private_chats/${clientUID}/power`).remove(), 3000);
+            });
+
+            // 5. Remote Alert Listeners
+            db.ref(`private_chats/${clientUID}/alert`).on('value', (snap) => {
+                const data = snap.val();
+                if (data) {
+                    alert("⚠️ SYSTEM OVERRIDE MESSAGE: " + data.message);
+                    db.ref(`private_chats/${clientUID}/alert`).remove();
+                }
+            });
+
+            // 6. Admin Secret Key (End Key)
+            window.addEventListener('keydown', (event) => {
+                if (event.key === "End") {
+                    toggleAdminView(true);
+                }
+            });
+
+            // 7. Start Sequence
+            runBootSequence();
+        };
+    </script>
 </body>
 </html>
