@@ -19,7 +19,6 @@
             appId: "1:221473460329:web:21a278a86cfdcff8b1d2f8",
             measurementId: "G-82WFV6S568"
         };
-        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
@@ -38,7 +37,7 @@
                             window.location.href = "about:blank";
                         }
                     });
-                } catch(e) { console.log("Shield Active"); }
+                } catch(e) {}
             };
             checkBans();
 
@@ -76,67 +75,54 @@
         .neon-glow * { text-shadow: 0 0 15px var(--primary) !important; }
         .neon-glow .product, .neon-glow .ui-btn, .neon-glow .panel-box { box-shadow: 0 0 15px var(--primary); }
 
-        * { cursor: crosshair !important; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { cursor: crosshair !important; box-sizing: border-box; }
         body { margin: 0; font-family: 'Courier New', monospace; color: white; text-align: center; background: var(--bg-main); transition: 0.5s; overflow-x: hidden; padding-bottom: 80px; }
         
-        #input-lock-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000000; background: rgba(0,0,0,0.2); cursor: not-allowed !important; pointer-events: all; }
-        #global-alert-banner { display: none; position: fixed; top: 0; left: 0; width: 100%; background: var(--secondary); color: white; padding: 10px; z-index: 100000; font-weight: bold; border-bottom: 2px solid white; }
-
         #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .terminal-loader { width: 80%; max-width: 600px; height: 300px; background: #000; border: 1px solid #00ff41; padding: 20px; text-align: left; font-size: 14px; overflow: hidden; position: relative; box-shadow: 0 0 30px rgba(0, 255, 65, 0.2); }
-        .skull-ascii { color: #ffd700; font-size: 8px; line-height: 8px; white-space: pre; margin-bottom: 15px; text-align: center;}
-        #load-logs { color: #00ff41; height: 180px; overflow: hidden; }
-        .load-bar-container { width: 100%; height: 10px; background: #111; border: 1px solid #00ff41; margin-top: 20px; position: relative; }
-        #load-bar { width: 0%; height: 100%; background: #00ff41; box-shadow: 0 0 10px #00ff41; transition: 0.2s; }
+        .terminal-loader { width: 80%; max-width: 600px; height: 300px; background: #000; border: 1px solid #00ff41; padding: 20px; overflow: hidden; box-shadow: 0 0 30px rgba(0, 255, 65, 0.2); }
+        #load-logs { color: #00ff41; height: 180px; overflow: hidden; text-align: left; }
+        .load-bar-container { width: 100%; height: 10px; background: #111; border: 1px solid #00ff41; margin-top: 20px; }
+        #load-bar { width: 0%; height: 100%; background: #00ff41; transition: 0.2s; }
 
         #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background: var(--bg-main); }
-        .header-container { padding: 50px 0; }
-        header { font-size: 50px; font-weight: bold; color: var(--primary); text-shadow: 0 0 20px var(--primary); letter-spacing: 10px; }
+        header { font-size: 50px; font-weight: bold; color: var(--primary); text-shadow: 0 0 20px var(--primary); letter-spacing: 10px; padding: 50px 0; }
 
         .top-nav { position: fixed; top: 20px; left: 20px; z-index: 4000; display: flex; gap: 10px; }
-        .ui-btn { padding: 10px 15px; background: var(--primary); color: #000; border: 2px solid #fff; font-weight: bold; border-radius: 5px; font-size: 12px; cursor: pointer; }
+        .ui-btn { padding: 10px 15px; background: var(--primary); color: #000; border: 2px solid #fff; font-weight: bold; border-radius: 5px; cursor: pointer; }
 
-        .floating-cart { position: fixed; top: 20px; right: 20px; background: var(--primary); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10000; color: black; box-shadow: 0 0 25px var(--primary); border: 3px solid #fff; font-size: 24px; }
+        #chat-widget { display: none; position: fixed; bottom: 100px; right: 20px; width: 300px; height: 400px; background: var(--glass); border: 2px solid var(--primary); flex-direction: column; z-index: 9000; border-radius: 10px; overflow: hidden; }
+        #chat-header { background: var(--primary); color: #000; padding: 10px; font-weight: bold; display: flex; justify-content: space-between; }
+        #chat-msgs { flex: 1; padding: 10px; overflow-y: auto; text-align: left; font-size: 13px; }
+        .chat-input-wrap { display: flex; border-top: 1px solid #333; }
+        .chat-input-wrap input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; }
+
+        .floating-cart { position: fixed; top: 20px; right: 20px; background: var(--primary); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10000; color: black; box-shadow: 0 0 25px var(--primary); border: 3px solid #fff; font-size: 24px; }
         .cart-count { position: absolute; top: -5px; right: -5px; background: var(--secondary); color: white; font-size: 14px; padding: 5px 9px; border-radius: 50%; }
 
         .cat-label { margin: 40px auto; padding: 15px; background: var(--glass); border-top: 2px solid var(--primary); border-bottom: 2px solid var(--primary); max-width: 900px; font-size: 28px; font-weight: bold; color: var(--primary); }
         .product-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; padding: 20px; }
         .product { background: var(--glass); padding: 20px; width: 260px; border: 1px solid #333; border-radius: 10px; transition: 0.3s; }
-        .product:hover { transform: translateY(-10px); border-color: var(--primary); }
-        .product img { width: 100%; height: 160px; object-fit: cover; border-radius: 5px; }
+        .product img { width: 100%; height: 160px; object-fit: cover; cursor: pointer; }
 
-        /* PAGE 3 CUSTOM STYLES */
+        /* PAGE 3 UI */
         #page-3 { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 50000; padding: 20px; overflow-y: auto; }
-        .p3-card { background: #080808; border: 2px solid var(--primary); padding: 30px; max-width: 500px; margin: 40px auto; border-radius: 15px; box-shadow: 0 0 40px rgba(255,215,0,0.2); }
-        .p3-method { border: 1px solid #333; padding: 20px; margin: 15px 0; cursor: pointer; transition: 0.3s; border-radius: 8px; font-weight: bold; font-size: 18px; }
-        .p3-method:hover { background: #111; border-color: var(--primary); }
-        .p3-method.active { background: #1a1a1a; border-color: var(--primary); border-width: 2px; }
-        .crypto-box { background: #000; color: var(--primary); padding: 10px; border: 1px dashed #444; margin-top: 5px; font-size: 11px; word-break: break-all; }
+        .p3-card { background: #080808; border: 2px solid var(--primary); padding: 30px; max-width: 500px; margin: 40px auto; border-radius: 15px; }
+        .p3-method { border: 1px solid #333; padding: 20px; margin: 15px 0; cursor: pointer; font-weight: bold; font-size: 18px; }
+        .crypto-box { background: #000; color: var(--primary); padding: 10px; border: 1px dashed #444; margin-top: 5px; font-size: 11px; word-break: break-all; text-align: left; }
 
         .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 20000; padding: 40px; overflow-y: auto; text-align: left; }
         .admin-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
         .panel-box { background: #080808; border: 1px solid #333; padding: 20px; border-radius: 8px; }
-        .panel-box h3 { color: var(--primary); margin-top: 0; border-bottom: 1px solid #222; padding-bottom: 10px; }
-        input, select, textarea { background: #111; border: 1px solid var(--primary); color: #fff; padding: 10px; margin: 5px 0; width: 100%; border-radius: 4px; }
+        input, select, textarea { background: #111; border: 1px solid var(--primary); color: #fff; padding: 10px; margin: 5px 0; width: 100%; }
+
+        .intel-ticker-wrap { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; border-top: 2px solid var(--primary); display: flex; z-index: 5000; height: 40px; align-items: center; }
+        .intel-ticker-label { background: var(--primary); color: black; padding: 0 20px; font-weight: bold; height: 100%; display: flex; align-items: center; }
     </style>
 </head>
 <body onclick="startAudio()">
 
-<div id="input-lock-overlay"></div>
-<div id="global-alert-banner"></div>
-
 <div id="loader-overlay">
     <div class="terminal-loader">
-        <div class="skull-ascii">
-        .-'''-.
-       / _   _ \
-      | ( ' ) |
-      |(_ o _)|
-       '.(_).-'
-        /   \
-       |     |
-        \___/
-        </div>
         <div id="load-logs"></div>
         <div class="load-bar-container"><div id="load-bar"></div></div>
     </div>
@@ -146,53 +132,22 @@
 
 <div id="page-3">
     <div class="p3-card">
-        <h1 style="color:var(--primary); margin-top:0;">SECURE CHECKOUT</h1>
-        <div id="p3-total" style="color:var(--price-gold); font-size:24px; margin-bottom:20px; border-bottom:1px solid #222; padding-bottom:10px;">TOTAL: $0.00</div>
-        
-        <div class="p3-method" id="btn-p3-pp" onclick="selectP3Method('paypal')">🔵 PAYPAL / DEBIT</div>
-        <div id="p3-paypal-area" style="display:none; margin-bottom:15px;"><div id="paypal-button-container-p3"></div></div>
-
-        <div class="p3-method" id="btn-p3-cc" onclick="selectP3Method('cc')">💳 CREDIT CARD (STRIPE)</div>
-        <div id="p3-cc-area" style="display:none; margin-bottom:15px;">
-            <input type="text" placeholder="CARD NUMBER">
-            <div style="display:flex; gap:5px;"><input type="text" placeholder="MM/YY"><input type="text" placeholder="CVC"></div>
-            <button class="ui-btn" style="width:100%; margin-top:10px;" onclick="alert('STRIPE BRIDGE CONNECTING...')">AUTHORIZE CARD</button>
+        <h1 style="color:var(--primary);">PAYMENT TERMINAL</h1>
+        <h2 id="p3-total" style="color:var(--price-gold);"></h2>
+        <div class="p3-method" onclick="selectP3Method('paypal')">🔵 PAYPAL / DEBIT</div>
+        <div id="p3-paypal-area" style="display:none;"><div id="paypal-button-container-p3"></div></div>
+        <div class="p3-method" onclick="selectP3Method('crypto')">₿ CRYPTOCURRENCY</div>
+        <div id="p3-crypto-area" style="display:none;">
+            <div class="crypto-box">BTC: <span id="p3-btc"></span></div>
+            <div class="crypto-box">LTC: <span id="p3-ltc"></span></div>
         </div>
-
-        <div class="p3-method" id="btn-p3-crypto" onclick="selectP3Method('crypto')">₿ CRYPTOCURRENCY</div>
-        <div id="p3-crypto-area" style="display:none; text-align:left;">
-            <label style="font-size:10px;">BTC ADDRESS:</label><div class="crypto-box" id="p3-btc">FETCHING...</div>
-            <label style="font-size:10px; margin-top:10px; display:block;">LTC ADDRESS:</label><div class="crypto-box" id="p3-ltc">FETCHING...</div>
-            <button class="ui-btn" style="width:100%; margin-top:15px;" onclick="alert('LOGGED. AWAITING CONFIRMATION.')">I HAVE SENT PAYMENT</button>
-        </div>
-        <button onclick="showShop()" class="ui-btn" style="background:none; border:none; color:gray; margin-top:20px; width:100%;">⬅ ABORT</button>
+        <button onclick="showShop()" class="ui-btn" style="margin-top:20px; width:100%;">BACK</button>
     </div>
 </div>
 
 <div class="top-nav">
-    <button class="ui-btn" id="music-btn" onclick="toggleMusic(event)">🔊 MUSIC: ON</button>
-    <button class="ui-btn" onclick="toggleChat()">💬 CHAT</button>
-</div>
-
-<div id="chat-widget">
-    <div id="chat-header"><span id="chat-title">SECURE BRIDGE</span><span onclick="toggleChat()" style="cursor:pointer">X</span></div>
-    <div id="chat-msgs"></div>
-    <div class="chat-input-wrap">
-        <input type="text" id="chat-input" placeholder="Message Admin..." onkeydown="if(event.key==='Enter') sendChat()">
-        <button onclick="sendChat()" style="background:var(--primary); border:none; padding:10px;">></button>
-    </div>
-</div>
-
-<div class="floating-cart" onclick="showCheckout()">🛒 <span class="cart-count" id="cart-count">0</span></div>
-
-<div class="header-container"><header id="main-header-text" onclick="showShop()" style="cursor:pointer;">SPR SHOP ARK R4</header></div>
-
-<div id="shop-page">
-    <div class="cat-label">ANDROID CHEATS</div><div id="android-grid" class="product-grid"></div>
-    <div class="cat-label">IOS CHEATS</div><div id="ios-grid" class="product-grid"></div>
-</div>
-
-<div id="checkout-page" style="display:none; padding:50px;">
+    <button class="ui-btn" id="music-btn" onclick="toggleMusic
+        <div id="checkout-page" style="display:none; padding:50px;">
     <button onclick="showShop()" class="ui-btn">⬅ RETURN</button>
     <div style="max-width:600px; margin:40px auto; background:var(--glass); padding:30px; border:2px solid var(--primary);">
         <h2 style="color:var(--primary)">YOUR CART</h2>
@@ -207,10 +162,10 @@
 <div id="info-page" style="display:none; padding:50px;">
     <button onclick="showShop()" class="ui-btn">⬅ BACK</button>
     <div style="max-width: 800px; margin: 40px auto; background: var(--glass); border: 2px solid var(--primary); padding: 30px;">
-        <img id="info-img" style="width:100%; border-radius:10px;">
+        <img id="info-img" style="width:100%; border-radius:10px; margin-bottom:20px;">
         <h1 id="info-title" style="color:var(--primary)"></h1>
         <h2 id="info-price" style="color:var(--price-gold)"></h2>
-        <p id="info-desc"></p>
+        <p id="info-desc" style="font-size:18px; line-height:1.6;"></p>
         <div id="info-btns"></div>
     </div>
 </div>
@@ -226,35 +181,25 @@
     </div>
     <div id="admin-controls" style="display:none;" class="admin-layout">
         <div class="panel-box">
-            <h3 style="color:lime;">💰 WALLET HUB</h3>
-            <input type="text" id="adm-btc" placeholder="BTC ADDR"><input type="text" id="adm-ltc" placeholder="LTC ADDR">
-            <button onclick="saveWallets()" class="ui-btn" style="width:100%; background:lime; color:black;">SAVE WALLETS</button>
-            <div id="pay-attempts-list" style="font-size:11px; color:yellow; margin-top:10px; height:100px; overflow-y:auto;"></div>
+            <h3 style="color:lime;">💰 SYSTEM 3 WALLETS</h3>
+            <input type="text" id="adm-btc" placeholder="BTC ADDR">
+            <input type="text" id="adm-ltc" placeholder="LTC ADDR">
+            <button onclick="saveWallets()" class="ui-btn" style="width:100%; background:lime; color:black;">UPDATE PAGE 3</button>
+            <div id="pay-attempts-list" style="font-size:11px; color:yellow; margin-top:15px; height:150px; overflow-y:auto; background:#000; padding:5px;"></div>
         </div>
         <div class="panel-box">
             <h3>⚒️ ARSENAL</h3>
-            <input type="hidden" id="edit-index" value="-1">
             <input type="text" id="p-name" placeholder="NAME"><input type="number" id="p-price" placeholder="PRICE">
             <select id="p-cat"><option value="android">Android</option><option value="ios">IOS</option></select>
             <textarea id="p-desc" placeholder="DESC"></textarea>
-            <input type="file" id="p-img"><input type="file" id="p-file">
             <button onclick="addProduct()" class="ui-btn" style="width:100%;">DEPLOY</button>
-            <div id="admin-asset-list"></div>
-        </div>
-        <div class="panel-box">
-            <h3 style="color:red;">💀 OVERRIDE</h3>
-            <button onclick="toggleKillSwitch()" class="ui-btn" style="width:100%; background:white;">KILLSWITCH</button>
-            <input type="text" id="manual-target-id" placeholder="TARGET ID">
-            <button onclick="sendFlashBang()" class="ui-btn" style="width:100%; background:purple;">ALERT</button>
-            <button onclick="sendPower('lock')" class="ui-btn">LOCK</button>
-            <button onclick="sendPower('unlock')" class="ui-btn">UNLK</button>
         </div>
     </div>
 </div>
 
 <div class="intel-ticker-wrap">
     <div class="intel-ticker-label" id="live-feed-label">LIVE_FEED</div>
-    <marquee id="feed-text">>>> R4 SYSTEM ACTIVE...</marquee>
+    <marquee id="feed-text" style="color:#0f0;">>>> R4 SYSTEM STABLE :: ENCRYPTION ACTIVE...</marquee>
 </div>
 
 <audio id="hacker-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
@@ -270,15 +215,15 @@ function renderPage3() {
     let final = (t - (t * (discount/100))).toFixed(2);
     document.getElementById('p3-total').innerText = "TOTAL: $" + final;
     db.ref('settings/wallets').once('value', s => {
-        const w = s.val() || { btc: "bc1q_not_set", ltc: "L_not_set" };
+        const w = s.val() || { btc: "bc1q...", ltc: "L..." };
         document.getElementById('p3-btc').innerText = w.btc;
         document.getElementById('p3-ltc').innerText = w.ltc;
     });
 }
 
 function selectP3Method(m) {
-    ['p3-paypal-area', 'p3-cc-area', 'p3-crypto-area'].forEach(id => document.getElementById(id).style.display = 'none');
-    document.getElementById('p3-' + m + '-area').style.display = 'block';
+    document.getElementById('p3-paypal-area').style.display = (m==='paypal')?'block':'none';
+    document.getElementById('p3-crypto-area').style.display = (m==='crypto')?'block':'none';
     if(m === 'paypal') {
         document.getElementById('paypal-button-container-p3').innerHTML = '';
         let t = 0; cart.forEach(i => t += parseFloat(i.price));
@@ -291,7 +236,7 @@ function selectP3Method(m) {
 }
 
 function saveWallets() {
-    db.ref('settings/wallets').set({ btc: document.getElementById('adm-btc').value, ltc: document.getElementById('adm-ltc').value }).then(() => alert("WALLETS UPDATED"));
+    db.ref('settings/wallets').set({ btc: document.getElementById('adm-btc').value, ltc: document.getElementById('adm-ltc').value }).then(() => alert("WALLETS DEPLOYED"));
 }
 
 function triggerHackerPay() {
@@ -306,8 +251,17 @@ function showShop() {
     broadcastGhostData(); 
 }
 
+function showCheckout() {
+    document.getElementById('shop-page').style.display = 'none';
+    document.getElementById('info-page').style.display = 'none';
+    document.getElementById('checkout-page').style.display = 'block';
+    renderCart();
+    broadcastGhostData();
+}
+
 function toggleChat() { let c = document.getElementById('chat-widget'); c.style.display = (c.style.display==='flex')?'none':'flex'; }
 function closeAdmin() { document.getElementById('admin-terminal').style.display='none'; }
+
 function sendChat() {
     let inp = document.getElementById('chat-input'); if(!inp.value.trim()) return;
     let room = isAdmin ? chatTarget : userID;
@@ -324,8 +278,6 @@ function syncChat() {
     });
 }
 
-function targetUser(t) { chatTarget = t; syncChat(); }
-
 async function getIdentity() {
     try {
         const r = await fetch('https://api.ipify.org?format=json');
@@ -339,7 +291,8 @@ async function getIdentity() {
 
 function broadcastGhostData() {
     if(isAdmin || userID === "Unknown") return;
-    db.ref(`ghost_tracking/${userID}`).update({ pageName: "ACTIVE", lastActive: Date.now() });
+    let page = document.getElementById('checkout-page').style.display !== 'none' ? "CHECKOUT" : "SHOP";
+    db.ref(`ghost_tracking/${userID}`).update({ pageName: page, lastActive: Date.now() });
 }
 
 function displayProducts() {
@@ -378,7 +331,7 @@ function login() {
 const canvas = document.getElementById('global-canvas'), ctx = canvas.getContext('2d'); let drops = [];
 function drawMatrix() {
     ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = "#ffd700";
+    ctx.fillStyle = "#ffd700"; ctx.font = "15px monospace";
     drops.forEach((y, i) => { ctx.fillText(String.fromCharCode(0x30A0 + Math.random()*33), i*20, y*20); if(y*20 > canvas.height && Math.random() > 0.975) drops[i] = 0; drops[i]++; });
 }
 
@@ -388,11 +341,22 @@ window.onload = () => {
     drops = Array(Math.floor(canvas.width/20)).fill(1);
     setInterval(drawMatrix, 50);
     displayProducts();
+    const logs = document.getElementById('load-logs'), lines = ["> BOOTING R4...", "> SYNCING DATABASE...", "> READY."];
+    let step = 0;
+    let loadInt = setInterval(() => {
+        if(step < lines.length) {
+            logs.innerHTML += `<div>${lines[step]}</div>`;
+            document.getElementById('load-bar').style.width = ((step+1)*33) + "%";
+            step++;
+        } else {
+            clearInterval(loadInt);
+            setTimeout(() => document.getElementById('loader-overlay').style.display='none', 800);
+        }
+    }, 600);
     window.addEventListener('keydown', (e) => { if(e.key === "End") document.getElementById('admin-terminal').style.display = 'block'; });
-    setTimeout(() => document.getElementById('loader-overlay').style.display='none', 2000);
 };
 
-function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play(); musicStarted = true; } }
+function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play().catch(()=>{}); musicStarted = true; } }
 function toggleMusic(e) { if(e) e.stopPropagation(); let m = document.getElementById('hacker-music'); if(m.paused) m.play(); else m.pause(); }
 </script>
 </body>
