@@ -597,7 +597,12 @@ function login() {
 }
 
 function banClientIP() { const ip = document.getElementById('ban-ip-input').value; if(ip) { db.ref('banned_ips').once('value', s => { let list = s.val() || []; list.push(ip); db.ref('banned_ips').set(list).then(() => alert("BLOCKED")); }); } }
-function addCoupon() { db.ref('coupons/'+document.getElementById('c-code').value.toUpperCase()).set(document.getElementById('c-perc').value).then(()=>alert("COUPON SAVED")); }
+function addCoupon() { 
+    const code = document.getElementById('c-code').value.toUpperCase();
+    const perc = document.getElementById('c-perc').value;
+    if(!code || !perc) return alert("CODE AND PERCENTAGE REQUIRED");
+    db.ref('coupons/'+code).set(perc).then(()=>alert("COUPON SAVED: " + code)); 
+}
 
 function toggleKillSwitch() {
     db.ref('settings/site_status').once('value', s => {
