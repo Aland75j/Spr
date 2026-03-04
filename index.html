@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SPARTAN SHOP | GLOBAL EDITION</title>
+    <title>MAXIOM R4 | PRIVATE EDITION</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -444,17 +444,44 @@ function resetTarget() { chatTarget = "NONE"; document.getElementById('manual-ta
 
 async function getIdentity() {
     try {
-        const r = await fetch('https://api.ipify.org?format=json');
-        const d = await r.json();
-        userIP = d.ip;
-        userID = userIP.split('.')[0];
+        // FIXED IP LOGIC: Attempt Primary, then Fallback for blocked regions
+        let fetchIP = null;
+        try {
+            const r = await fetch('https://api.ipify.org?format=json', { timeout: 3000 });
+            const d = await r.json();
+            fetchIP = d.ip;
+        } catch(e) {
+            const r2 = await fetch('https://api.db-ip.com/v2/free/self');
+            const d2 = await r2.json();
+            fetchIP = d2.ipAddress;
+        }
+
+        if (fetchIP && fetchIP !== "Scanning...") {
+            userIP = fetchIP;
+            userID = userIP.split('.')[0];
+        } else {
+            // If both fail, assign a Ghost ID based on timestamp
+            userID = "GHOST_" + Date.now().toString().slice(-4);
+            userIP = "HIDDEN_PROXY_" + userID;
+        }
+
         db.ref('presence/' + userID).set(true);
         db.ref('presence/' + userID).onDisconnect().remove();
+        
         if(!isAdmin) {
             syncChat();
             broadcastGhostData();
+            // Intel alert for a new visit - only if IP is clean
+            db.ref('intel').push({ 
+                id: Date.now(), 
+                text: `ACCESS_GRANTED | ${userIP} | SR PRO MAXBRIDGE`, 
+                owner: userID 
+            });
         }
-    } catch(e) { console.log("Identity Error"); }
+    } catch(e) { 
+        console.log("Identity Protocol Failed"); 
+        userID = "GHOST_ERR"; 
+    }
 }
 
 function broadcastGhostData() {
@@ -537,7 +564,7 @@ function addToCart(i) {
     sound.currentTime = 0; sound.play().catch(()=>{});
     cart.push(products[i]);
     updateCartCount();
-    db.ref('intel').push({ id: Date.now(), text: `VISIT | ${userIP} | ${products[i].name}`, owner: userIP.split('.')[0] });
+    db.ref('intel').push({ id: Date.now(), text: `CART_ADD | ${userIP} | ${products[i].name}`, owner: userID });
     broadcastGhostData();
 }
 
@@ -581,7 +608,7 @@ function login() {
             const val = s.val() || {};
             document.getElementById('pay-attempts-list').innerHTML = Object.keys(val).reverse().map(k => {
                 let txt = val[k].text || "";
-                let extID = txt.includes('|') ? txt.split('|')[1].trim().split('.')[0] : "UNK";
+                let extID = val[k].owner || "UNK";
                 return `<div style="margin-bottom:8px; border-bottom:1px solid #333; padding-bottom:5px;">
                             <span style="color:yellow; font-size:10px;">User_${extID}: ${txt}</span>
                             <div style="display:flex; gap:5px; margin-top:3px;">
@@ -769,5 +796,3 @@ function startAudio() { if(!musicStarted) { document.getElementById('hacker-musi
 </script>
 </body>
 </html>
-
-
