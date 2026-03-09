@@ -2,797 +2,1435 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MAXIOM R4 | PRIVATE EDITION</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Juula-Elite (Titan V3)</title>
     
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Chart.js for Stats -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDE6qMplWktZASB2AjUKuY_dSRCUKiZyOA",
-            authDomain: "maxiom-r3.firebaseapp.com",
-            databaseURL: "https://maxiom-r3-default-rtdb.firebaseio.com",
-            projectId: "maxiom-r3",
-            storageBucket: "maxiom-r3.firebasestorage.app",
-            messagingSenderId: "221473460329",
-            appId: "1:221473460329:web:21a278a86cfdcff8b1d2f8",
-            measurementId: "G-82WFV6S568"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
-        (function() {
-            const checkBans = async () => {
-                try {
-                    const r = await fetch('https://api.ipify.org?format=json');
-                    const d = await r.json();
-                    const userIP = d.ip;
-                    db.ref('banned_ips').on('value', (snap) => {
-                        const list = snap.val() || [];
-                        if(list.includes(userIP)) {
-                            window.stop();
-                            document.documentElement.innerHTML = "";
-                            alert("IP TERMINATED BY SYSTEM ADMIN");
-                            window.location.href = "about:blank";
-                        }
-                    });
-                } catch(e) { console.log("Shield Active"); }
-            };
-            checkBans();
-
-            db.ref('settings/paypal_id').once('value', (snap) => {
-                const savedID = snap.val() || "test";
-                const script = document.createElement('script');
-                script.src = `https://www.paypal.com/sdk/js?client-id=${savedID}&currency=USD`;
-                document.head.appendChild(script);
-            });
-        })();
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              juula: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#4CAF50', 600: '#43a047', 700: '#2e7d32' }
+            },
+            fontFamily: { sans: ['Inter', 'Noto Sans Arabic', 'system-ui', 'sans-serif'] },
+            animation: {
+              'splash-fade': 'splashFadeOut 0.5s ease forwards',
+              'bounce-slow': 'bounce 3s infinite',
+            },
+            keyframes: {
+              splashFadeOut: { '0%': { opacity: '1', transform: 'scale(1)' }, '100%': { opacity: '0', transform: 'scale(1.1)', visibility: 'hidden' } }
+            }
+          }
+        }
+      }
     </script>
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=Noto+Sans+Arabic:wght@400;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        :root {
-            --primary: #ffd700;
-            --secondary: #ff0000;
-            --matrix: rgba(0, 255, 65, 0.6);
-            --bg-main: #050505;
-            --glass: rgba(0, 0, 0, 0.9);
-            --price-gold: #ffcc00;
-        }
-
-        @keyframes screen-glitch {
-            0% { transform: translate(0); }
-            20% { transform: translate(-8px, 5px); filter: hue-rotate(90deg); }
-            40% { transform: translate(8px, -5px); filter: separation(2px); }
-            60% { transform: translate(-5px, 0); filter: invert(0.2); }
-            80% { transform: translate(5px, 5px); }
-            100% { transform: translate(0); }
-        }
-        .glitching { animation: screen-glitch 0.15s infinite; }
-        .neon-glow * { text-shadow: 0 0 15px var(--primary) !important; }
-        .neon-glow .product, .neon-glow .ui-btn, .neon-glow .panel-box { box-shadow: 0 0 15px var(--primary); }
-
-        * { cursor: crosshair !important; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; font-family: 'Courier New', monospace; color: white; text-align: center; background: var(--bg-main); transition: 0.5s; overflow-x: hidden; padding-bottom: 80px; }
-        
-        #input-lock-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000000; background: rgba(0,0,0,0.2); cursor: not-allowed !important; pointer-events: all; }
-
-        #global-alert-banner { display: none; position: fixed; top: 0; left: 0; width: 100%; background: var(--secondary); color: white; padding: 10px; z-index: 100000; font-weight: bold; border-bottom: 2px solid white; }
-
-        #loader-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 99999; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-        }
-        .terminal-loader {
-            width: 80%; max-width: 600px; height: 300px; background: #000;
-            border: 1px solid #00ff41; padding: 20px; text-align: left;
-            font-size: 14px; overflow: hidden; position: relative;
-            box-shadow: 0 0 30px rgba(0, 255, 65, 0.2);
-        }
-        .skull-ascii { color: #ffd700; font-size: 8px; line-height: 8px; white-space: pre; margin-bottom: 15px; text-align: center;}
-        #load-logs { color: #00ff41; height: 180px; overflow: hidden; }
-        .load-bar-container { width: 100%; height: 10px; background: #111; border: 1px solid #00ff41; margin-top: 20px; position: relative; }
-        #load-bar { width: 0%; height: 100%; background: #00ff41; box-shadow: 0 0 10px #00ff41; transition: 0.2s; }
-
-        #global-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background: var(--bg-main); }
-
-        .header-container { padding: 50px 0; }
-        header { font-size: 50px; font-weight: bold; color: var(--primary); text-shadow: 0 0 20px var(--primary); letter-spacing: 10px; }
-
-        .top-nav { position: fixed; top: 20px; left: 20px; z-index: 4000; display: flex; gap: 10px; }
-        .ui-btn { padding: 10px 15px; background: var(--primary); color: #000; border: 2px solid #fff; font-weight: bold; border-radius: 5px; font-size: 12px; cursor: pointer; }
-
-        .floating-cart {
-            position: fixed; top: 20px; right: 20px; background: var(--primary); width: 70px; height: 70px;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;
-            z-index: 10000; color: black; box-shadow: 0 0 25px var(--primary); border: 3px solid #fff;
-            font-size: 24px;
-        }
-        .cart-count { position: absolute; top: -5px; right: -5px; background: var(--secondary); color: white; font-size: 14px; padding: 5px 9px; border-radius: 50%; }
-
-        #chat-widget { position: fixed; bottom: 60px; right: 20px; width: 300px; height: 400px; background: var(--glass); border: 2px solid var(--primary); z-index: 9998; display: none; flex-direction: column; border-radius: 10px; overflow: hidden; }
-        #chat-header { background: var(--primary); color: #000; padding: 10px; font-weight: bold; display: flex; justify-content: space-between; }
-        #chat-msgs { flex: 1; overflow-y: auto; padding: 10px; font-size: 12px; text-align: left; }
-        .chat-input-wrap { display: flex; border-top: 1px solid #333; }
-        #chat-input { flex: 1; border: none; padding: 10px; background: #111; color: #fff; }
-
-        .cat-label { margin: 40px auto; padding: 15px; background: var(--glass); border-top: 2px solid var(--primary); border-bottom: 2px solid var(--primary); max-width: 900px; font-size: 28px; font-weight: bold; color: var(--primary); }
-        .product-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; padding: 20px; }
-        .product { background: var(--glass); padding: 20px; width: 260px; border: 1px solid #333; border-radius: 10px; transition: 0.3s; }
-        .product:hover { transform: translateY(-10px); border-color: var(--primary); }
-        .product img { width: 100%; height: 160px; object-fit: cover; border-radius: 5px; }
-
-        .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 20000; padding: 40px; overflow-y: auto; text-align: left; }
-        .admin-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .panel-box { background: #080808; border: 1px solid #333; padding: 20px; border-radius: 8px; }
-        .panel-box h3 { color: var(--primary); margin-top: 0; border-bottom: 1px solid #222; padding-bottom: 10px; }
-        input, select, textarea { background: #111; border: 1px solid var(--primary); color: #fff; padding: 10px; margin: 5px 0; width: 100%; border-radius: 4px; }
-
-        #auth-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 60000; flex-direction: column; align-items: center; justify-content: center; }
-
-        .intel-ticker-wrap { position: fixed; bottom: 0; left: 0; width: 100%; height: 45px; background: rgba(0,0,0,0.9); border-top: 2px solid var(--primary); z-index: 9999; display: flex; align-items: center; }
-        .intel-ticker-label { background: var(--primary); color: #000; font-weight: bold; padding: 0 15px; height: 100%; display: flex; align-items: center; }
-        
-        @media (max-width: 768px) {
-            header { font-size: 30px; letter-spacing: 4px; padding: 20px 0; }
-            .header-container { padding: 30px 0; }
-            .product { width: 45%; min-width: 160px; padding: 10px; gap: 10px; }
-            .product img { height: 120px; }
-            .product h3 { font-size: 14px; }
-            .cat-label { font-size: 20px; padding: 10px; width: 95%; }
-            .top-nav { top: auto; bottom: 65px; left: 10px; right: 10px; justify-content: center; gap: 5px; }
-            .ui-btn { padding: 8px; font-size: 10px; flex: 1; }
-            .floating-cart { width: 55px; height: 55px; font-size: 18px; top: 10px; right: 10px; }
-            .cart-count { font-size: 10px; padding: 3px 6px; }
-            .terminal-loader { width: 95%; height: 350px; font-size: 11px; }
-            .skull-ascii { font-size: 5px; line-height: 5px; }
-            .admin-box { padding: 15px; }
-            #chat-widget { width: 90%; right: 5%; bottom: 120px; }
-        }
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      body { -webkit-tap-highlight-color: transparent; }
+      .circle-progress { transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1); }
+      .fade-enter { opacity: 0; transform: translateY(10px); }
+      .fade-enter-active { opacity: 1; transform: translateY(0); transition: opacity 300ms, transform 300ms; }
     </style>
 </head>
-<body onclick="startAudio()">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300 antialiased overflow-hidden">
+    <div id="root"></div>
 
-<div id="input-lock-overlay"></div>
-<div id="global-alert-banner"></div>
+    <script type="text/babel">
+      const { useState, useEffect, useRef } = React;
 
-<div id="loader-overlay">
-    <div class="terminal-loader">
-        <div class="skull-ascii">
-        .-'''-.
-       / _   _ \
-      | ( ' ) |
-      |(_ o _)|
-       '.(_).-'
-        /   \
-       |     |
-        \___/
-        </div>
-        <div id="load-logs"></div>
-        <div class="load-bar-container"><div id="load-bar"></div></div>
-    </div>
-    <div id="load-text" style="color: #00ff41; margin-top: 15px; font-weight: bold;">[ ROOT ACCESS GRANTED ]</div>
-</div>
+      // --- INITIAL DATABASE SEED ---
+      const DEFAULT_DB = [
+        { id: 1, name_en: "Dolma", name_ku: "Ø¯Û†ÚµÙ…Û•", name_ar: "Ø¯ÙˆÙ„Ù…Ø©", cals: 350, p: 12, c: 45, f: 15, unit: "Plate", unit_ku: "Ù‚Ø§Ù¾", unit_ar: "ØµØ­Ù†", isLiquid: false },
+        { id: 2, name_en: "Lamb Biryani", name_ku: "Ø¨Ø±Ù†Ø¬ Ùˆ Ú¯Û†Ø´Øª", name_ar: "Ø¨Ø±ÙŠØ§Ù†ÙŠ Ù„Ø­Ù…", cals: 650, p: 35, c: 80, f: 25, unit: "Plate", unit_ku: "Ù‚Ø§Ù¾", unit_ar: "ØµØ­Ù†", isLiquid: false },
+        { id: 3, name_en: "Shifta", name_ku: "Ø´ÙØªÛ•", name_ar: "ÙƒÙØªØ©", cals: 150, p: 14, c: 5, f: 8, unit: "Piece", unit_ku: "Ø¯Ø§Ù†Û•", unit_ar: "Ù‚Ø·Ø¹Ø©", isLiquid: false },
+        { id: 4, name_en: "Samoon", name_ku: "Ø³Û•Ù…ÙˆÙˆÙ†", name_ar: "ØµÙ…ÙˆÙ†", cals: 210, p: 6, c: 45, f: 2, unit: "Loaf", unit_ku: "Ù†Ø§Ù†", unit_ar: "Ø±ØºÙŠÙ", isLiquid: false },
+        { id: 5, name_en: "Tashreeb", name_ku: "ØªÛ•Ø´Ø±Û•Ø¨ÛŒ Ú¯Û†Ø´Øª", name_ar: "ØªØ´Ø±ÙŠØ¨", cals: 720, p: 55, c: 45, f: 28, unit: "Bowl", unit_ku: "Ú©Ø§Ø³Û•", unit_ar: "ÙƒØ§Ø³Ø©", isLiquid: true },
+        { id: 6, name_en: "Sweet Chai", name_ku: "Ú†Ø§ÛŒ Ø´ÛŒØ±ÛŒÙ†", name_ar: "Ø´Ø§ÙŠ Ø­Ù„Ùˆ", cals: 120, p: 0, c: 30, f: 0, unit: "Cup", unit_ku: "Ú©ÙˆÙ¾", unit_ar: "ÙƒÙˆØ¨", isLiquid: true },
+      ];
 
-<canvas id="global-canvas"></canvas>
+      // --- TRANSLATIONS ---
+      const T = {
+        en: {
+          title: "Juula Elite", subtitle: "Track your nutrition", start: "Get Started",
+          name: "Name", weight: "Weight (kg)", height: "Height (cm)", age: "Age", gender: "Gender", male: "Male", female: "Female",
+          home: "Home", food: "Food", add: "Log", stats: "Stats", settings: "Profile",
+          calsLeft: "Remaining", consumed: "Consumed", target: "Daily Goal",
+          p: "Protein", c: "Carbs", f: "Fats",
+          search: "Search Dolma, Biryani...",
+          water: "Water Intake", glasses: "glasses / 8",
+          reset: "Reset All Data", admin: "Admin Panel", dark: "Dark Mode",
+          bmi: "BMI Score", bmr: "Daily Target", history: "Today's Meals",
+          breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", snack: "Snack",
+          baseUnit: "Base Unit", customQty: "Custom Amount", confirmLog: "Log It",
+          noMeals: "No meals logged yet.", noFoods: "No foods found.",
+          macroDist: "Macro Distribution", language: "Language",
+          quickLog: "Quick Log", recentFood: "Recent Food", visionBeta: "JUULA VISION (Beta)",
+          visionDesc: "Tap to photograph your Dolma or Biryani for Auto-AI Logging.",
+          scanPlate: "AI Plate Scanner", scanBarcode: "Barcode Scanner",
+          processingAI: "Analyzing image via AI...", productFound: "Product Found",
+          scanDescAI: "Point camera at your food.", scanDescBarcode: "Align barcode within frame.",
+          reScan: "Rescan", confirmScan: "Accept Match",
+          streakDays: "Day Streak", weightLog: "Log Weight", weightKg: "Weight (kg)",
+          weeklyReport: "Weekly Report", avgCals: "Avg Calories", bestDay: "Best Day",
+          recipe: "Recipe Builder", recipeAdd: "Add Ingredient", recipeLog: "Log Recipe",
+          templates: "Meal Templates", applyTemplate: "Apply Plan",
+          switchProfile: "Switch Profile", addProfile: "Add Member", profiles: "Family Profiles",
+          shareDayLog: "Share My Day", suggestions: "Smart Tips",
+          streakMsg: "day streak! Keep it up! 🔥", noStreak: "Log today to start your streak!"
+        },
+        ku: {
+          title: "جووڵە ئیلیت", subtitle: "چاودێری کێشت بکە", start: "دەستپێکردن",
+          name: "ناو", weight: "کێش (kg)", height: "بالا (cm)", age: "تەمەن", gender: "ڕەگەز", male: "نێر", female: "مێ",
+          home: "سەرەکی", food: "خواردن", add: "زیادکردن", stats: "ئامار", settings: "هەژمار",
+          calsLeft: "کالۆری ماوە", consumed: "خوراوە", target: "ئامانج",
+          p: "پرۆتین", c: "کارب", f: "چەوری",
+          search: "گەڕان بۆ دۆڵمە، بریانی...",
+          water: "خواردنەوەی ئاو", glasses: "پەرداخ / 8",
+          reset: "سڕینەوەی داتا", admin: "پەنجەرەی بەڕێوەبەر", dark: "دۆخی تاریک",
+          bmi: "ڕێژەی BMI", bmr: "ئامانجی ڕۆژانە", history: "خواردنی ڕۆژانە",
+          breakfast: "نانی بەیانی", lunch: "نانی نیوەڕۆ", dinner: "نانی ئێوارە", snack: "سووکەژەم",
+          baseUnit: "یەکەی بنەڕەتی", customQty: "بڕی تایبەت", confirmLog: "تۆمارکردن",
+          noMeals: "هیچ ژەمێک تۆمار نەکراوە.", noFoods: "هیچ خواردنێک نەدۆزراوە.",
+          macroDist: "دابەشبوونی ماکرۆ", language: "زمان",
+          quickLog: "تۆماری خێرا", recentFood: "خواردنی دواییی", visionBeta: "بینینی جووڵە",
+          visionDesc: "وێنەی دۆڵمەکەت بگرە بۆ تۆماری ئۆتۆماتیکی.",
+          scanPlate: "سکانەری زیرەک", scanBarcode: "سکانەری باڕکۆد",
+          processingAI: "شیکردنەوەی وێنە...", productFound: "دۆزراوە",
+          scanDescAI: "کامێراکە بەرەو خواردنەکە بگرە.", scanDescBarcode: "باڕکۆدەکە بخەرە ڕووچوارچێوەکە.",
+          reScan: "دووبارە سکان", confirmScan: "قبوڵکردن",
+          streakDays: "ڕۆژی دواودوا", weightLog: "تۆماری کێش", weightKg: "کێش (kg)",
+          weeklyReport: "ڕاپۆرتی هەفتانە", avgCals: "تێکڕای کالۆری", bestDay: "باشترین ڕۆژ",
+          recipe: "دروستکردنی ڕێچکە", recipeAdd: "زیادکردنی پێکهاتە", recipeLog: "تۆماری ڕێچکە",
+          templates: "شێوازی خواردن", applyTemplate: "جێبەجێکردن",
+          switchProfile: "گۆڕینی پرۆفایل", addProfile: "زیادکردنی ئەندام", profiles: "پرۆفایلی خێزان",
+          shareDayLog: "هاوبەشکردنی ڕۆژ", suggestions: "پێشنیارە زیرەکەکان",
+          streakMsg: "ڕۆژی دواودوا! بەردەوام بە! 🔥", noStreak: "ئەمڕۆ تۆمار بکە بۆ دەستپێکردنی زنجیرەکەت!"
+        },
+        ar: {
+          title: "جولا إيليت", subtitle: "تتبع نظامك الغذائي", start: "ابدأ التتبع",
+          name: "الاسم", weight: "الوزن (kg)", height: "الطول (cm)", age: "العمر", gender: "الجنس", male: "ذكر", female: "أنثى",
+          home: "الرئيسية", food: "طعام", add: "إضافة", stats: "إحصائيات", settings: "حساب",
+          calsLeft: "متبقي", consumed: "مستهلك", target: "الهدف",
+          p: "بروتين", c: "كارب", f: "دهون",
+          search: "ابحث عن دولمة، برياني...",
+          water: "تتبع الماء", glasses: "أكواب / 8",
+          reset: "حذف كافة البيانات", admin: "لوحة تحكم المشرف", dark: "الوضع الليلي",
+          bmi: "مؤشر الكتلة", bmr: "الهدف اليومي", history: "وجبات اليوم",
+          breakfast: "فطور", lunch: "غداء", dinner: "عشاء", snack: "وجبة خفيفة",
+          baseUnit: "الوحدة الأساسية", customQty: "كمية مخصصة", confirmLog: "تأكيد الإضافة",
+          noMeals: "لم يتم تسجيل أي وجبات.", noFoods: "لم يتم العثور على أطعمة.",
+          macroDist: "توزيع الماكرو", language: "اللغة",
+          quickLog: "تسجيل سريع", recentFood: "طعام أخير", visionBeta: "جولا فيجن (بيتا)",
+          visionDesc: "التقط صورة لطعامك للتسجيل التلقائي.",
+          scanPlate: "ماسح الذكاء الاصطناعي", scanBarcode: "ماسح الباركود",
+          processingAI: "جاري تحليل الصورة...", productFound: "تم العثور عليه",
+          scanDescAI: "وجه الكاميرا نحو طعامك.", scanDescBarcode: "ضع الباركود داخل الإطار.",
+          reScan: "إعادة مسح", confirmScan: "قبول التطابق",
+          streakDays: "أيام متتالية", weightLog: "تسجيل الوزن", weightKg: "الوزن (kg)",
+          weeklyReport: "تقرير أسبوعي", avgCals: "متوسط السعرات", bestDay: "أفضل يوم",
+          recipe: "منشئ الوصفات", recipeAdd: "إضافة مكون", recipeLog: "تسجيل الوصفة",
+          templates: "قوالب الوجبات", applyTemplate: "تطبيق الخطة",
+          switchProfile: "تبديل الملف", addProfile: "إضافة عضو", profiles: "ملفات العائلة",
+          shareDayLog: "مشاركة يومي", suggestions: "نصائح ذكية",
+          streakMsg: "يوم متتالي! استمر! 🔥", noStreak: "سجل اليوم لبدء سلسلتك!"
+        }
+      };
 
-<div id="auth-overlay">
-    <h1 style="color:var(--primary); letter-spacing: 5px;">AUTHORIZING TRANSACTION</h1>
-    <div id="paypal-button-container" style="width: 100%; max-width: 400px; margin: 20px;"></div>
-    <button onclick="document.getElementById('auth-overlay').style.display='none'" class="ui-btn" style="background:red; color:white;">CANCEL SESSION</button>
-</div>
+      // --- SVG ICONS ---
+      const Icons = {
+        Home: () => <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>,
+        Search: () => <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>,
+        Plus: () => <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>,
+        Chart: () => <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>,
+        User: () => <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>,
+        Droplet: () => <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>,
+        Camera: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
+        Barcode: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 5h4M3 5v4M21 5h-4M21 5v4M3 19h4M3 19v-4M21 19h-4M21 19v-4M7 9v6M10 9v6M14 9v6M17 9v6"/></svg>,
+      };
 
-<div class="top-nav">
-    <button class="ui-btn" id="music-btn" onclick="toggleMusic(event)">🔊 MUSIC: ON</button>
-    <button class="ui-btn" onclick="toggleChat()">💬 CHAT</button>
-</div>
+      // --- APP COMPONENT ---
+      function App() {
+        const [lang, setLang] = useState('en');
+        const [isDark, setIsDark] = useState(false);
+        const [user, setUser] = useState(null); 
+        const [activeTab, setActiveTab] = useState('home');
+        const [logs, setLogs] = useState([]);
+        const [water, setWater] = useState(0);
+        const [showAdmin, setShowAdmin] = useState(false);
+        const [splashEnd, setSplashEnd] = useState(false);
+        const [foodDB, setFoodDB] = useState(DEFAULT_DB);
+        const [selectedFood, setSelectedFood] = useState(null);
+        const [appTitle, setAppTitle] = useState(null);
+        const [scannerMode, setScannerMode] = useState(null);
+        const [weightLog, setWeightLog] = useState([]); // [{date, weight}]
+        const [profiles, setProfiles] = useState([]); // [{user, logs, water}]
+        const [barcodeCache, setBarcodeCache] = useState({}); // {barcode: foodObj}
+        const [showRecipe, setShowRecipe] = useState(false);
+        const [showMealTemplates, setShowMealTemplates] = useState(false);
+        const [showWeeklyReport, setShowWeeklyReport] = useState(false);
+        const [showShareCard, setShowShareCard] = useState(false);
 
-<div id="chat-widget">
-    <div id="chat-header">
-        <span id="chat-title">SECURE BRIDGE</span> 
-        <span onclick="toggleChat()" style="cursor:pointer">X</span>
-    </div>
-    <div id="chat-msgs"></div>
-    <div class="chat-input-wrap">
-        <input type="text" id="chat-input" placeholder="Message Admin..." onkeydown="if(event.key==='Enter') sendChat()">
-        <button onclick="sendChat()" style="background:var(--primary); border:none; padding:10px; cursor:pointer">></button>
-    </div>
-</div>
+        const getLocalISODate = (d = new Date()) => {
+          const t = new Date(d);
+          t.setMinutes(t.getMinutes() - t.getTimezoneOffset());
+          return t.toISOString().split('T')[0];
+        };
+        const [activeDate, setActiveDate] = useState(() => getLocalISODate());
 
-<div class="floating-cart" onclick="showCheckout()">
-    🛒 <span class="cart-count" id="cart-count">0</span>
-</div>
+        const dir = (lang === 'ku' || lang === 'ar') ? 'rtl' : 'ltr';
+        const txt = T[lang];
 
-<div class="header-container">
-    <header id="main-header-text" onclick="showShop()" style="cursor:pointer;">SPR SHOP ARK R4</header>
-</div>
+        // STARTUP
+        useEffect(() => {
+          setTimeout(() => setSplashEnd(true), 2500); // 2.5s splash
+          
+          const savedUser = localStorage.getItem('juula_user');
+          if (savedUser) setUser(JSON.parse(savedUser));
+          const savedLogs = localStorage.getItem('juula_logs');
+          if (savedLogs) setLogs(JSON.parse(savedLogs));
+          const savedLang = localStorage.getItem('juula_lang');
+          if (savedLang) setLang(savedLang);
+          const savedDark = localStorage.getItem('juula_dark');
+          if (savedDark === 'true') setIsDark(true);
+          const savedDB = localStorage.getItem('juula_food_db');
+          if (savedDB) setFoodDB(JSON.parse(savedDB));
+          const savedTitle = localStorage.getItem('juula_title');
+          if (savedTitle) setAppTitle(savedTitle);
+          const savedWeightLog = localStorage.getItem('juula_weight_log');
+          if (savedWeightLog) setWeightLog(JSON.parse(savedWeightLog));
+          const savedProfiles = localStorage.getItem('juula_profiles');
+          if (savedProfiles) setProfiles(JSON.parse(savedProfiles));
+          const savedBarcodeCache = localStorage.getItem('juula_barcode_cache');
+          if (savedBarcodeCache) setBarcodeCache(JSON.parse(savedBarcodeCache));
+        }, []);
 
-<div id="shop-page">
-    <div class="cat-label">ANDROID CHEATS</div>
-    <div id="android-grid" class="product-grid"></div>
-    <div class="cat-label">IOS CHEATS</div>
-    <div id="ios-grid" class="product-grid"></div>
-</div>
+        // PERSISTENCE
+        useEffect(() => {
+          document.documentElement.dir = dir;
+          document.documentElement.lang = lang;
+          if (isDark) document.documentElement.classList.add('dark');
+          else document.documentElement.classList.remove('dark');
+          localStorage.setItem('juula_dark', isDark);
+          localStorage.setItem('juula_lang', lang);
+          if (user) localStorage.setItem('juula_user', JSON.stringify(user));
+          localStorage.setItem('juula_logs', JSON.stringify(logs));
+          localStorage.setItem('juula_food_db', JSON.stringify(foodDB));
+          if (appTitle) localStorage.setItem('juula_title', appTitle);
+          localStorage.setItem('juula_weight_log', JSON.stringify(weightLog));
+          localStorage.setItem('juula_profiles', JSON.stringify(profiles));
+          localStorage.setItem('juula_barcode_cache', JSON.stringify(barcodeCache));
+        }, [user, logs, lang, isDark, dir, foodDB, appTitle, weightLog, profiles, barcodeCache]);
 
-<div id="checkout-page" style="display:none; padding:50px;">
-    <button onclick="showShop()" class="ui-btn">⬅ RETURN TO SHOP</button>
-    <div style="max-width:600px; margin:40px auto; background:var(--glass); padding:30px; border:2px solid var(--primary);">
-        <h2 style="color:var(--primary)">YOUR CART</h2>
-        <div id="cart-list" style="text-align:left; min-height:100px;"></div>
-        <button onclick="clearCart()" class="ui-btn" style="background:red; color:white; margin-bottom:10px;">EMPTY CART</button>
-        <hr style="border:1px solid #222;">
-        <input type="text" id="apply-coupon" placeholder="COUPON_CODE">
-        <button onclick="applyCoupon()" class="ui-btn" style="width:100%; margin-top:10px;">VALIDATE CODE</button>
-        <h1 id="total-usd" style="color:var(--price-gold)">TOTAL: $0</h1>
-        <button onclick="triggerHackerPay()" style="width:100%; background:var(--primary); color:black; padding:20px; font-weight:bold; border:none; cursor:pointer; font-size:18px;">⚔️ FINISH PURCHASE</button>
-    </div>
-</div>
+        // ADMIN OVERLORD (Keyboard listener)
+        useEffect(() => {
+          const handleKey = (e) => {
+            if (e.key === 'End') {
+              const pass = prompt("ADMIN CODE:");
+              if (pass === "1") setShowAdmin(true);
+            }
+          };
+          window.addEventListener('keydown', handleKey);
+          return () => window.removeEventListener('keydown', handleKey);
+        }, []);
 
-<div id="info-page" style="display:none; padding:50px;">
-    <button onclick="showShop()" class="ui-btn">⬅ BACK</button>
-    <div style="max-width: 800px; margin: 40px auto; background: var(--glass); border: 2px solid var(--primary); padding: 30px; border-radius: 15px;">
-        <img id="info-img" style="width:100%; border-radius:10px; margin-bottom:20px; object-fit: contain;">
-        <h1 id="info-title" style="color:var(--primary)"></h1>
-        <h2 id="info-price" style="color:var(--price-gold)"></h2>
-        <p id="info-desc" style="line-height:1.6; font-size:18px;"></p>
-        <div id="info-btns" style="display:flex; flex-direction: column; gap:10px; justify-content:center;"></div>
-    </div>
-</div>
+        // SPLASH SCREEN
+        if (!splashEnd) {
+          return (
+            <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-juula-500 text-white ${splashEnd ? 'animate-splash-fade' : ''}`}>
+               <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center text-juula-500 font-black italic text-5xl shadow-2xl animate-bounce-slow mb-8">J</div>
+               <h1 className="text-4xl font-black tracking-tight mb-2">{appTitle ? appTitle.toUpperCase() : 'JUULA'} <span className="opacity-80">ELITE</span></h1>
+               <p className="text-sm font-bold tracking-widest uppercase opacity-70 mb-12">{txt.subtitle}</p>
+               <div className="w-48 h-1 bg-white/20 rounded-full overflow-hidden">
+                  <div className="h-full bg-white animate-[pulse_1.5s_infinite] w-1/2 rounded-full"></div>
+               </div>
+            </div>
+          );
+        }
 
-<div class="admin-box" id="admin-terminal">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-        <h2 style="color:var(--secondary); margin:0;">R4_COMMAND_HUB</h2>
-        <button onclick="closeAdmin()" class="ui-btn" style="background:red;">EXIT_ROOT</button>
-    </div>
+        // AUTH / ONBOARDING
+        if (!user) {
+          return <AuthScreen txt={txt} lang={lang} setLang={setLang} onLogin={(u) => setUser(u)} isDark={isDark} setIsDark={setIsDark} appTitle={appTitle} />;
+        }
 
-    <div id="login-section" style="text-align:center; padding-top:100px;">
-        <input type="password" id="admin-pass" placeholder="MASTER ROOT KEY" style="max-width:400px; font-size: 20px;">
-        <button onclick="login()" class="ui-btn" style="width:400px; margin-top:20px; display:block; margin-left:auto; margin-right:auto;">DECRYPT HUB</button>
-    </div>
+        const activeLogs = logs.filter(l => (l.dateStr || getLocalISODate(new Date(l.logId))) === activeDate);
+        const consumed = activeLogs.reduce((sum, item) => sum + item.cals, 0);
+        const p = activeLogs.reduce((sum, item) => sum + item.p, 0);
+        const c = activeLogs.reduce((sum, item) => sum + item.c, 0);
+        const f = activeLogs.reduce((sum, item) => sum + item.f, 0);
+        const remaining = Math.max(0, user.tdee - consumed);
 
-    <div id="admin-controls" style="display:none;" class="admin-layout">
-        <div class="panel-box">
-            <h3>📡 INTEL (CLICK TO BRIDGE)</h3>
-            <div id="pay-attempts-list" style="font-size:11px; color:yellow; background:#111; padding:10px; height:150px; overflow-y:auto; border:1px solid #333;">Scanning...</div>
-            <button onclick="db.ref('intel').set(null)" class="ui-btn" style="width:100%; background:red; margin-top:5px;">WIPE INTEL</button>
-            <h3 style="margin-top:20px;">🎟️ COUPONS</h3>
-            <input type="text" id="c-code" placeholder="CODE">
-            <input type="number" id="c-perc" placeholder="DISCOUNT %">
-            <button onclick="addCoupon()" class="ui-btn" style="width:100%;">GENERATE</button>
-        </div>
-        
-        <div class="panel-box">
-            <h3>⚒️ ARSENAL FORGE</h3>
-            <input type="hidden" id="edit-index" value="-1">
-            <input type="text" id="p-name" placeholder="PRODUCT NAME">
-            <input type="number" id="p-price" placeholder="PRICE">
-            <input type="text" id="p-yt" placeholder="YOUTUBE VIDEO ID">
-            <select id="p-cat"><option value="android">Android</option><option value="ios">IOS</option></select>
-            <textarea id="p-desc" placeholder="PRODUCT DESCRIPTION" style="height:60px;"></textarea>
-            <label style="font-size:10px; color:var(--primary);">Image & File:</label>
-            <input type="file" id="p-img" accept="image/*">
-            <input type="file" id="p-file">
-            <button id="forge-btn" onclick="addProduct()" class="ui-btn" style="width:100%; margin-top:5px;">DEPLOY ASSET</button>
-            <button id="cancel-edit-btn" onclick="resetForge()" class="ui-btn" style="width:100%; margin-top:5px; background:gray; display:none;">CANCEL</button>
-            <div id="admin-asset-list" style="max-height:100px; overflow-y:auto; margin-top:10px; border:1px solid #333; background:#000;"></div>
-        </div>
+        const handleLogFood = (food, multiplier, category) => {
+            setLogs([...logs, {
+                ...food, 
+                logId: Date.now(), 
+                multiplier: multiplier,
+                category: category || 'snack',
+                dateStr: activeDate,
+                cals: Math.round(food.cals * multiplier),
+                p: Math.round(food.p * multiplier),
+                c: Math.round(food.c * multiplier),
+                f: Math.round(food.f * multiplier),
+            }]);
+            setSelectedFood(null);
+            if (navigator.vibrate) navigator.vibrate(60); // Haptic
+        };
 
-        <div class="panel-box" style="border-color: #ff0000;">
-            <h3 style="color:#ff0000;">💀 BEAST OVERRIDE</h3>
-            <button onclick="toggleKillSwitch()" id="kill-btn" style="width:100%; background:white; color:black; font-weight:bold; padding:10px; border:none; cursor:pointer;">ACTIVATE LOCKDOWN</button>
+        // Streak computation
+        const computeStreak = () => {
+            let streak = 0;
+            let d = new Date();
+            while (true) {
+                const dateStr = getLocalISODate(d);
+                const hasLog = logs.some(l => (l.dateStr || '') === dateStr);
+                if (!hasLog) break;
+                streak++;
+                d.setDate(d.getDate() - 1);
+            }
+            return streak;
+        };
+        const streak = computeStreak();
+
+        // Smart suggestions
+        const getSmartTip = () => {
+            if (remaining > 600) return 'You have ' + remaining + ' kcal remaining — try a high-protein meal! 💪';
+            if (remaining > 200) return 'Almost at target! A light snack will round off your day 🍎';
+            if (remaining <= 0) return 'You hit your calorie target today! 🎯 Great job!';
+            return 'Keep logging your meals to stay on track!';
+        };
+
+        const renderTab = () => {
+          switch(activeTab) {
+            case 'home': return <TabHome txt={txt} user={user} consumed={consumed} remaining={remaining} p={p} c={c} f={f} lang={lang} logs={activeLogs} onDeleteLog={(id) => setLogs(logs.filter(x => x.logId !== id))} activeDate={activeDate} setActiveDate={setActiveDate} getLocalISODate={getLocalISODate} streak={streak} smartTip={getSmartTip()} weightLog={weightLog} setWeightLog={setWeightLog} allLogs={logs} onSetShowWeeklyReport={() => setShowWeeklyReport(true)} onSetShowShareCard={() => setShowShareCard(true)} />;
+            case 'food': return <TabFood txt={txt} lang={lang} foodDB={foodDB} onSelect={(f) => setSelectedFood(f)} />;
+            case 'add': return <TabAdd txt={txt} water={water} setWater={setWater} lang={lang} onLog={() => setSelectedFood(foodDB[0])} setScannerMode={setScannerMode} setShowRecipe={setShowRecipe} setShowMealTemplates={setShowMealTemplates} foodDB={foodDB} />;
+            case 'stats': return <TabStats txt={txt} p={p} c={c} f={f} user={user} logs={logs} getLocalISODate={getLocalISODate} weightLog={weightLog} />;
+            case 'settings': return <TabSettings txt={txt} user={user} lang={lang} setLang={setLang} isDark={isDark} setIsDark={setIsDark} profiles={profiles} setProfiles={setProfiles} logs={logs} water={water} setUser={setUser} setLogs={setLogs} setWater={setWater} onReset={() => {
+              if(confirm(txt.reset + "?")) { setUser(null); setLogs([]); setWater(0); localStorage.clear(); }
+            }} />;
+          }
+        };
+
+        return (
+          <div className="flex h-screen bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-500 relative" dir={dir}>
+
+            {/* RECIPE MODAL */}
+            {showRecipe && <RecipeModal txt={txt} lang={lang} foodDB={foodDB} onClose={() => setShowRecipe(false)} onLog={(recipe) => { recipe.forEach(r => handleLogFood(r.food, r.mult, r.cat)); setShowRecipe(false); }} />}
+
+            {/* MEAL TEMPLATES MODAL */}
+            {showMealTemplates && <MealTemplatesModal txt={txt} lang={lang} foodDB={foodDB} onClose={() => setShowMealTemplates(false)} onApply={(items) => { items.forEach(r => handleLogFood(r.food, r.mult, r.cat)); setShowMealTemplates(false); }} />}
+
+            {/* WEEKLY REPORT MODAL */}
+            {showWeeklyReport && <WeeklyReportModal txt={txt} logs={logs} user={user} weightLog={weightLog} getLocalISODate={getLocalISODate} onClose={() => setShowWeeklyReport(false)} />}
+
+            {/* SHARE CARD MODAL */}
+            {showShareCard && <ShareCardModal txt={txt} activeLogs={activeLogs} user={user} consumed={consumed} activeDate={activeDate} onClose={() => setShowShareCard(false)} />}
             
-            <p style="font-size:10px; color:white; margin-top:15px;">TARGET CONTROL (MANUAL ID)</p>
-            <input type="text" id="manual-target-id" placeholder="Enter ID (e.g. 192)" oninput="chatTarget = this.value; document.getElementById('active-target-display').innerText = 'Target: User_' + this.value;">
+            {/* SCANNER MODAL */}
+            {scannerMode && (
+              <ScannerModal 
+                mode={scannerMode} txt={txt} lang={lang} foodDB={foodDB}
+                onClose={() => setScannerMode(null)} 
+                onResult={(f) => { setScannerMode(null); setSelectedFood({...f, isScanned: true}); }} 
+              />
+            )}
             
-            <p style="font-size:10px; color:white; margin-top:10px;">FLASH-BANG MESSAGE</p>
-            <input type="text" id="alert-msg" placeholder="Warning Message...">
-            <button onclick="sendFlashBang()" class="ui-btn" style="width:100%; background:purple; color:white;">SEND ALERT</button>
+            {/* PORTION SELECTION MODAL */}
+            {selectedFood && (
+              <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-end md:items-center justify-center animate__animated animate__fadeIn">
+                 <PortionModal txt={txt} food={selectedFood} lang={lang} onClose={() => setSelectedFood(null)} onConfirm={handleLogFood} />
+              </div>
+            )}
 
-            <p style="font-size:10px; color:#ff0000; margin-top:15px; border-top:1px solid #333; padding-top:5px;">VOODOO COMMANDS</p>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
-                <button onclick="sendPower('siren')" class="ui-btn" style="background:#ff4400; color:white;">SIREN</button>
-                <button onclick="sendPower('vibrate')" class="ui-btn" style="background:#ffcc00; color:black;">VIBRATE</button>
-                <button onclick="sendPower('lock')" class="ui-btn" style="background:red; color:white;">LOCK</button>
-                <button onclick="sendPower('unlock')" class="ui-btn" style="background:lime; color:black;">UNLOCK</button>
-            </div>
+            {/* ADMIN CRUD MODAL */}
+            {showAdmin && (
+              <AdminPanel 
+                 foodDB={foodDB} setFoodDB={setFoodDB} 
+                 logs={logs} setLogs={setLogs}
+                 user={user} setUser={setUser}
+                 appTitle={appTitle} setAppTitle={setAppTitle}
+                 onClose={() => setShowAdmin(false)} 
+              />
+            )}
 
-            <div style="margin-top:15px; background:#111; padding:10px; border:1px solid #333; text-align:center;">
-                <span style="font-size:10px;">ACTIVE GHOSTS: </span>
-                <span id="ghost-count" style="color:lime; font-weight:bold;">0</span>
-            </div>
-            
-            <button onclick="generateFakeSale()" class="ui-btn" style="width:100%; margin-top:10px; background:orange;">INJECT FAKE SALE</button>
-            <button onclick="vacuumDatabase()" style="width:100%; margin-top:10px; background:transparent; border:1px solid red; color:red; font-size:10px; cursor:pointer;">[ WIPE ALL LOGS ]</button>
-        </div>
+            {/* PC SIDEBAR NAV */}
+            <nav className="hidden md:flex flex-col w-24 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 py-8 items-center justify-between z-40 shadow-xl">
+              <div className="flex flex-col gap-12 text-slate-400 dark:text-slate-500">
+                <div className="w-12 h-12 bg-juula-500 rounded-xl flex items-center justify-center text-white font-black italic shadow-lg shadow-juula-500/30 mb-8">J</div>
+                <NavItem icon={<Icons.Home />} label={txt.home} active={activeTab === 'home'} onClick={() => setActiveTab('home')} />
+                <NavItem icon={<Icons.Search />} label={txt.food} active={activeTab === 'food'} onClick={() => setActiveTab('food')} />
+                <button onClick={() => setActiveTab('add')} className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-xl hover:scale-105 active:scale-95 transition-all ${activeTab==='add' ? 'bg-juula-600' : 'bg-juula-500'}`}>
+                    <Icons.Plus />
+                </button>
+                <NavItem icon={<Icons.Chart />} label={txt.stats} active={activeTab === 'stats'} onClick={() => setActiveTab('stats')} />
+                <NavItem icon={<Icons.User />} label={txt.settings} active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+              </div>
+            </nav>
 
-        <div class="panel-box">
-            <h3 style="color:cyan;">📢 SYSTEM BROADCAST</h3>
-            <input type="text" id="broadcast-input" placeholder="ALERT BANNER MESSAGE">
-            <div style="display:flex; gap:5px;">
-                <button onclick="db.ref('settings/broadcast').set(document.getElementById('broadcast-input').value)" class="ui-btn" style="flex:2; background:cyan; color:black;">UPDATE</button>
-                <button onclick="document.getElementById('broadcast-input').value=''; db.ref('settings/broadcast').set(null)" class="ui-btn" style="flex:1; background:#333; color:white;">CLEAR</button>
-            </div>
-            <h3 style="margin-top:20px; color:var(--secondary);">🛡️ SECURITY</h3>
-            <input type="text" id="ban-ip-input" placeholder="IP TO BLOCK">
-            <button onclick="banClientIP()" class="ui-btn" style="width:100%; background:red; color:white;">BLOCK IP</button>
-            <div id="active-target-display" style="color:lime; font-size:10px; margin-top:10px;">Target: User_Self</div>
-            <button onclick="resetTarget()" class="ui-btn" style="width:100%; margin-top:5px; background:gray;">RESET BRIDGE</button>
-        </div>
-    </div>
-</div>
+            {/* MAIN CONTENT AREA */}
+            <main className="flex-1 flex flex-col h-full relative overflow-hidden">
+              <div className="flex-1 overflow-y-auto w-full max-w-5xl mx-auto pb-24 md:pb-8 p-4 md:p-8 custom-scrollbar relative">
+                {renderTab()}
+              </div>
+            </main>
 
-<div id="pgup-menu" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:350px; background:#000; border:3px solid var(--primary); z-index:100000; padding:20px; border-radius:10px; box-shadow:0 0 30px var(--primary); font-family:monospace; max-height: 90vh; overflow-y: auto;">
-    <h2 style="color:var(--primary); margin-top:0; border-bottom: 1px solid var(--primary);">UI COMMAND CENTER</h2>
-    <p style="font-size:10px; margin-top:10px;">PRIMARY THEME COLOR</p>
-    <input type="color" id="color-picker" style="width:100%; height:40px; background:transparent; border:1px solid #333;">
-    <p style="font-size:10px; margin-top:15px;">SHOP TITLE</p>
-    <input type="text" id="title-input" placeholder="New Shop Name..." style="width:100%; padding:10px; background:#111; color:#fff; border:1px solid var(--primary);">
-    <p style="font-size:10px; margin-top:15px;">MATRIX VELOCITY</p>
-    <input type="range" id="ui-matrix-speed" min="20" max="150" value="50" style="width:100%;">
-    <p style="font-size:10px; margin-top:15px;">NEON OVERDRIVE</p>
-    <select id="ui-glow" style="width:100%; padding:5px; background:#111; color:white; border:1px solid var(--primary);">
-        <option value="off">OFF</option>
-        <option value="on">ON (EXTREME)</option>
-    </select>
-    <p style="font-size:10px; margin-top:15px;">SYSTEM FONT</p>
-    <select id="ui-font" style="width:100%; padding:5px; background:#111; color:white; border:1px solid var(--primary);">
-        <option value="'Courier New', monospace">COURIER</option>
-        <option value="Arial, sans-serif">SANS</option>
-    </select>
-    <button onclick="triggerGlobalGlitch()" style="width:100%; margin-top:20px; padding:10px; background:red; color:white; font-weight:bold; border:none; cursor:pointer;">⚠️ TRIGGER SYSTEM GLITCH</button>
-    <hr style="border:0.5px solid #333; margin:20px 0;">
-    <button onclick="applyGlobalChanges()" style="width:100%; padding:15px; background:var(--primary); color:#000; font-weight:bold; border:none; cursor:pointer;">APPLY GLOBALLY</button>
-    <button onclick="document.getElementById('pgup-menu').style.display='none'" style="width:100%; margin-top:10px; background:transparent; color:gray; border:none; cursor:pointer;">[ CLOSE ]</button>
-</div>
-
-<div class="intel-ticker-wrap">
-    <div class="intel-ticker-label" id="live-feed-label">LIVE_FEED</div>
-    <marquee id="feed-text" style="color:#0f0; font-weight:bold;">>>> R4 FUSION SYSTEM STABLE :: ENCRYPTION ACTIVE...</marquee>
-</div>
-
-<audio id="hacker-music" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
-<audio id="siren-sound" src="https://www.myinstants.com/media/sounds/strobe-warning.mp3"></audio>
-<audio id="snd-click" src="https://www.myinstants.com/media/sounds/sword-slash.mp3"></audio>
-
-<script>
-let products = [], cart = [], coupons = {}, isAdmin = false, discount = 0, musicStarted = false;
-let userIP = "Scanning...", userID = "Unknown", chatTarget = "NONE";
-let matrixInt;
-
-function toggleChat() { let c = document.getElementById('chat-widget'); c.style.display = (c.style.display==='flex')?'none':'flex'; }
-function closeAdmin() { document.getElementById('admin-terminal').style.display='none'; }
-
-function sendChat() {
-    let inp = document.getElementById('chat-input');
-    if(!inp.value.trim()) return;
-    let room = isAdmin ? chatTarget : userID;
-    if(room === "NONE") return alert("SELECT A TARGET FIRST");
-    db.ref(`private_chats/${room}`).push({ sender: isAdmin ? "ADMIN" : `User_${userID}`, msg: inp.value, time: Date.now() });
-    inp.value = "";
-}
-
-function syncChat() {
-    let room = isAdmin ? chatTarget : userID;
-    if(room === "NONE") return;
-    db.ref(`private_chats/${room}`).off();
-    db.ref(`private_chats/${room}`).on('value', s => {
-        let list = s.val() ? Object.values(s.val()) : [];
-        document.getElementById('chat-msgs').innerHTML = list.map(m => m.msg ? `<div style="margin-bottom:5px;"><b style="color:${m.sender === "ADMIN" ? "#00ff00" : "var(--primary)"}">${m.sender}</b>: ${m.msg}</div>` : '').join('');
-        let div = document.getElementById('chat-msgs'); div.scrollTop = div.scrollHeight;
-    });
-}
-
-function targetUser(targetID) { 
-    chatTarget = targetID; 
-    document.getElementById('manual-target-id').value = targetID;
-    document.getElementById('active-target-display').innerText = "Target: User_" + targetID; 
-    document.getElementById('chat-title').innerText = "BRIDGE: User_" + targetID; 
-    syncChat(); 
-    if(document.getElementById('chat-widget').style.display !== 'flex') toggleChat(); 
-}
-
-function openGhostView(targetID) {
-    const gW = window.open('', '_blank', 'width=450,height=500');
-    gW.document.write(`
-        <html>
-        <head>
-            <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"><\/script>
-            <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"><\/script>
-        </head>
-        <body style="background:#050505; color:#0f0; font-family:monospace; padding:20px; overflow-x:hidden;">
-            <h2 style="color:yellow; border-bottom:1px solid #333; padding-bottom:10px;">GHOST MONITOR: User_${targetID}</h2>
-            <div id="status" style="margin-top:20px;">
-                <p>STATUS: <span id="conn-state" style="color:red;">CONNECTING...</span></p>
-                <p>CURRENT PAGE: <span id="p" style="color:white; font-weight:bold;">-</span></p>
-                <p>LAST ACTIVE: <span id="a" style="color:white;">-</span></p>
-                <div style="background:#111; padding:15px; border:1px solid #333; margin-top:20px; border-radius:5px;">
-                    <p style="color:yellow; margin:0 0 10px 0; font-size:12px; border-bottom:1px solid #222;">LIVE TYPING FEED:</p>
-                    <div id="t" style="color:white; font-size:18px; word-break: break-all; min-height:40px;">...</div>
-                </div>
-            </div>
-            <script>
-                const config = {
-                    apiKey: "AIzaSyDE6qMplWktZASB2AjUKuY_dSRCUKiZyOA",
-                    authDomain: "maxiom-r3.firebaseapp.com",
-                    databaseURL: "https://maxiom-r3-default-rtdb.firebaseio.com",
-                    projectId: "maxiom-r3"
-                };
-                firebase.initializeApp(config);
-                const gDB = firebase.database();
+            {/* MOBILE BOTTOM NAV */}
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 flex justify-around items-center h-20 px-2 pb-safe z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] dark:shadow-none">
+                <NavItem icon={<Icons.Home />} label={txt.home} active={activeTab === 'home'} onClick={() => setActiveTab('home')} />
+                <NavItem icon={<Icons.Search />} label={txt.food} active={activeTab === 'food'} onClick={() => setActiveTab('food')} />
                 
-                gDB.ref('.info/connected').on('value', s => {
-                    if(s.val()) document.getElementById('conn-state').innerText = "ACTIVE BRIDGE";
-                });
+                <div className="relative -top-6">
+                    <button onClick={() => setActiveTab('add')} className={`w-14 h-14 rounded-[1.25rem] flex items-center justify-center text-white shadow-lg shadow-juula-500/40 transform active:scale-90 transition-all ${activeTab==='add' ? 'bg-juula-600 rotate-45' : 'bg-juula-500'}`}>
+                        <div className={`${activeTab==='add' ? '-rotate-45' : ''} transition-transform`}><Icons.Plus /></div>
+                    </button>
+                </div>
 
-                gDB.ref('ghost_tracking/${targetID}').on('value', s => {
-                    const d = s.val();
-                    if(d) {
-                        document.getElementById('p').innerText = d.pageName || "BROWSING";
-                        document.getElementById('a').innerText = new Date(d.lastActive).toLocaleTimeString();
-                        document.getElementById('t').innerText = d.typing || "Not typing...";
-                    }
-                });
-            <\/script>
-        </body>
-        </html>
-    `);
-}
+                <NavItem icon={<Icons.Chart />} label={txt.stats} active={activeTab === 'stats'} onClick={() => setActiveTab('stats')} />
+                <NavItem icon={<Icons.User />} label={txt.settings} active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+            </nav>
+          </div>
+        );
+      }
 
-function resetTarget() { chatTarget = "NONE"; document.getElementById('manual-target-id').value = ""; document.getElementById('active-target-display').innerText = "Target: User_Self"; document.getElementById('chat-title').innerText = "SECURE BRIDGE"; document.getElementById('chat-msgs').innerHTML = ""; }
+      // --- SUB COMPONENTS ---
+      const NavItem = ({ icon, label, active, onClick }) => (
+        <button onClick={onClick} className={`flex flex-col items-center gap-1 transition-all ${active ? 'text-juula-500 translate-y-[-2px]' : 'text-slate-400 hover:opacity-80'}`}>
+          <div className={`${active ? 'drop-shadow-[0_0_8px_rgba(76,175,80,0.4)]' : ''}`}>{icon}</div>
+          <span className="text-[10px] font-bold tracking-wide">{label}</span>
+        </button>
+      );
 
-async function getIdentity() {
-    try {
-        // FIXED IP LOGIC: Attempt Primary, then Fallback for blocked regions
-        let fetchIP = null;
-        try {
-            const r = await fetch('https://api.ipify.org?format=json', { timeout: 3000 });
-            const d = await r.json();
-            fetchIP = d.ip;
-        } catch(e) {
-            const r2 = await fetch('https://api.db-ip.com/v2/free/self');
-            const d2 = await r2.json();
-            fetchIP = d2.ipAddress;
-        }
-
-        if (fetchIP && fetchIP !== "Scanning...") {
-            userIP = fetchIP;
-            userID = userIP.split('.')[0];
-        } else {
-            // If both fail, assign a Ghost ID based on timestamp
-            userID = "GHOST_" + Date.now().toString().slice(-4);
-            userIP = "HIDDEN_PROXY_" + userID;
-        }
-
-        db.ref('presence/' + userID).set(true);
-        db.ref('presence/' + userID).onDisconnect().remove();
+      // --- PORTION SELECTION & EDIT MODAL ---
+      function PortionModal({ txt, food, lang, onClose, onConfirm }) {
+        const [multiplier, setMultiplier] = useState(1);
+        const [category, setCategory] = useState('breakfast');
         
-        if(!isAdmin) {
-            syncChat();
-            broadcastGhostData();
-            // Intel alert for a new visit - only if IP is clean
-            db.ref('intel').push({ 
-                id: Date.now(), 
-                text: `ACCESS_GRANTED | ${userIP} | SR PRO MAXBRIDGE`, 
-                owner: userID 
-            });
-        }
-    } catch(e) { 
-        console.log("Identity Protocol Failed"); 
-        userID = "GHOST_ERR"; 
-    }
-}
+        // Editable State for Scanned items
+        const isScanned = !!food.isScanned;
+        const [editName, setEditName] = useState((lang==='ku' && food.name_ku) ? food.name_ku : (lang==='ar' && food.name_ar) ? food.name_ar : food.name_en);
+        const [editCals, setEditCals] = useState(food.cals);
+        const [editP, setEditP] = useState(food.p);
+        const [editC, setEditC] = useState(food.c);
+        const [editF, setEditF] = useState(food.f);
 
-function broadcastGhostData() {
-    if(isAdmin || userID === "Unknown") return;
-    const isCheckout = document.getElementById('checkout-page').style.display !== 'none';
-    const isInfo = document.getElementById('info-page').style.display !== 'none';
-    let currentPage = "MAIN SHOP";
-    if(isCheckout) currentPage = "CHECKOUT PAGE";
-    if(isInfo) currentPage = "PRODUCT INFO: " + (document.getElementById('info-title').innerText || "");
-    
-    let typingContent = "";
-    if(document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA")) {
-        typingContent = document.activeElement.value;
-    }
+        const tUnit = food[`unit_${lang}`] || food.unit;
 
-    db.ref(`ghost_tracking/${userID}`).update({
-        pageName: currentPage,
-        lastActive: Date.now(),
-        typing: typingContent || "Browsing..."
-    });
-}
+        const presets = [
+            { label: `0.5 ${tUnit}`, mult: 0.5 },
+            { label: `1 ${tUnit}`, mult: 1 },
+            { label: `1.5 ${tUnit}`, mult: 1.5 },
+            { label: `2 ${tUnit}`, mult: 2 },
+        ];
 
-function toggleMusic(e) { 
-    if(e) e.stopPropagation();
-    let m = document.getElementById('hacker-music'), btn = document.getElementById('music-btn');
-    if (m.paused) { m.play(); btn.innerText = "🔊 MUSIC: ON"; } else { m.pause(); btn.innerText = "🔇 MUSIC: OFF"; }
-}
+        return (
+            <div className="bg-white dark:bg-slate-900 w-full md:w-[450px] rounded-t-[2rem] md:rounded-[2rem] p-6 shadow-2xl animate__animated animate__slideInUp md:animate__zoomIn max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-start mb-6">
+                    <div className="w-full mr-4">
+                        {isScanned ? (
+                           <input value={editName} onChange={e => setEditName(e.target.value)} className="w-full text-2xl font-black bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white p-2 rounded-lg outline-none focus:border-juula-500 border border-transparent" />
+                        ) : (
+                           <h2 className="text-2xl font-black text-slate-900 dark:text-white">{editName}</h2>
+                        )}
+                        <p className="text-sm font-bold text-slate-500">{txt.baseUnit}: 1 {tUnit}</p>
+                    </div>
+                    <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 font-bold flex-shrink-0">&times;</button>
+                </div>
 
-function displayProducts() {
-    db.ref('products').on('value', (snap) => {
-        products = snap.val() || [];
-        const android = document.getElementById("android-grid"), ios = document.getElementById("ios-grid");
-        if(!android) return;
-        android.innerHTML = ""; ios.innerHTML = "";
-        products.forEach((p, i) => {
-            if(!p) return;
-            const div = document.createElement("div"); div.className = "product";
-            div.innerHTML = `<img src="${p.image || ''}" onclick="showInfo(${i})"><h3>${p.name}</h3><div style="color:var(--price-gold); font-weight:bold; font-size:20px;">$${p.price}</div><button onclick="addToCart(${i})" style="width:100%; background:var(--primary); margin-top:10px; border:none; padding:10px; cursor:pointer; font-weight:bold;">ADD TO CART</button>`;
-            p.category === "ios" ? ios.appendChild(div) : android.appendChild(div);
-        });
-        if(isAdmin) renderAdminAssets();
-    });
-}
+                {/* Quick Presets */}
+                <div className="grid grid-cols-4 gap-2 mb-6">
+                    {presets.map(p => (
+                        <button key={p.mult} onClick={() => setMultiplier(p.mult)} 
+                            className={`py-3 rounded-xl text-xs font-bold transition-colors ${multiplier === p.mult ? 'bg-juula-500 text-white shadow-md' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`}>
+                            {p.label}
+                        </button>
+                    ))}
+                </div>
 
-function addProduct() {
-    const n=document.getElementById('p-name').value, p=document.getElementById('p-price').value, y=document.getElementById('p-yt').value, c=document.getElementById('p-cat').value, d=document.getElementById('p-desc').value, fImg=document.getElementById('p-img').files[0], fFile=document.getElementById('p-file').files[0], idx=document.getElementById('edit-index').value;
-    if(!n || !p) return alert("NAME AND PRICE REQUIRED");
-    const read = (file) => file ? new Promise(res => { const r=new FileReader(); r.onload=e=>res({data:e.target.result, name:file.name}); r.readAsDataURL(file); }) : null;
-    Promise.all([read(fImg), read(fFile)]).then(vals => {
-        let existing = (idx != -1) ? products[idx] : {};
-        let obj = { name:n, price:p, yt:y, category:c, desc:d, image: vals[0] ? vals[0].data : (existing.image || ""), delivery: vals[1] ? vals[1] : (existing.delivery || null) };
-        if(idx == -1) products.push(obj); else products[idx] = obj;
-        db.ref('products').set(products).then(() => { alert(idx == -1 ? "ASSET DEPLOYED" : "ASSET UPDATED"); resetForge(); });
-    });
-}
+                {/* Custom Slider */}
+                <div className="mb-6">
+                    <p className="text-xs font-bold text-slate-500 mb-2 uppercase">{txt.customQty}: {multiplier}x</p>
+                    <input type="range" min="0.1" max="5" step="0.1" value={multiplier} onChange={e => setMultiplier(parseFloat(e.target.value))} className="w-full accent-juula-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer"/>
+                </div>
 
-function renderAdminAssets() {
-    const list = document.getElementById('admin-asset-list');
-    if(!list) return;
-    list.innerHTML = products.map((p, i) => p ? `<div style="border-bottom:1px solid #222; padding:5px; display:flex; justify-content:space-between; align-items:center;"><span style="font-size:10px; color:white;">${p.name}</span><div><button onclick="editProduct(${i})" style="color:lime; background:none; border:1px solid lime; padding:2px; font-size:9px;">E</button><button onclick="deleteProduct(${i})" style="color:red; background:none; border:1px solid red; margin-left:2px; padding:2px; font-size:9px;">D</button></div></div>` : '').join('');
-}
+                {/* Category Selection */}
+                <div className="mb-6 grid grid-cols-4 gap-2">
+                    {['breakfast', 'lunch', 'dinner', 'snack'].map(cat => (
+                        <button key={cat} onClick={() => setCategory(cat)} 
+                            className={`py-2 rounded-xl text-[10px] uppercase font-bold transition-colors ${category === cat ? 'bg-indigo-500 text-white shadow-md' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`}>
+                            {txt[cat]}
+                        </button>
+                    ))}
+                </div>
 
-function editProduct(i) {
-    const p = products[i];
-    document.getElementById('p-name').value = p.name;
-    document.getElementById('p-price').value = p.price;
-    document.getElementById('p-yt').value = p.yt || '';
-    document.getElementById('p-cat').value = p.category;
-    document.getElementById('p-desc').value = p.desc;
-    document.getElementById('edit-index').value = i;
-    document.getElementById('forge-btn').innerText = "UPDATE";
-    document.getElementById('cancel-edit-btn').style.display = "block";
-}
+                {/* Dynamic Calculated Output */}
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl mb-6">
+                    {isScanned ? (
+                       <div className="grid grid-cols-4 gap-2">
+                          <div><label className="text-[10px] text-juula-500 font-bold block mb-1">KCAL</label><input type="number" value={editCals} onChange={e => setEditCals(Number(e.target.value))} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2 rounded text-juula-500 font-black outline-none" /></div>
+                          <div><label className="text-[10px] text-blue-500 font-bold block mb-1">{txt.p}</label><input type="number" value={editP} onChange={e => setEditP(Number(e.target.value))} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2 rounded text-blue-500 font-bold outline-none" /></div>
+                          <div><label className="text-[10px] text-orange-400 font-bold block mb-1">{txt.c}</label><input type="number" value={editC} onChange={e => setEditC(Number(e.target.value))} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2 rounded text-orange-400 font-bold outline-none" /></div>
+                          <div><label className="text-[10px] text-indigo-500 font-bold block mb-1">{txt.f}</label><input type="number" value={editF} onChange={e => setEditF(Number(e.target.value))} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2 rounded text-indigo-500 font-bold outline-none" /></div>
+                       </div>
+                    ) : (
+                       <React.Fragment>
+                         <p className="text-3xl font-black text-juula-500 mb-2">{Math.round(editCals * multiplier)} <span className="text-sm text-slate-500 font-bold">KCAL</span></p>
+                         <div className="flex justify-between text-xs font-bold">
+                             <span className="text-blue-500">{txt.p}: {Math.round(editP * multiplier)}g</span>
+                             <span className="text-orange-400">{txt.c}: {Math.round(editC * multiplier)}g</span>
+                             <span className="text-indigo-500">{txt.f}: {Math.round(editF * multiplier)}g</span>
+                         </div>
+                       </React.Fragment>
+                    )}
+                    {isScanned && <p className="text-[10px] text-slate-400 mt-2 text-center text-juula-500">* Results multiplied by {multiplier}x on Confirm.</p>}
+                </div>
 
-function deleteProduct(i) { if(confirm("DELETE ASSET?")) { products.splice(i, 1); db.ref('products').set(products); } }
-function resetForge() { document.getElementById('edit-index').value = "-1"; document.getElementById('forge-btn').innerText = "DEPLOY ASSET"; document.getElementById('cancel-edit-btn').style.display = "none"; document.getElementById('p-name').value = ""; document.getElementById('p-price').value = ""; document.getElementById('p-yt').value = ""; document.getElementById('p-desc').value = ""; }
+                <button onClick={() => onConfirm({...food, name_en: editName, cals: editCals, p: editP, c: editC, f: editF}, multiplier, category)} className="w-full bg-juula-500 hover:bg-juula-600 text-white font-black p-4 rounded-2xl shadow-lg transition-transform active:scale-95 text-lg">
+                    {txt.confirmScan || txt.confirmLog}
+                </button>
+            </div>
+        )
+      }
 
-function addToCart(i) {
-    const sound = document.getElementById('snd-click');
-    sound.currentTime = 0; sound.play().catch(()=>{});
-    cart.push(products[i]);
-    updateCartCount();
-    db.ref('intel').push({ id: Date.now(), text: `CART_ADD | ${userIP} | ${products[i].name}`, owner: userID });
-    broadcastGhostData();
-}
+      // --- NEW: V5 SCANNER MODAL ---
+      function ScannerModal({ mode, txt, lang, foodDB, onClose, onResult }) {
+          const [status, setStatus] = useState('initializing');
+          const [stream, setStream] = useState(null);
+          const videoRef = useRef(null);
+          
+          useEffect(() => {
+              if (mode === 'ai') {
+                  // Simulate AI Camera Flow
+                  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                      .then(s => {
+                          setStream(s);
+                          if(videoRef.current) videoRef.current.srcObject = s;
+                          setStatus('scanning');
+                          // AI Simulation mock delay
+                          setTimeout(() => {
+                              setStatus('analyzing');
+                              setTimeout(() => {
+                                  // Pick a mock food from DB that visually makes sense or random
+                                  const mockMatch = foodDB[Math.floor(Math.random() * foodDB.length)];
+                                  s.getTracks().forEach(track => track.stop()); // kill stream
+                                  onResult(mockMatch);
+                              }, 2000);
+                          }, 3000);
+                      })
+                      .catch(err => {
+                          alert("Camera Error: " + err.message);
+                          onClose();
+                      });
+              } else if (mode === 'barcode') {
+                  // Dynamically load html5-qrcode if not already loaded
+                  const loadAndScan = () => {
+                      setStatus('scanning');
+                      if (typeof Html5Qrcode === 'undefined') {
+                          const script = document.createElement('script');
+                          script.src = 'https://unpkg.com/html5-qrcode';
+                          script.onload = () => startBarcodeScanner();
+                          script.onerror = () => { alert('Barcode library failed to load. Check internet connection.'); onClose(); };
+                          document.head.appendChild(script);
+                      } else {
+                          startBarcodeScanner();
+                      }
+                  };
+                  const startBarcodeScanner = () => {
+                  const html5QrcodeScanner = new Html5Qrcode("reader");
+                  html5QrcodeScanner.start(
+                      { facingMode: "environment" },
+                      { fps: 10, qrbox: { width: 250, height: 250 } },
+                      (decodedText) => {
+                          html5QrcodeScanner.stop();
+                          setStatus('analyzing');
+                          // Fetch OpenFoodFacts
+                          fetch(`https://world.openfoodfacts.org/api/v0/product/${decodedText}.json`)
+                              .then(res => res.json())
+                              .then(data => {
+                                  if (data.status === 1) {
+                                      const prod = data.product;
+                                      const mappedFood = {
+                                          id: Date.now(),
+                                          name_en: prod.product_name_en || prod.product_name || "Unknown Product",
+                                          cals: Math.round((prod.nutriments && prod.nutriments['energy-kcal_100g']) || 0),
+                                          p: Math.round((prod.nutriments && prod.nutriments['proteins_100g']) || 0),
+                                          c: Math.round((prod.nutriments && prod.nutriments['carbohydrates_100g']) || 0),
+                                          f: Math.round((prod.nutriments && prod.nutriments['fat_100g']) || 0),
+                                          unit: "100g serving"
+                                      };
+                                      onResult(mappedFood);
+                                  } else {
+                                      alert("Barcode product not found in OpenFoodFacts database.");
+                                      onClose();
+                                  }
+                              })
+                              .catch(err => {
+                                  alert("API Error: " + err.message);
+                                  onClose();
+                              });
+                      },
+                      () => { /* Ignore read errors quietly */ }
+                  ).catch(err => {
+                      alert("Scanner Error: " + err.message);
+                      onClose();
+                  });
+                  return () => {
+                      if(html5QrcodeScanner.isScanning) html5QrcodeScanner.stop();
+                  };
+                  }; // end startBarcodeScanner
+                  loadAndScan();
+                  return; // cleanup handled inside startBarcodeScanner
+              }
+              
+              return () => {
+                  if(stream) stream.getTracks().forEach(track => track.stop());
+              }
+          }, [mode]);
 
-function updateCartCount() { document.getElementById('cart-count').innerText = cart.length; }
-function clearCart() { cart = []; updateCartCount(); renderCart(); }
-function removeFromCart(i) { cart.splice(i, 1); updateCartCount(); renderCart(); }
-function showCheckout() { document.getElementById('shop-page').style.display='none'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='block'; renderCart(); broadcastGhostData(); }
+          return (
+              <div className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center overflow-hidden">
+                  {/* Top Bar */}
+                  <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-20 bg-gradient-to-b from-black/80 to-transparent">
+                      <h2 className="text-white font-black italic">{mode === 'ai' ? txt.scanPlate : txt.scanBarcode}</h2>
+                      <button onClick={onClose} className="w-10 h-10 bg-white/10 rounded-full text-white font-bold">&times;</button>
+                  </div>
+                  
+                  {/* Camera Viewport */}
+                  <div className="relative w-full h-full max-w-md bg-zinc-900 border-x border-zinc-700">
+                      {mode === 'ai' && <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />}
+                      {mode === 'barcode' && <div id="reader" className="w-full h-full object-cover flex items-center justify-center"></div>}
+                      
+                      {/* Scanning Overlays */}
+                      <div className="absolute inset-0 pointer-events-none">
+                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 border-2 border-juula-500/50 rounded-3xl">
+                              <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-juula-500 rounded-tl-3xl"></div>
+                              <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-juula-500 rounded-tr-3xl"></div>
+                              <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-juula-500 rounded-bl-3xl"></div>
+                              <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-juula-500 rounded-br-3xl"></div>
+                          </div>
+                          {mode === 'ai' && status === 'scanning' && (
+                              <div className="w-full h-1 bg-juula-500 absolute top-1/2 shadow-[0_0_20px_#4CAF50] animate-[ping_2s_infinite]"></div>
+                          )}
+                          {status === 'analyzing' && (
+                              <div className="absolute inset-0 bg-juula-500/20 backdrop-blur-md flex flex-col items-center justify-center p-8">
+                                  <div className="w-16 h-16 border-4 border-white/20 border-t-juula-500 rounded-full animate-spin mb-4"></div>
+                                  <p className="text-white font-black text-xl text-center shadow-lg">{txt.processingAI}</p>
+                              </div>
+                          )}
+                      </div>
+                  </div>
+                  
+                  {/* Instructions */}
+                  <div className="absolute bottom-10 left-0 right-0 text-center z-20">
+                      <p className="text-white/80 bg-black/60 px-6 py-2 rounded-full inline-block font-bold">
+                          {status === 'scanning' ? (mode === 'ai' ? txt.scanDescAI : txt.scanDescBarcode) : txt.productFound}
+                      </p>
+                  </div>
+              </div>
+          );
+      }
 
-function renderCart() {
-    let l=document.getElementById('cart-list'), t=0; l.innerHTML = "";
-    cart.forEach((item, index) => {
-        l.innerHTML += `<div style="padding:10px; border-bottom:1px solid #222; display:flex; justify-content:space-between;"><span>${item.name} - $${item.price}</span><button onclick="removeFromCart(${index})" style="background:none; border:none; color:red; cursor:pointer;">[REMOVE]</button></div>`;
-        t += parseFloat(item.price);
-    });
-    let final = t - (t * (discount/100));
-    document.getElementById('total-usd').innerText = "TOTAL: $" + final.toFixed(2);
-}
+      // --- ADMIN PANEL (V4 Ultimate - Multi Tab) ---
+      function AdminPanel({ foodDB, setFoodDB, logs, setLogs, user, setUser, appTitle, setAppTitle, onClose }) {
+          const [activeAdminTab, setActiveAdminTab] = useState('db'); // db, system, custom
+          const [view, setView] = useState('list'); // list, edit, add
+          const [editForm, setEditForm] = useState(null);
+          const [customName, setCustomName] = useState(appTitle || '');
 
-function triggerHackerPay() {
-    if(cart.length === 0) return alert("INVENTORY EMPTY");
-    document.getElementById('auth-overlay').style.display = 'flex';
-    document.getElementById('paypal-button-container').innerHTML = '';
-    let t=0; cart.forEach(i=>t+=parseFloat(i.price));
-    let final = (t - (t * (discount/100))).toFixed(2);
-    paypal.Buttons({
-        createOrder: (data, actions) => actions.order.create({ purchase_units: [{ amount: { value: final } }] }),
-        onApprove: (data, actions) => actions.order.capture().then(det => {
-            cart.forEach(item => { if(item.delivery) { const a = document.createElement('a'); a.href = item.delivery.data; a.download = item.delivery.name; document.body.appendChild(a); a.click(); document.body.removeChild(a); } });
-            alert("SUCCESS."); cart = []; updateCartCount(); location.reload();
-        })
-    }).render('#paypal-button-container');
-}
+          const saveFood = () => {
+              if(!editForm.name_en || !editForm.cals) return alert("Required fields missing");
+              const safeForm = {
+                  ...editForm,
+                  cals: parseInt(editForm.cals) || 0,
+                  p: parseInt(editForm.p) || 0,
+                  c: parseInt(editForm.c) || 0,
+                  f: parseInt(editForm.f) || 0,
+              };
+              
+              if(view === 'edit') {
+                  setFoodDB(foodDB.map(f => f.id === safeForm.id ? safeForm : f));
+              } else {
+                  safeForm.id = Date.now();
+                  setFoodDB([...foodDB, safeForm]);
+              }
+              setView('list');
+          };
 
-function login() {
-    if(document.getElementById('admin-pass').value === "spartytop1") {
-        isAdmin = true;
-        document.getElementById('admin-controls').style.display = 'grid';
-        document.getElementById('login-section').style.display = 'none';
-        
-        db.ref('intel').limitToLast(50).on('value', s => { 
-            const val = s.val() || {};
-            document.getElementById('pay-attempts-list').innerHTML = Object.keys(val).reverse().map(k => {
-                let txt = val[k].text || "";
-                let extID = val[k].owner || "UNK";
-                return `<div style="margin-bottom:8px; border-bottom:1px solid #333; padding-bottom:5px;">
-                            <span style="color:yellow; font-size:10px;">User_${extID}: ${txt}</span>
-                            <div style="display:flex; gap:5px; margin-top:3px;">
-                                <button onclick="targetUser('${extID}')" style="background:#0044ff; color:white; border:none; font-size:9px; padding:3px 8px; cursor:pointer; border-radius:3px;">BRIDGE</button>
-                                <button onclick="openGhostView('${extID}')" style="background:#008800; color:white; border:none; font-size:9px; padding:3px 8px; cursor:pointer; border-radius:3px;">GHOST</button>
+          const deleteFood = (id) => {
+              if(confirm("Delete this food entirely?")) {
+                  setFoodDB(foodDB.filter(f => f.id !== id));
+              }
+          };
+
+          const exportData = () => {
+              const data = { user, logs, foodDB, appTitle };
+              const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `titan_backup_${Date.now()}.json`;
+              a.click();
+          };
+
+          const importData = (e) => {
+              const file = e.target.files[0];
+              if(!file) return;
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                  try {
+                      const data = JSON.parse(event.target.result);
+                      if(data.user) setUser(data.user);
+                      if(data.logs) setLogs(data.logs);
+                      if(data.foodDB) setFoodDB(data.foodDB);
+                      if(data.appTitle) setAppTitle(data.appTitle);
+                      alert("Data imported successfully!");
+                  } catch(err) { alert("Invalid backup file."); }
+              };
+              reader.readAsText(file);
+          };
+
+          return (
+              <div className="fixed inset-0 z-[9999] bg-slate-900 text-white font-mono p-4 md:p-8 overflow-y-auto">
+                 <div className="max-w-4xl mx-auto">
+                    <header className="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
+                        <div>
+                            <h1 className="text-3xl font-black text-emerald-400">OVERLORD_CMD // v4</h1>
+                            <p className="text-sm text-slate-400">System Status: ONLINE | Admin Access</p>
+                        </div>
+                        <button onClick={onClose} className="px-6 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold rounded-xl transition-colors">EXIT SESSION</button>
+                    </header>
+
+                    {/* Admin Navigation */}
+                    <div className="flex gap-2 mb-8 bg-slate-800 p-2 rounded-xl">
+                        {['db', 'system', 'custom'].map(t => (
+                            <button key={t} onClick={() => { setActiveAdminTab(t); setView('list'); }} 
+                                className={`flex-1 py-3 text-sm font-bold uppercase rounded-lg transition-colors ${activeAdminTab === t ? 'bg-emerald-500 text-slate-900' : 'text-slate-400 hover:bg-slate-700'}`}>
+                                {t === 'db' ? 'Food Database' : t === 'system' ? 'System Tools' : 'UI Customization'}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* --- TAB: FOOD DB --- */}
+                    {activeAdminTab === 'db' && (
+                        <div>
+                            {view === 'list' && (
+                                <div>
+                                    <button onClick={() => { setEditForm({name_en:'', name_ku:'', name_ar:'', cals:0, p:0, c:0, f:0, unit:'Unit'}); setView('add'); }} 
+                                        className="mb-6 w-full p-4 border-2 border-dashed border-emerald-500/50 hover:border-emerald-500 text-emerald-400 font-bold hover:bg-emerald-500/10 rounded-xl transition-all">
+                                        + ADD NEW FOOD INSTANCE
+                                    </button>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {foodDB.map(f => (
+                                            <div key={f.id} className="bg-slate-800 p-4 rounded-xl flex justify-between items-center border border-slate-700">
+                                                <div>
+                                                    <p className="font-bold text-lg">{f.name_en}</p>
+                                                    <p className="text-xs text-slate-400">{f.cals}kcal | P:{f.p} C:{f.c} F:{f.f}</p>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <button onClick={() => { setEditForm(f); setView('edit'); }} className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg">EDIT</button>
+                                                    <button onClick={() => deleteFood(f.id)} className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg">DEL</button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {(view === 'edit' || view === 'add') && (
+                                <div className="bg-slate-800 p-8 rounded-2xl space-y-6 max-w-2xl mx-auto border border-slate-700 shadow-2xl">
+                                    <h2 className="text-2xl font-black text-emerald-400 mb-6">{view === 'edit' ? 'MODIFY RESOURCE' : 'CREATE RESOURCE'}</h2>
+                                    
+                                    <div className="space-y-4">
+                                        <div><label className="text-xs text-slate-400 block mb-1">English Name *</label><input value={editForm.name_en} onChange={e=>setEditForm({...editForm, name_en: e.target.value})} className="w-full bg-slate-900 border border-slate-700 p-3 rounded-lg text-white outline-none focus:border-emerald-500"/></div>
+                                        <div><label className="text-xs text-slate-400 block mb-1">Kurdish Name</label><input value={editForm.name_ku || ''} onChange={e=>setEditForm({...editForm, name_ku: e.target.value})} className="w-full bg-slate-900 border border-slate-700 p-3 rounded-lg text-white outline-none focus:border-emerald-500" dir="rtl"/></div>
+                                        <div><label className="text-xs text-slate-400 block mb-1">Arabic Name</label><input value={editForm.name_ar || ''} onChange={e=>setEditForm({...editForm, name_ar: e.target.value})} className="w-full bg-slate-900 border border-slate-700 p-3 rounded-lg text-white outline-none focus:border-emerald-500" dir="rtl"/></div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><label className="text-xs text-emerald-400 block mb-1">Calories (kcal) *</label><input type="number" value={editForm.cals} onChange={e=>setEditForm({...editForm, cals: e.target.value})} className="w-full bg-slate-900 border border-slate-700 p-3 rounded-lg text-white outline-none focus:border-emerald-500"/></div>
+                                        <div><label className="text-xs text-slate-400 block mb-1">Base Unit (en)</label><input value={editForm.unit} onChange={e=>setEditForm({...editForm, unit: e.target.value})} placeholder="e.g. Plate" className="w-full bg-slate-900 border border-slate-700 p-3 rounded-lg text-white outline-none focus:border-emerald-500"/></div>
+                                        <div><label className="text-xs text-slate-400 block mb-1">Base Unit (ku)</label><input value={editForm.unit_ku || ''} onChange={e=>setEditForm({...editForm, unit_ku: e.target.value})} placeholder="e.g. Ù‚Ø§Ù¾" className="w-full bg-slate-900 border border-slate-700 p-3 rounded-lg text-white outline-none focus:border-emerald-500" dir="rtl"/></div>
+                                        <div><label className="text-xs text-slate-400 block mb-1">Base Unit (ar)</label><input value={editForm.unit_ar || ''} onChange={e=>setEditForm({...editForm, unit_ar: e.target.value})} placeholder="e.g. ØµØ­Ù†" className="w-full bg-slate-900 border border-slate-700 p-3 rounded-lg text-white outline-none focus:border-emerald-500" dir="rtl"/></div>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-4 p-4 bg-slate-900 rounded-xl border border-slate-700/50 mt-4">
+                                        <div><label className="text-xs text-blue-400 block mb-1">Protein (g)</label><input type="number" value={editForm.p} onChange={e=>setEditForm({...editForm, p: e.target.value})} className="w-full bg-slate-800 border border-slate-700 p-3 rounded-lg text-white outline-none"/></div>
+                                        <div><label className="text-xs text-orange-400 block mb-1">Carbs (g)</label><input type="number" value={editForm.c} onChange={e=>setEditForm({...editForm, c: e.target.value})} className="w-full bg-slate-800 border border-slate-700 p-3 rounded-lg text-white outline-none"/></div>
+                                        <div><label className="text-xs text-indigo-400 block mb-1">Fats (g)</label><input type="number" value={editForm.f} onChange={e=>setEditForm({...editForm, f: e.target.value})} className="w-full bg-slate-800 border border-slate-700 p-3 rounded-lg text-white outline-none"/></div>
+                                    </div>
+
+                                    <div className="flex gap-4 pt-6 mt-4 border-t border-slate-700">
+                                        <button onClick={saveFood} className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-black p-4 rounded-xl transition-colors">SAVE TO DB</button>
+                                        <button onClick={() => setView('list')} className="w-1/3 bg-slate-700 hover:bg-slate-600 text-white font-bold p-4 rounded-xl transition-colors">CANCEL</button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* --- TAB: SYSTEM TOOLS --- */}
+                    {activeAdminTab === 'system' && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
+                                <h3 className="text-xl font-bold mb-2 text-blue-400">Data Sync</h3>
+                                <p className="text-xs text-slate-400 mb-6">Backup or restore your entire Juula profile, logs, and custom foods via JSON.</p>
+                                <div className="space-y-4">
+                                    <button onClick={exportData} className="w-full py-4 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 font-bold rounded-xl border border-blue-500/30 transition-colors">
+                                        EXPORT JSON BACKUP
+                                    </button>
+                                    <label className="block w-full py-4 bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold rounded-xl text-center cursor-pointer transition-colors">
+                                        IMPORT JSON DATA
+                                        <input type="file" accept=".json" onChange={importData} className="hidden" />
+                                    </label>
+                                </div>
                             </div>
-                        </div>`;
-            }).join(''); 
+                            
+                            <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
+                                <h3 className="text-xl font-bold mb-2 text-red-400">Danger Zone</h3>
+                                <p className="text-xs text-slate-400 mb-6">Irreversible database actions. Proceed with caution.</p>
+                                <div className="space-y-4">
+                                    <button onClick={() => { if(confirm("Clear all diet history?")) setLogs([]); }} className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold rounded-xl text-sm border border-red-500/30 text-left px-4">
+                                        â–º WIPE DIET LOGS
+                                    </button>
+                                    <button onClick={() => { if(confirm("Restore default food database? Custom foods will be lost.")) setFoodDB(DEFAULT_DB); }} className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold rounded-xl text-sm border border-red-500/30 text-left px-4">
+                                        â–º RESET FOOD DB TO DEFAULTS
+                                    </button>
+                                    <button onClick={() => { if(confirm("Delete User Profile? App will reset to onboarding.")) { setUser(null); onClose(); } }} className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 font-black rounded-xl text-sm border border-red-500/50 text-left px-4">
+                                        â–º NUKE USER PROFILE
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div className="col-span-1 md:col-span-2 bg-slate-900 p-4 rounded-xl border border-slate-700 overflow-x-auto text-[10px] text-green-500/70 py-4 opacity-50 hover:opacity-100 transition-opacity">
+                                <p className="mb-2 font-bold text-white">RAW STATE DUMP (READ-ONLY):</p>
+                                <pre>{JSON.stringify({ activeLogs: logs.length, dbItems: foodDB.length, profile: (user ? user.name : ""), appTitle }, null, 2)}</pre>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- TAB: UI CUSTOMIZATION --- */}
+                    {activeAdminTab === 'custom' && (
+                        <div className="bg-slate-800 p-8 rounded-2xl border border-slate-700 max-w-2xl mx-auto">
+                           <h3 className="text-2xl font-black text-indigo-400 mb-2">Interface Overrides</h3>
+                           <p className="text-xs text-slate-400 mb-8">Modify the visual text strings globally across the application.</p>
+                           
+                           <div className="space-y-6">
+                               <div>
+                                   <label className="text-xs font-bold text-slate-300 block mb-2">App Branding Title</label>
+                                   <div className="flex gap-2">
+                                       <input value={customName} onChange={e => setCustomName(e.target.value)} placeholder="e.g. MyFitnessApp" className="flex-1 bg-slate-900 border border-slate-700 p-4 rounded-xl text-white outline-none focus:border-indigo-500" />
+                                       <button onClick={() => { setAppTitle(customName || null); alert("Branding updated."); }} className="px-6 bg-indigo-500 font-bold rounded-xl text-white hover:bg-indigo-400 transition-colors">APPLY</button>
+                                   </div>
+                                   <p className="text-[10px] text-slate-500 mt-2">Replaces "Juula" on the splash screen and main authentication headers.</p>
+                               </div>
+                           </div>
+                        </div>
+                    )}
+
+                 </div>
+              </div>
+          );
+      }
+
+      // --- ONBOARDING GATEWAY ---
+      function AuthScreen({ txt, lang, setLang, onLogin, isDark, setIsDark, appTitle }) {
+        const [formData, setForm] = useState({ name: '', weight: '', height: '', age: '', gender: 'male' });
+
+        const calculateBMR = (w, h, a, g) => {
+          let bmr = (10 * w) + (6.25 * h) - (5 * a);
+          bmr = g === 'male' ? bmr + 5 : bmr - 161;
+          return Math.round(bmr * 1.3); 
+        };
+
+        const calculateBMI = (w, h) => {
+          const hm = h / 100;
+          return (w / (hm * hm)).toFixed(1);
+        };
+
+        const handleSub = (e) => {
+          e.preventDefault();
+          const w = parseFloat(formData.weight);
+          const h = parseFloat(formData.height);
+          const a = parseInt(formData.age);
+          if(!w || !h || !a) return;
+          const userObj = {
+            ...formData,
+            bmi: calculateBMI(w, h),
+            tdee: calculateBMR(w, h, a, formData.gender)
+          };
+          onLogin(userObj);
+        };
+
+        return (
+          <div className={`min-h-screen flex items-center justify-center p-6 ${isDark ? 'bg-slate-950' : 'bg-slate-100'} transition-colors duration-500`} dir={lang === 'en' ? 'ltr' : 'rtl'}>
+            <div className={`w-full max-w-md ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'} border rounded-[2rem] p-8 shadow-2xl animate__animated animate__fadeInUp`}>
+              
+              <div className="flex justify-between items-center mb-8">
+                <div className="w-12 h-12 bg-juula-500 rounded-xl flex items-center justify-center text-white font-black italic shadow-lg shadow-juula-500/30">J</div>
+                <div className="flex gap-2">
+                  {['en', 'ku', 'ar'].map(l => (
+                    <button key={l} onClick={()=>setLang(l)} className={`px-2 py-1 text-xs rounded-lg font-bold uppercase transition-colors ${lang === l ? 'bg-juula-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>{l}</button>
+                  ))}
+                  <button onClick={()=>setIsDark(!isDark)} className="p-2 ml-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500">
+                    {isDark ? 'â˜€ï¸' : 'ðŸŒ™'}
+                  </button>
+                </div>
+              </div>
+
+              <h1 className={`text-4xl font-black mb-2 tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>{appTitle ? appTitle.toUpperCase() : txt.title}</h1>
+              <p className="text-slate-500 mb-8 font-medium">{txt.subtitle}</p>
+
+              <form onSubmit={handleSub} className="space-y-4">
+                <input required type="text" placeholder={txt.name} className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-juula-500 outline-none w-full text-slate-900 dark:text-white"
+                  onChange={e => setForm({...formData, name: e.target.value})} />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <input required type="number" placeholder={txt.weight} className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-juula-500 outline-none w-full text-slate-900 dark:text-white"
+                    onChange={e => setForm({...formData, weight: e.target.value})} />
+                  <input required type="number" placeholder={txt.height} className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-juula-500 outline-none w-full text-slate-900 dark:text-white"
+                    onChange={e => setForm({...formData, height: e.target.value})} />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <input required type="number" placeholder={txt.age} className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-juula-500 outline-none w-full text-slate-900 dark:text-white"
+                    onChange={e => setForm({...formData, age: e.target.value})} />
+                  <select className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 outline-none text-slate-900 dark:text-white"
+                    onChange={e => setForm({...formData, gender: e.target.value})}>
+                    <option value="male">{txt.male}</option>
+                    <option value="female">{txt.female}</option>
+                  </select>
+                </div>
+
+                <button type="submit" className="w-full bg-juula-500 hover:bg-juula-600 text-white font-bold p-4 rounded-2xl shadow-[0_10px_30px_rgba(76,175,80,0.3)] transition-all active:scale-95 mt-4">
+                  {txt.start}
+                </button>
+              </form>
+            </div>
+          </div>
+        )
+      }
+
+      // --- MAIN VIEWS ---
+      function TabHome({ txt, user, consumed, remaining, p, c, f, lang, logs, onDeleteLog, activeDate, setActiveDate, getLocalISODate, streak, smartTip, weightLog, setWeightLog, allLogs, onSetShowWeeklyReport, onSetShowShareCard }) {
+        const pct = Math.min((consumed / user.tdee) * 100, 100);
+        const radius = 60;
+        const circumference = 2 * Math.PI * radius;
+        const offset = circumference - (pct / 100) * circumference;
+        const [weightInput, setWeightInput] = useState('');
+
+        const changeDate = (days) => {
+            const d = new Date(activeDate);
+            d.setDate(d.getDate() + days);
+            setActiveDate(getLocalISODate(d));
+        };
+
+        const logWeight = () => {
+            const w = parseFloat(weightInput);
+            if (!w) return;
+            const today = getLocalISODate();
+            const filtered = weightLog.filter(x => x.date !== today);
+            setWeightLog([...filtered, { date: today, weight: w }]);
+            setWeightInput('');
+            if (navigator.vibrate) navigator.vibrate(50);
+        };
+
+        return (
+          <div className="animate__animated animate__fadeIn space-y-6">
+            <header className="flex justify-between items-end mb-2">
+              <div>
+                <h2 className="text-3xl font-black tracking-tight capitalize">{user.name}</h2>
+                <div className="flex items-center gap-4 text-slate-500 font-medium mt-1">
+                  <button onClick={() => changeDate(-1)} className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex justify-center items-center hover:bg-juula-500 hover:text-white transition-colors">&lt;</button>
+                  <p className="min-w-[120px] text-center">{activeDate === getLocalISODate() ? 'Today' : new Date(activeDate).toLocaleDateString(lang === 'en' ? 'en-US' : 'ar-IQ', { weekday: 'short', month: 'short', day: 'numeric'})}</p>
+                  <button onClick={() => changeDate(1)} className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex justify-center items-center hover:bg-juula-500 hover:text-white transition-colors">&gt;</button>
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                {streak > 0 && <div className="flex items-center gap-1 bg-orange-100 dark:bg-orange-900/30 text-orange-500 font-black px-3 py-1 rounded-full text-xs">
+                  🔥 {streak} {txt.streakDays || 'Day Streak'}
+                </div>}
+                <div className="flex gap-2">
+                  <button onClick={onSetShowShareCard} className="text-xs font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-3 py-1 rounded-full hover:bg-juula-500 hover:text-white transition-colors">📤 {txt.shareDayLog || 'Share'}</button>
+                  <button onClick={onSetShowWeeklyReport} className="text-xs font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-3 py-1 rounded-full hover:bg-juula-500 hover:text-white transition-colors">📊 {txt.weeklyReport || 'Report'}</button>
+                </div>
+              </div>
+            </header>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {/* HERO RING */}
+              <div className="col-span-2 md:col-span-2 bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between shadow-lg shadow-slate-200/20 dark:shadow-none">
+                <div>
+                  <p className="text-4xl font-black text-slate-900 dark:text-white mb-1">{remaining}</p>
+                  <p className="text-sm font-bold text-slate-500 uppercase tracking-wide">{txt.calsLeft}</p>
+                  <div className="mt-6">
+                    <p className="text-xs text-slate-400 font-medium mb-1">{txt.target}: {user.tdee} | {txt.consumed}: {consumed}</p>
+                  </div>
+                </div>
+                
+                <div className="relative w-32 h-32 flex-shrink-0">
+                  <svg className="w-full h-full transform -rotate-90 drop-shadow-sm">
+                    <circle cx="64" cy="64" r="60" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-100 dark:text-slate-800" />
+                    <circle 
+                      className="circle-progress text-juula-500"
+                      cx="64" cy="64" r="60" 
+                      stroke="currentColor" strokeWidth="8" fill="transparent" strokeLinecap="round"
+                      strokeDasharray={circumference}
+                      strokeDashoffset={offset}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xl font-black text-slate-900 dark:text-white">{Math.round(pct)}%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* MACROS */}
+              <div className="col-span-2 md:col-span-1 bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-slate-200/60 dark:border-slate-800/60 flex flex-col justify-between">
+                <MacroBar label={txt.p} val={p} max={160} color="bg-blue-500" />
+                <MacroBar label={txt.c} val={c} max={250} color="bg-orange-400" />
+                <MacroBar label={txt.f} val={f} max={70} color="bg-indigo-500" />
+              </div>
+
+              {/* STATS OVERVIEW */}
+              <div className="col-span-2 md:col-span-1 bg-gradient-to-br from-juula-500 to-juula-600 text-white rounded-[2rem] p-6 shadow-lg shadow-juula-500/30 flex flex-col justify-between">
+                <div>
+                  <p className="text-xs font-bold text-juula-100 uppercase tracking-widest">{txt.bmi}</p>
+                  <p className="text-4xl font-black mt-1 mb-2 drop-shadow-sm">{user.bmi}</p>
+                </div>
+                <div className="flex justify-between items-end border-t border-white/20 pt-4 mt-2">
+                   <div>
+                      <p className="text-[10px] text-juula-100 uppercase">{txt.weight}</p>
+                      <p className="font-bold">{user.weight}kg</p>
+                   </div>
+                   <div className="text-right">
+                      <p className="text-[10px] text-juula-100 uppercase">{txt.height}</p>
+                      <p className="font-bold">{user.height}cm</p>
+                   </div>
+                </div>
+              </div>
+            </div>
+
+             {/* SMART TIP + WEIGHT LOG ROW */}
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/10 border border-blue-200/60 dark:border-blue-800/30 rounded-2xl p-4 flex items-center gap-3">
+                 <span className="text-2xl">💡</span>
+                 <p className="text-sm font-semibold text-blue-800 dark:text-blue-200">{smartTip}</p>
+               </div>
+               <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-4 flex items-center gap-3">
+                 <span className="text-xl">⚖️</span>
+                 <input type="number" value={weightInput} onChange={e => setWeightInput(e.target.value)} placeholder={txt.weightKg || 'Weight kg'} className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-2 rounded-xl text-sm outline-none" />
+                 <button onClick={logWeight} className="bg-juula-500 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-juula-600 transition-colors active:scale-95">+</button>
+               </div>
+             </div>
+
+             <div className="mt-4">
+                <h3 className="text-xl font-bold mb-4 px-2">{txt.history}</h3>
+                <div className="space-y-6">
+                  {logs.length === 0 ? (
+                    <div className="text-center p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[2rem] text-slate-400">
+                       {txt.noMeals}
+                    </div>
+                  ) : ['breakfast', 'lunch', 'dinner', 'snack'].map(cat => {
+                    const catLogs = logs.filter(l => l.category === cat);
+                    if (catLogs.length === 0) return null;
+                    return (
+                        <div key={cat} className="space-y-3">
+                            <h4 className="text-sm font-bold text-slate-500 uppercase tracking-widest px-2 flex justify-between">
+                                <span>{txt[cat]}</span>
+                                <span>{catLogs.reduce((sum, l) => sum + l.cals, 0)} KCAL</span>
+                            </h4>
+                            {catLogs.map(l => (
+                                <div key={l.logId} className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800/60 flex justify-between items-center group">
+                                   <div>
+                                      <p className="font-bold text-slate-900 dark:text-white">{(lang==='ku' && l.name_ku) ? l.name_ku : (lang==='ar' && l.name_ar) ? l.name_ar : l.name_en}</p>
+                                      <p className="text-xs text-slate-400">{l.multiplier}x {l[`unit_${lang}`] || l.unit}</p>
+                                   </div>
+                                   <div className="flex items-center gap-4">
+                                      <p className="font-black text-juula-500">{l.cals}</p>
+                                      <button onClick={() => onDeleteLog(l.logId)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-red-500 transition-colors">
+                                         &times;
+                                      </button>
+                                   </div>
+                                </div>
+                            )).reverse()}
+                        </div>
+                    );
+                  })}
+                </div>
+             </div>
+          </div>
+        );
+      }
+
+      function MacroBar({label, val, max, color}) {
+        const p = Math.min((val/max)*100, 100);
+        return (
+          <div className="w-full relative py-2">
+             <div className="flex justify-between text-xs font-bold mb-1">
+                <span className="text-slate-500">{label}</span>
+                <span className="text-slate-900 dark:text-white">{val}g</span>
+             </div>
+             <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div className={`h-full ${color} rounded-full transition-all duration-1000 origin-left`} style={{width: `${p}%`}}></div>
+             </div>
+          </div>
+        );
+      }
+
+      function TabFood({ txt, lang, foodDB, onSelect }) {
+        const [search, setSearch] = useState('');
+        
+        const filtered = foodDB.filter(f => 
+          f.name_en.toLowerCase().includes(search.toLowerCase()) || 
+          (f.name_ku && f.name_ku.includes(search)) || 
+          (f.name_ar && f.name_ar.includes(search))
+        );
+
+        return (
+          <div className="animate__animated animate__fadeIn relative h-full flex flex-col">
+            <div className="sticky top-0 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md pb-4 z-10 pt-2">
+              <div className="relative">
+                <div className="absolute top-1/2 transform -translate-y-1/2 mx-4 text-slate-400">
+                  <Icons.Search />
+                </div>
+                <input 
+                  type="text" 
+                  autoFocus
+                  placeholder={txt.search} 
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-juula-500 p-4 px-12 rounded-2xl outline-none shadow-sm text-slate-900 dark:text-white"
+                />
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-3 pb-4">
+              {filtered.map(f => (
+                <div key={f.id} onClick={() => onSelect(f)} className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800/60 flex justify-between items-center cursor-pointer active:scale-[0.98] transition-all hover:border-juula-500">
+                   <div>
+                      <p className="font-bold text-slate-900 dark:text-white text-lg drop-shadow-sm">{(lang==='ku' && f.name_ku) ? f.name_ku : (lang==='ar' && f.name_ar) ? f.name_ar : f.name_en}</p>
+                      <p className="text-xs text-slate-500 font-medium">P:{f.p}g C:{f.c}g F:{f.f}g â€¢ {f[`unit_${lang}`] || f.unit}</p>
+                   </div>
+                   <div className="bg-juula-50 dark:bg-juula-900/20 text-juula-600 dark:text-juula-400 px-3 py-1 rounded-lg font-black tracking-tight border border-juula-100 dark:border-juula-900">
+                      {f.cals}
+                   </div>
+                </div>
+              ))}
+              {filtered.length === 0 && (
+                <div className="text-center p-8 text-slate-400">{txt.noFoods}</div>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      function TabAdd({ txt, water, setWater, lang, onLog, setScannerMode }) {
+        return (
+          <div className="animate__animated animate__fadeIn space-y-6">
+             <div className="grid grid-cols-2 gap-4 h-64">
+                 <div onClick={() => setScannerMode('ai')} className="bg-slate-900 border border-slate-700 text-white rounded-[2rem] flex flex-col items-center justify-center p-6 text-center cursor-pointer hover:bg-slate-800 shadow-xl overflow-hidden relative group transition-transform active:scale-95">
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+                    <div className="text-juula-400 mb-4 group-hover:scale-110 transition-transform"><Icons.Camera /></div>
+                    <h3 className="text-xl font-black italic mb-2 leading-tight">{txt.scanPlate}</h3>
+                    <span className="text-[9px] font-mono bg-juula-500/20 text-juula-400 px-2 py-1 rounded">AI ENGINE</span>
+                 </div>
+                 
+                 <div onClick={() => setScannerMode('barcode')} className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-[2rem] flex flex-col items-center justify-center p-6 text-center cursor-pointer active:scale-95 hover:border-juula-500 transition-all shadow-sm group">
+                    <div className="text-slate-400 mb-4 group-hover:text-juula-500 transition-colors"><Icons.Barcode /></div>
+                    <h3 className="text-xl font-bold mb-2 leading-tight text-slate-800 dark:text-white">{txt.scanBarcode}</h3>
+                    <span className="text-[9px] font-mono bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-1 rounded">OPENFOODFACTS</span>
+                 </div>
+             </div>
+
+             <div className="grid grid-cols-2 gap-4">
+                <div onClick={() => setWater(w => Math.min(w+1, 8))} 
+                  className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-slate-200/60 dark:border-slate-800/60 flex flex-col items-center justify-center cursor-pointer active:scale-95 transition-transform text-center relative overflow-hidden">
+                    <div className="absolute bottom-0 left-0 right-0 bg-blue-500/10 transition-all duration-500" style={{height: `${(water/8)*100}%`}}></div>
+                    <div className={`p-4 rounded-full mb-2 ${water >= 8 ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-400 bg-slate-50 dark:bg-slate-800'}`}>
+                        <Icons.Droplet />
+                    </div>
+                    <p className="text-3xl font-black text-slate-900 dark:text-white relative z-10">{water}</p>
+                    <p className="text-[10px] uppercase font-bold text-slate-500 relative z-10 tracking-widest">{txt.glasses}</p>
+                </div>
+
+                <div onClick={onLog} 
+                  className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-slate-200/60 dark:border-slate-800/60 flex flex-col items-center justify-center cursor-pointer active:scale-95 transition-transform text-center group">
+                    <p className="text-4xl shadow-sm rounded-full bg-slate-50 dark:bg-slate-800 w-16 h-16 flex items-center justify-center mb-2 group-hover:rotate-12 transition-transform">ðŸ½ï¸</p>
+                    <p className="font-bold text-slate-900 dark:text-white">{txt.quickLog}</p>
+                    <p className="text-xs text-juula-500 font-bold">{txt.recentFood}</p>
+                </div>
+             </div>
+          </div>
+        );
+      }
+
+      function TabStats({ txt, p, c, f, user, logs, getLocalISODate, weightLog }) {
+        const canvasRef = useRef(null);
+        const chartInstance = useRef(null);
+        const lineCanvasRef = useRef(null);
+        const lineChartInstance = useRef(null);
+
+        // Build 7-day data
+        const last7 = Array.from({length: 7}, (_, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - (6 - i));
+            const dateStr = getLocalISODate(d);
+            const dayLogs = logs.filter(l => (l.dateStr || '') === dateStr);
+            const cals = dayLogs.reduce((s, l) => s + l.cals, 0);
+            const wEntry = weightLog.find(w => w.date === dateStr);
+            return { dateStr, cals, weight: wEntry ? wEntry.weight : null, label: d.toLocaleDateString('en-US', {weekday: 'short'}) };
         });
-        db.ref('coupons').on('value', s => { coupons = s.val() || {}; });
-        renderAdminAssets();
-    }
-}
 
-function banClientIP() { const ip = document.getElementById('ban-ip-input').value; if(ip) { db.ref('banned_ips').once('value', s => { let list = s.val() || []; list.push(ip); db.ref('banned_ips').set(list).then(() => alert("BLOCKED")); }); } }
-function addCoupon() { 
-    const code = document.getElementById('c-code').value.toUpperCase();
-    const perc = document.getElementById('c-perc').value;
-    if(!code || !perc) return alert("CODE AND PERCENTAGE REQUIRED");
-    db.ref('coupons/'+code).set(perc).then(()=>alert("COUPON SAVED: " + code)); 
-}
+        useEffect(() => {
+          if(!canvasRef.current) return;
+          if(chartInstance.current) chartInstance.current.destroy();
+          const ctx = canvasRef.current.getContext('2d');
+          chartInstance.current = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: [txt.p, txt.c, txt.f],
+              datasets: [{ data: [p, c, f], backgroundColor: ['#3b82f6', '#fb923c', '#6366f1'], borderRadius: 8 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(150,150,150,0.1)' } }, x: { grid: { display: false } } } }
+          });
+          return () => { if(chartInstance.current) chartInstance.current.destroy(); }
+        }, [p,c,f,txt]);
 
-function toggleKillSwitch() {
-    db.ref('settings/site_status').once('value', s => {
-        let status = s.val() === "LOCKED" ? "OPEN" : "LOCKED";
-        db.ref('settings/site_status').set(status);
-        alert("SITE STATUS: " + status);
-    });
-}
+        useEffect(() => {
+          if(!lineCanvasRef.current) return;
+          if(lineChartInstance.current) lineChartInstance.current.destroy();
+          const ctx = lineCanvasRef.current.getContext('2d');
+          lineChartInstance.current = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: last7.map(d => d.label),
+              datasets: [
+                { label: 'Calories', data: last7.map(d => d.cals), borderColor: '#4CAF50', backgroundColor: 'rgba(76,175,80,0.1)', borderWidth: 2, pointBackgroundColor: '#4CAF50', tension: 0.4, fill: true },
+                { label: 'Target', data: last7.map(() => user.tdee), borderColor: 'rgba(100,100,100,0.4)', borderWidth: 1, borderDash: [6, 4], pointRadius: 0, tension: 0 }
+              ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(150,150,150,0.1)' } }, x: { grid: { display: false } } } }
+          });
+          return () => { if(lineChartInstance.current) lineChartInstance.current.destroy(); }
+        }, [logs, weightLog]);
 
-function generateFakeSale() {
-    const items = ["Aimbot", "Wallhack", "Full Bundle", "iOS Bypass", "Android Root"];
-    const msg = `>>> SUCCESS: Anonymous_User_${Math.floor(Math.random()*999)} purchased [${items[Math.floor(Math.random()*items.length)]}]!`;
-    db.ref('settings/feed_text').set(msg);
-}
+        // Weekly report numbers
+        const avgCals = Math.round(last7.reduce((s, d) => s + d.cals, 0) / 7);
+        const daysHit = last7.filter(d => d.cals >= user.tdee * 0.9).length;
+        const bestDay = last7.reduce((best, d) => d.cals > best.cals ? d : best, last7[0]);
 
-function sendFlashBang() {
-    const msg = document.getElementById('alert-msg').value;
-    const target = chatTarget !== "NONE" ? chatTarget : document.getElementById('manual-target-id').value;
-    if(!msg || !target || target === "" || target === "NONE") return alert("NO TARGET SELECTED");
-    db.ref(`private_chats/${target}/alert`).set({ msg: msg, time: Date.now() }).then(() => alert("FLASH-BANG DEPLOYED"));
-}
+        return (
+          <div className="animate__animated animate__fadeIn space-y-6 h-full flex flex-col">
+            <h2 className="text-2xl font-black">{txt.stats}</h2>
 
-function sendPower(type) {
-    const target = chatTarget !== "NONE" ? chatTarget : document.getElementById('manual-target-id').value;
-    if(!target || target === "NONE") return alert("SELECT TARGET FIRST");
-    db.ref(`private_chats/${target}/power`).set({ type: type, time: Date.now() }).then(() => alert(type.toUpperCase() + " SENT"));
-}
+            {/* 7-Day Line Chart */}
+            <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-slate-200/60 dark:border-slate-800/60 relative" style={{height: '220px'}}>
+               <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-3">7-Day Calorie Trend</h3>
+               <div className="absolute inset-0 mt-14 p-4">
+                 <canvas ref={lineCanvasRef}></canvas>
+               </div>
+            </div>
+            
+            {/* Quick 7-day stats row */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-200/60 dark:border-slate-800/60 text-center">
+                <p className="text-2xl font-black text-juula-500">{avgCals}</p>
+                <p className="text-[10px] text-slate-500 font-bold uppercase">{txt.avgCals || 'Avg/Day'}</p>
+              </div>
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-200/60 dark:border-slate-800/60 text-center">
+                <p className="text-2xl font-black text-blue-500">{daysHit}/7</p>
+                <p className="text-[10px] text-slate-500 font-bold uppercase">Days On Target</p>
+              </div>
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-200/60 dark:border-slate-800/60 text-center">
+                <p className="text-2xl font-black text-orange-500">{bestDay ? bestDay.label : '-'}</p>
+                <p className="text-[10px] text-slate-500 font-bold uppercase">{txt.bestDay || 'Best Day'}</p>
+              </div>
+            </div>
 
-function vacuumDatabase() {
-    if(confirm("WIPE ALL LOGS?")) { db.ref('intel').set(null); db.ref('private_chats').set(null); db.ref('ghost_tracking').set(null); alert("PURIFIED"); }
-}
+            {/* Macro Bar Chart */}
+            <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-slate-200/60 dark:border-slate-800/60 relative" style={{height: '200px'}}>
+               <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">{txt.macroDist}</h3>
+               <div className="absolute inset-0 mt-12 p-6">
+                 <canvas ref={canvasRef}></canvas>
+               </div>
+            </div>
 
-function showInfo(i) {
-    const p = products[i];
-    document.getElementById('shop-page').style.display = 'none';
-    document.getElementById('info-page').style.display = 'block';
-    document.getElementById('info-img').src = p.image || '';
-    document.getElementById('info-title').innerText = p.name;
-    document.getElementById('info-price').innerText = "$" + p.price;
-    document.getElementById('info-desc').innerText = p.desc;
-    document.getElementById('info-btns').innerHTML = `<button class="ui-btn" onclick="addToCart(${i})" style="background:var(--primary); color:black;">ADD TO CART</button>${p.yt ? `<button class="ui-btn" onclick="window.open('https://youtube.com/watch?v=${p.yt}')" style="background:red; color:white;">📺 PREVIEW</button>` : ''}`;
-    broadcastGhostData();
-}
+            <div className="grid grid-cols-2 gap-4 h-32">
+               <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-slate-200/60 dark:border-slate-800/60 flex flex-col justify-center">
+                  <p className="text-xs text-slate-400 font-bold uppercase">{txt.target}</p>
+                  <p className="text-2xl font-black text-slate-900 dark:text-white">{user.tdee} <span className="text-sm font-normal text-slate-500">kcal</span></p>
+               </div>
+               <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-slate-200/60 dark:border-slate-800/60 flex flex-col justify-center">
+                  <p className="text-xs text-slate-400 font-bold uppercase">{txt.bmi}</p>
+                  <p className="text-2xl font-black text-slate-900 dark:text-white">{user.bmi}</p>
+               </div>
+            </div>
+          </div>
+        );
+      }
 
-function showShop() { document.getElementById('shop-page').style.display='block'; document.getElementById('info-page').style.display='none'; document.getElementById('checkout-page').style.display='none'; broadcastGhostData(); }
-function applyCoupon() { const c = document.getElementById('apply-coupon').value.toUpperCase(); if(coupons[c]) { discount = coupons[c]; renderCart(); alert("APPLIED " + discount + "% DISCOUNT"); } else { alert("INVALID CODE"); } }
+      function TabSettings({ txt, user, lang, setLang, isDark, setIsDark, onReset, profiles, setProfiles, logs, water, setUser, setLogs, setWater }) {
+        const saveCurrentProfile = () => {
+            const updated = (profiles||[]).filter(pr => pr.user.name !== user.name);
+            setProfiles([...updated, { user, logs, water }]);
+        };
+        const switchProfile = (pr) => {
+            saveCurrentProfile();
+            setUser(pr.user);
+            setLogs(pr.logs || []);
+            setWater(pr.water || 0);
+        };
+        return (
+          <div className="animate__animated animate__fadeIn space-y-4">
+             <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-slate-200/60 dark:border-slate-800/60 text-center flex flex-col items-center">
+                <div className="w-24 h-24 bg-juula-50 dark:bg-juula-900/30 text-juula-600 rounded-[2rem] flex items-center justify-center text-4xl mb-4 font-black shadow-sm border border-juula-100 dark:border-juula-900/50">
+                   {user.name.charAt(0).toUpperCase()}
+                </div>
+                <h2 className="text-2xl font-black">{user.name}</h2>
+                <p className="text-slate-500 font-medium">{user.weight}kg â€¢ {user.height}cm â€¢ {user.age}yr â€¢ {(user.gender).toUpperCase()}</p>
+             </div>
 
-const canvas = document.getElementById('global-canvas'); const ctx = canvas.getContext('2d'); let drops = [];
-function drawMatrix() {
-    ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary'); ctx.font = "15px monospace";
-    drops.forEach((y, i) => { ctx.fillText(String.fromCharCode(0x30A0 + Math.random()*33), i*20, y*20); if(y*20 > canvas.height && Math.random() > 0.975) drops[i] = 0; drops[i]++; });
-}
+             {/* V6: Family Profiles */}
+             {profiles && profiles.length > 0 && (
+               <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-slate-200/60 dark:border-slate-800/60">
+                 <h3 className="font-black text-slate-800 dark:text-white mb-4">Family Profiles</h3>
+                 <div className="flex flex-wrap gap-2">{(profiles||[]).map(pr => <button key={pr.user.name} onClick={() => switchProfile(pr)} className="px-4 py-2 bg-juula-50 dark:bg-juula-900/20 text-juula-700 dark:text-juula-300 rounded-full font-bold text-sm border border-juula-200 dark:border-juula-800 hover:bg-juula-100 transition-colors">{pr.user.name}</button>)}</div>
+                 <p className="text-[10px] text-slate-400 mt-3">Tap to switch. Your session auto-saves.</p>
+               </div>
+             )}
 
-function updateMatrixSpeed(speed) { clearInterval(matrixInt); matrixInt = setInterval(drawMatrix, speed); }
+             <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-slate-200/60 dark:border-slate-800/60 space-y-6">
+                <div className="flex justify-between items-center">
+                   <div className="font-bold tracking-wide">ðŸŒ {txt.language}</div>
+                   <div className="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1 shadow-inner">
+                      {['en', 'ku', 'ar'].map(l => (
+                        <button key={l} onClick={()=>setLang(l)} className={`px-4 py-2 text-sm font-bold uppercase rounded-lg transition-all ${lang === l ? 'bg-white dark:bg-slate-700 shadow-sm text-juula-600' : 'text-slate-400'}`}>
+                           {l}
+                        </button>
+                      ))}
+                   </div>
+                </div>
 
-window.onload = () => {
-    getIdentity();
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    drops = Array(Math.floor(canvas.width/20)).fill(1);
-    matrixInt = setInterval(drawMatrix, 50);
-    displayProducts();
-    
-    db.ref('presence').on('value', s => { if(document.getElementById('ghost-count')) document.getElementById('ghost-count').innerText = s.val() ? Object.keys(s.val()).length : 0; });
+                <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800/60">
+                   <div className="font-bold tracking-wide">ðŸŒ™ {txt.dark}</div>
+                   <button onClick={()=>setIsDark(!isDark)} className={`w-14 h-8 rounded-full transition-colors relative shadow-inner ${isDark ? 'bg-juula-500' : 'bg-slate-200 dark:bg-slate-700'}`}>
+                      <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-transform shadow-md ${isDark ? 'left-7' : 'left-1'}`}></div>
+                   </button>
+                </div>
+             </div>
 
-    db.ref('settings/site_status').on('value', s => {
-        if(s.val() === "LOCKED" && !isAdmin) {
-            document.body.innerHTML = "<h1 style='color:red; margin-top:20%'>403: SYSTEM LOCKED</h1><p>Admin is performing maintenance.</p>";
-            window.stop();
-        }
-    });
+             <button onClick={onReset} className="w-full bg-red-50 dark:bg-red-900/10 text-red-500 font-bold p-6 rounded-[2rem] border border-red-100 dark:border-red-900/30 active:scale-95 transition-transform flex items-center justify-center gap-2">
+                <i className="fas fa-trash"></i> {txt.reset}
+             </button>
 
-    db.ref(`private_chats/${userID}/alert`).on('value', s => {
-        if(s.val()) { alert("⚠️ ADMIN: " + s.val().msg); db.ref(`private_chats/${userID}/alert`).remove(); }
-    });
+             <p className="text-center text-[10px] text-slate-400 font-mono mt-8 tracking-widest opacity-50">JUULA TITAN V6 â€¢ DB: LOADED</p>
+          </div>
+        );
+      }
 
-    db.ref(`private_chats/${userID}/power`).on('value', s => {
-        const p = s.val();
-        if(!p) return;
-        try {
-            if(p.type === 'siren') { 
-                const sfx = document.getElementById('siren-sound');
-                sfx.volume = 1.0;
-                sfx.play().catch(() => { alert("⚠️ SYNCING SECURITY BRIDGE..."); sfx.play(); }); 
-            }
-            if(p.type === 'vibrate') { if('vibrate' in navigator) navigator.vibrate([1000, 500, 1000]); }
-            if(p.type === 'lock') { 
-                document.getElementById('input-lock-overlay').style.display = 'block'; 
-                document.body.style.filter = 'grayscale(1) contrast(0.8)';
-            }
-            if(p.type === 'unlock') { 
-                document.getElementById('input-lock-overlay').style.display = 'none'; 
-                document.body.style.filter = 'none';
-            }
-        } catch(e) {}
-        setTimeout(() => db.ref(`private_chats/${userID}/power`).remove(), 2000);
-    });
+            // --- V6 RECIPE MODAL ---
+      function RecipeModal({ txt, lang, foodDB, onClose, onLog }) {
+        const [recipeName, setRecipeName] = React.useState('');
+        const [items, setItems] = React.useState([]);
+        const [search, setSearch] = React.useState('');
+        const filtered = foodDB.filter(f => f.name_en.toLowerCase().includes(search.toLowerCase())).slice(0, 6);
+        const totalCals = items.reduce((s, it) => s + Math.round(it.food.cals * it.mult), 0);
+        return (
+          <div className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center">
+            <div className="bg-white dark:bg-slate-900 w-full md:w-[500px] rounded-t-[2rem] md:rounded-[2rem] p-6 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between mb-4"><h2 className="text-2xl font-black text-purple-600">Recipe Builder</h2><button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold">&times;</button></div>
+              <input value={recipeName} onChange={e => setRecipeName(e.target.value)} placeholder="Recipe name..." className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-xl mb-3 outline-none text-slate-900 dark:text-white" />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search food to add..." className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-xl mb-2 outline-none text-slate-900 dark:text-white" />
+              {search && <div className="mb-3 space-y-1">{filtered.map(f => <button key={f.id} onClick={() => { setItems([...items, {food: f, mult: 1, cat: 'lunch'}]); setSearch(''); }} className="w-full text-left px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl hover:bg-juula-50 transition-colors"><span className="font-bold text-sm">{f.name_en}</span><span className="text-xs text-slate-400 ml-2">{f.cals}kcal</span></button>)}</div>}
+              <div className="space-y-2 mb-4">{items.map((it, idx) => <div key={idx} className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl"><span className="flex-1 font-semibold text-sm">{it.food.name_en}</span><input type="number" value={it.mult} min="0.1" step="0.1" onChange={e => { const arr=[...items]; arr[idx].mult=parseFloat(e.target.value)||1; setItems(arr); }} className="w-14 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 p-1 rounded-lg text-center text-sm outline-none" /><button onClick={() => setItems(items.filter((_,i) => i!==idx))} className="w-6 h-6 rounded-full bg-red-100 text-red-500 font-bold text-xs">&times;</button></div>)}</div>
+              {items.length > 0 && <div className="bg-juula-50 dark:bg-juula-900/20 p-3 rounded-xl mb-4 flex justify-between"><span className="font-bold">{recipeName||'My Recipe'}</span><span className="text-juula-600 font-black">{totalCals} kcal</span></div>}
+              <button onClick={() => { if(items.length>0) onLog(items); }} disabled={items.length===0} className="w-full bg-purple-500 hover:bg-purple-600 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white font-black p-4 rounded-2xl active:scale-95 transition-all">Log Recipe</button>
+            </div>
+          </div>
+        );
+      }
 
-    db.ref('settings/broadcast').on('value', s => {
-        const banner = document.getElementById('global-alert-banner');
-        if(s.val()) { banner.innerText = "⚠️ SYSTEM: " + s.val(); banner.style.display = 'block'; } else { banner.style.display = 'none'; }
-    });
+      // --- V6 MEAL TEMPLATES MODAL ---
+      function MealTemplatesModal({ txt, lang, foodDB, onClose, onApply }) {
+        const templates = [
+          { name: 'High Protein Day', emoji: '💪', desc: 'Muscle gain: high protein, moderate carbs', items: foodDB.slice(0,4).map((f,i)=>({food:f,mult:[1,0.5,1,1][i]||1,cat:['breakfast','lunch','lunch','dinner'][i]||'snack'})) },
+          { name: 'Ramadan Iftar', emoji: '🌙', desc: 'Traditional breaking fast plan', items: foodDB.slice(1,5).map((f,i)=>({food:f,mult:[1,1,0.5,1][i]||1,cat:['snack','dinner','dinner','dinner'][i]||'snack'})) },
+          { name: 'Light Detox', emoji: '🥗', desc: 'Low calorie, nutrient-dense', items: foodDB.slice(0,3).map((f,i)=>({food:f,mult:0.5,cat:['breakfast','lunch','dinner'][i]||'dinner'})) },
+          { name: 'Eid Feast', emoji: '🎉', desc: 'Celebratory family spread', items: foodDB.slice(2,7).map((f,i)=>({food:f,mult:[1.5,1,1,1,1][i]||1,cat:['lunch','lunch','dinner','dinner','snack'][i]||'lunch'})) },
+        ];
+        return (
+          <div className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center">
+            <div className="bg-white dark:bg-slate-900 w-full md:w-[480px] rounded-t-[2rem] md:rounded-[2rem] p-6 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between mb-4"><h2 className="text-2xl font-black text-amber-600">Meal Templates</h2><button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold">&times;</button></div>
+              <div className="space-y-4">{templates.map(t => <div key={t.name} className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-5 border border-slate-200/60 dark:border-slate-700"><div className="flex justify-between items-start"><div><p className="font-black">{t.emoji} {t.name}</p><p className="text-xs text-slate-400 mt-1">{t.desc}</p><p className="text-xs text-juula-500 font-bold mt-1">{t.items.reduce((s,it)=>s+Math.round(it.food.cals*it.mult),0)} kcal total</p></div><button onClick={()=>onApply(t.items)} className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-4 py-2 rounded-xl text-sm active:scale-95">Apply</button></div></div>)}</div>
+            </div>
+          </div>
+        );
+      }
 
-    db.ref('settings/feed_label').on('value', s => { document.getElementById('live-feed-label').innerText = s.val() || "LIVE_FEED"; });
-    db.ref('settings/feed_text').on('value', s => { document.getElementById('feed-text').innerText = s.val() || ">>> R4 FUSION SYSTEM STABLE :: ENCRYPTION ACTIVE..."; });
+      // --- V6 WEEKLY REPORT MODAL ---
+      function WeeklyReportModal({ txt, logs, user, weightLog, getLocalISODate, onClose }) {
+        const last7 = Array.from({length:7}, (_,i) => {
+          const d = new Date(); d.setDate(d.getDate()-(6-i));
+          const dateStr = getLocalISODate(d);
+          const cals = logs.filter(l=>(l.dateStr||'')===dateStr).reduce((s,l)=>s+l.cals,0);
+          return { dateStr, cals, label: d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) };
+        });
+        const avgCals = Math.round(last7.reduce((s,d)=>s+d.cals,0)/7);
+        const daysHit = last7.filter(d=>d.cals>=user.tdee*0.9).length;
+        const bestDay = last7.reduce((b,d)=>d.cals>b.cals?d:b,last7[0]);
+        return (
+          <div className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center">
+            <div className="bg-white dark:bg-slate-900 w-full md:w-[480px] rounded-t-[2rem] md:rounded-[2rem] p-6 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between mb-4"><h2 className="text-2xl font-black">Weekly Report</h2><button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold">&times;</button></div>
+              <div className="bg-gradient-to-br from-juula-500 to-juula-600 rounded-2xl p-5 text-white mb-4">
+                <p className="font-black text-xl mb-1">On target {daysHit}/7 days this week!</p>
+                <p className="text-juula-100 text-sm">Avg: {avgCals} kcal/day vs {user.tdee} kcal goal</p>
+                <p className="text-white/80 text-sm mt-1">Best day: {bestDay.label} ({bestDay.cals} kcal)</p>
+              </div>
+              <div className="space-y-2 mt-4">{last7.map(d=><div key={d.dateStr} className="flex items-center gap-3"><span className="text-xs text-slate-500 w-10">{d.label.split(',')[0]}</span><div className="flex-1 h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden"><div className={`h-full rounded-full ${d.cals>=user.tdee*0.9?'bg-juula-500':'bg-slate-300 dark:bg-slate-600'}`} style={{width:`${Math.min((d.cals/user.tdee)*100,100)}%`}}></div></div><span className="text-xs font-bold w-14 text-right text-slate-700 dark:text-slate-300">{d.cals}</span></div>)}</div>
+            </div>
+          </div>
+        );
+      }
 
-    db.ref('settings/glitch_signal').on('value', s => {
-        if(!s.val()) return;
-        document.body.classList.add('glitching');
-        setTimeout(() => document.body.classList.remove('glitching'), 2000);
-    });
+      // --- V6 SHARE CARD MODAL ---
+      function ShareCardModal({ txt, activeLogs, user, consumed, activeDate, onClose }) {
+        return (
+          <div className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] overflow-hidden shadow-2xl">
+              <div className="bg-gradient-to-br from-juula-500 to-juula-700 p-8 text-white">
+                <div className="flex items-center gap-3 mb-6"><div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center font-black text-2xl italic">J</div><div><p className="font-black text-xl">{user.name}</p><p className="text-juula-100 text-xs">{activeDate}</p></div></div>
+                <div className="text-center mb-6"><p className="text-6xl font-black">{consumed}</p><p className="text-juula-100 font-bold">kcal consumed</p><p className="text-white/70 text-sm mt-1">of {user.tdee} kcal goal</p></div>
+                <div className="grid grid-cols-2 gap-2">{activeLogs.slice(0,4).map(l=><div key={l.logId} className="bg-white/10 rounded-xl p-3"><p className="font-bold text-xs truncate">{l.name_en}</p><p className="text-juula-100 text-xs">{l.cals} kcal</p></div>)}</div>
+                <p className="text-center text-[10px] text-white/50 mt-4 font-mono">JUULA TITAN V6</p>
+              </div>
+              <div className="p-4 flex gap-3">
+                <button onClick={() => alert('To share: Take a screenshot of this card!')} className="flex-1 bg-juula-500 text-white font-bold py-3 rounded-xl hover:bg-juula-600 transition-colors">Screenshot tip</button>
+                <button onClick={onClose} className="px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-xl">Close</button>
+              </div>
+            </div>
+          </div>
+        );
+      }
 
-    db.ref('settings/global_ui').on('value', s => {
-        const data = s.val();
-        if(data) {
-            if(data.primary_color) document.documentElement.style.setProperty('--primary', data.primary_color);
-            if(data.shop_title) document.getElementById('main-header-text').innerText = data.shop_title;
-            if(data.matrix_speed) updateMatrixSpeed(parseInt(data.matrix_speed));
-            if(data.glow_active === "on") document.body.classList.add('neon-glow'); else document.body.classList.remove('neon-glow');
-            if(data.font_choice) document.body.style.fontFamily = data.font_choice;
-        }
-    });
-
-    window.addEventListener('keydown', (e) => {
-        if(e.key === "End") { e.preventDefault(); document.getElementById('admin-terminal').style.display = 'block'; }
-        if(e.key === "PageUp") { e.preventDefault(); document.getElementById('pgup-menu').style.display = 'block'; }
-    });
-
-    window.addEventListener('mousedown', () => broadcastGhostData());
-    window.addEventListener('keyup', () => broadcastGhostData());
-    setInterval(broadcastGhostData, 2000);
-
-    const logs = document.getElementById('load-logs'), lines = ["> BOOTING R4...", "> SYNCING DATABASE...", "> READY."];
-    let step = 0;
-    let loadInt = setInterval(() => {
-        if(step < lines.length) {
-            logs.innerHTML += `<div>${lines[step]}</div>`;
-            document.getElementById('load-bar').style.width = ((step+1)*33) + "%";
-            step++;
-        } else {
-            clearInterval(loadInt);
-            setTimeout(() => document.getElementById('loader-overlay').style.display='none', 800);
-        }
-    }, 600);
-};
-
-function triggerGlobalGlitch() { db.ref('settings/glitch_signal').set(Date.now()); }
-
-function applyGlobalChanges() {
-    const uiData = {
-        primary_color: document.getElementById('color-picker').value,
-        shop_title: document.getElementById('title-input').value,
-        matrix_speed: document.getElementById('ui-matrix-speed').value,
-        glow_active: document.getElementById('ui-glow').value,
-        font_choice: document.getElementById('ui-font').value
-    };
-    db.ref('settings/global_ui').set(uiData).then(() => {
-        document.getElementById('pgup-menu').style.display = 'none';
-        alert("GLOBAL UPDATE DEPLOYED");
-    });
-}
-
-function startAudio() { if(!musicStarted) { document.getElementById('hacker-music').play().catch(()=>{}); musicStarted = true; } }
-</script>
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
 </body>
 </html>
+
+
+
+
