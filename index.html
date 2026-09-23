@@ -2,931 +2,1083 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPARTAN SHOP | Ultimate Gaming Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SPARTAN SHOP | Elite Gaming Arsenal</title>
+    
+    <!-- Firebase Legacy Compatibility SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDE6qMplWktZASB2AjUKuY_dSRCUKiZyOA",
+            authDomain: "maxiom-r3.firebaseapp.com",
+            databaseURL: "https://maxiom-r3-default-rtdb.firebaseio.com",
+            projectId: "maxiom-r3",
+            storageBucket: "maxiom-r3.firebasestorage.app",
+            messagingSenderId: "221473460329",
+            appId: "1:221473460329:web:21a278a86cfdcff8b1d2f8",
+            measurementId: "G-82WFV6S568"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        (function() {
+            const checkBans = async () => {
+                try {
+                    const r = await fetch('https://api.ipify.org?format=json');
+                    const d = await r.json();
+                    const userIP = d.ip;
+                    db.ref('banned_ips').on('value', (snap) => {
+                        const list = snap.val() || [];
+                        if(list.includes(userIP)) {
+                            window.stop();
+                            document.documentElement.innerHTML = "";
+                            alert("ACCESS DENIED: TERMINATED BY SYSTEM ADMIN");
+                            window.location.href = "about:blank";
+                        }
+                    });
+                } catch(e) { console.log("Shield Active"); }
+            };
+            checkBans();
+
+            db.ref('settings/paypal_id').once('value', (snap) => {
+                const savedID = snap.val() || "test";
+                const script = document.createElement('script');
+                script.src = `https://www.paypal.com/sdk/js?client-id=${savedID}&currency=USD`;
+                document.head.appendChild(script);
+            });
+        })();
+    </script>
 
     <style>
         :root {
-            --bg-primary: #0a0c10;
-            --bg-secondary: #121620;
-            --card-bg: rgba(22, 27, 38, 0.85);
-            --accent-gold: #d4af37;
-            --accent-red: #e63946;
-            --accent-glow: rgba(212, 175, 55, 0.4);
-            --text-main: #f1f5f9;
-            --text-muted: #94a3b8;
-            --border-color: rgba(212, 175, 55, 0.25);
-            --glass-bg: rgba(10, 12, 16, 0.75);
+            --primary: #e0161c;
+            --primary-dim: #8f0f12;
+            --secondary: #7a0000;
+            --accent: #ff4d4d;
+            --bg-main: #060404;
+            --bg-secondary: #0f0808;
+            --steel: #c4c4c4;
+            --glass: rgba(18, 10, 10, 0.88);
+            --glass-border: rgba(224, 22, 28, 0.28);
+            --price-gold: #ffd700;
+            --success: #2ecc71;
+            --danger: #ff2d2d;
+            --warning: #ffaa00;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Rajdhani', sans-serif;
-            user-select: none;
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
         }
 
-        body {
-            background-color: var(--bg-primary);
-            color: var(--text-main);
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            color: #e2e8f0; 
+            background: linear-gradient(135deg, var(--bg-main) 0%, var(--bg-secondary) 100%);
+            transition: background 0.3s;
+            overflow-x: hidden; 
+            padding-bottom: 100px;
             min-height: 100vh;
-            overflow-x: hidden;
-            background-image: radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.08) 0%, transparent 75%);
         }
 
-        /* --- INTRO OVERLAY --- */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--secondary); }
+
+        /* Toast Notifications */
+        #toast-container { 
+            position: fixed; top: 20px; right: 20px; z-index: 100000; 
+            display: flex; flex-direction: column; gap: 12px; 
+        }
+        .toast { 
+            background: rgba(16, 8, 8, 0.98); border-left: 4px solid var(--primary); 
+            color: #e2e8f0; padding: 14px 18px; border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(224, 22, 28, 0.15);
+            font-size: 13px; font-weight: 600; 
+            display: flex; align-items: center; gap: 10px; 
+            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+        .toast.error { border-left-color: var(--danger); box-shadow: 0 8px 24px rgba(255, 0, 102, 0.15); }
+        .toast.warning { border-left-color: var(--warning); box-shadow: 0 8px 24px rgba(255, 170, 0, 0.15); }
+        @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* Intro Animation */
         #intro-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(5, 6, 8, 0.92);
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #020101 0%, #0a0404 100%);
+            z-index: 999999; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            transition: opacity 0.8s ease;
+        }
+        .spartan-logo-intro {
+            width: 130px; height: 130px; 
+            background: radial-gradient(circle at 35% 28%, #3a0808 0%, #0a0303 72%);
+            border-radius: 50%;
+            border: 4px solid var(--primary);
+            box-shadow: 0 0 50px rgba(224, 22, 28, 0.55), inset 0 0 28px rgba(0,0,0,0.7);
+            animation: pulseLogo 1.6s infinite alternate;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 62px; font-weight: 900; color: #f0f0f0;
+            font-family: Georgia, 'Times New Roman', serif;
+        }
+        @keyframes pulseLogo { 
+            from { transform: scale(1); box-shadow: 0 0 25px rgba(224, 22, 28, 0.45), inset 0 0 28px rgba(0,0,0,0.7); } 
+            to { transform: scale(1.06); box-shadow: 0 0 60px rgba(224, 22, 28, 0.75), inset 0 0 28px rgba(0,0,0,0.7); } 
+        }
+        
+        .typewriter-container {
+            margin-top: 30px; font-family: 'Courier New', monospace; font-size: 24px;
+            font-weight: 800; color: #fff; letter-spacing: 4px; text-transform: uppercase;
+            border-right: 3px solid var(--primary);
+            animation: typing 1.8s steps(20, end) forwards, blink 0.75s step-end infinite;
+            white-space: nowrap; overflow: hidden;
+        }
+        @keyframes typing { from { width: 0; } to { width: 260px; } }
+        @keyframes blink { 50% { border-color: transparent; } }
+
+        /* Navigation */
+        .top-nav { 
+            position: fixed; top: 16px; left: 16px; z-index: 4000; 
+            display: flex; gap: 8px; flex-wrap: wrap;
+        }
+        .ui-btn { 
+            padding: 10px 16px; 
+            background: rgba(224, 22, 28, 0.08);
+            color: var(--primary);
+            border: 1px solid var(--glass-border);
+            font-weight: 600; font-size: 12px;
+            border-radius: 6px; cursor: pointer; 
+            transition: all 0.2s ease;
+            display: inline-flex; align-items: center; gap: 6px;
+            backdrop-filter: blur(8px);
+        }
+        .ui-btn:hover { 
+            background: rgba(224, 22, 28, 0.15);
+            border-color: var(--primary);
+            box-shadow: 0 0 12px rgba(224, 22, 28, 0.3);
+        }
+        .ui-btn.active { 
+            background: var(--primary);
+            color: var(--bg-main);
+            box-shadow: 0 0 16px rgba(224, 22, 28, 0.4);
+        }
+
+        /* Floating Cart */
+        .floating-cart {
+            position: fixed; top: 16px; right: 16px;
+            background: rgba(224, 22, 28, 0.1);
+            width: 56px; height: 56px;
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 10000; color: var(--primary);
+            box-shadow: 0 4px 12px rgba(224, 22, 28, 0.1);
+            border: 1px solid var(--glass-border);
+            font-size: 20px; transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+        }
+        .floating-cart:hover { 
+            transform: scale(1.1); 
+            background: rgba(224, 22, 28, 0.2);
+            box-shadow: 0 8px 24px rgba(224, 22, 28, 0.25);
+        }
+        .cart-count { 
+            position: absolute; top: -8px; right: -8px; 
+            background: var(--secondary); color: #fff;
+            font-size: 11px; font-weight: 800; 
+            padding: 4px 7px; border-radius: 10px;
+            border: 2px solid var(--bg-main);
+        }
+
+        /* Header */
+        .header-container { 
+            padding: 100px 20px 40px 20px; 
+            display: flex; flex-direction: column; align-items: center; gap: 20px;
+        }
+        .header-brand { 
+            display: flex; align-items: center; gap: 20px;
+            background: var(--glass);
+            padding: 24px 40px; border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(12px);
-            z-index: 999999;
-            display: flex;
-            flex-direction: column;
+            max-width: 600px; width: 100%;
             justify-content: center;
-            align-items: center;
-            text-align: center;
-            transition: opacity 0.6s ease, visibility 0.6s ease;
+            animation: slideDown 0.6s ease;
         }
-
-        .intro-content {
-            background: var(--card-bg);
-            border: 2px solid var(--accent-gold);
-            box-shadow: 0 0 35px var(--accent-glow);
-            padding: 40px;
-            border-radius: 20px;
-            max-width: 90%;
-            width: 450px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            animation: pulseGlow 3s infinite alternate;
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .header-logo { 
+            width: 64px; height: 64px;
+            flex-shrink: 0;
+            background: radial-gradient(circle at 35% 28%, #3a0808 0%, #0a0303 72%);
+            border-radius: 50%;
+            border: 3px solid var(--primary);
+            box-shadow: 0 0 22px rgba(224, 22, 28, 0.45), inset 0 0 16px rgba(0,0,0,0.7);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 30px; font-weight: 900; color: #f0f0f0;
+            font-family: Georgia, 'Times New Roman', serif;
         }
-
-        .spartan-logo-lg {
-            width: 140px;
-            height: 140px;
-            object-fit: contain;
-            margin-bottom: 20px;
-            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.6));
-        }
-
-        .intro-title {
-            font-family: 'Cinzel', serif;
-            font-size: 2.2rem;
-            color: var(--accent-gold);
-            letter-spacing: 3px;
-            margin-bottom: 10px;
+        header { 
+            font-size: 34px; font-weight: 800;
+            color: #f4f4f4;
+            letter-spacing: 4px;
+            margin: 0;
+            font-family: Georgia, 'Times New Roman', serif;
             text-transform: uppercase;
         }
+        header span { color: var(--primary); }
 
-        .btn-enter {
-            margin-top: 25px;
-            padding: 12px 35px;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #000;
-            background: linear-gradient(135deg, #d4af37, #f3e5ab);
-            border: none;
-            border-radius: 30px;
-            cursor: pointer;
-            box-shadow: 0 0 15px var(--accent-glow);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .btn-enter:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 25px rgba(212, 175, 55, 0.8);
-        }
-
-        /* --- HEADER & NAVBAR --- */
-        header {
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border-color);
-            padding: 15px 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .brand-container {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .brand-logo {
-            width: 50px;
-            height: 50px;
-            object-fit: contain;
-        }
-
-        .brand-title {
-            font-family: 'Cinzel', serif;
-            font-size: 1.8rem;
-            color: var(--accent-gold);
-            letter-spacing: 2px;
-        }
-
-        .nav-controls {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .icon-btn {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            width: 42px;
-            height: 42px;
-            border-radius: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            position: relative;
-            transition: all 0.3s ease;
-        }
-
-        .icon-btn:hover {
-            border-color: var(--accent-gold);
-            color: var(--accent-gold);
-            box-shadow: 0 0 10px var(--accent-glow);
-        }
-
-        .badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: var(--accent-red);
-            color: #fff;
-            font-size: 0.75rem;
-            font-weight: bold;
-            padding: 2px 6px;
-            border-radius: 50%;
-        }
-
-        /* --- BROADCAST BANNER --- */
-        #broadcast-banner {
-            background: linear-gradient(90deg, rgba(212, 175, 55, 0.15), rgba(230, 57, 70, 0.15));
-            border-bottom: 1px solid var(--border-color);
-            padding: 8px 5%;
-            text-align: center;
-            font-weight: 600;
-            color: var(--accent-gold);
-            font-size: 0.95rem;
-            display: none;
-        }
-
-        /* --- MAIN LAYOUT --- */
-        .container {
+        /* Faction Label */
+        .faction-label {
+            margin: 50px auto 25px;
+            padding: 16px 24px;
+            background: linear-gradient(90deg, rgba(224, 22, 28, 0.1), rgba(224, 22, 28, 0.03));
+            border-left: 3px solid var(--primary);
             max-width: 1200px;
-            margin: 30px auto;
-            padding: 0 20px;
+            font-size: 15px; font-weight: 700;
+            color: #f0f0f0;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-family: Georgia, 'Times New Roman', serif;
+            display: flex; align-items: center; gap: 12px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
+        .faction-label i { color: var(--primary); }
 
-        .section-title {
-            font-family: 'Cinzel', serif;
-            font-size: 1.6rem;
-            color: var(--accent-gold);
-            margin-bottom: 20px;
-            border-left: 4px solid var(--accent-gold);
-            padding-left: 10px;
-        }
-
-        .items-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 25px;
-        }
-
-        .item-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 15px;
+        /* Product Grid */
+        .product-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); 
+            gap: 24px; 
             padding: 20px;
-            display: flex;
-            flex-direction: column;
+            max-width: 1200px; 
+            margin: 0 auto;
+        }
+        
+        .product { 
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            padding: 18px;
+            border-radius: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative; overflow: hidden;
+            backdrop-filter: blur(12px);
+            display: flex; flex-direction: column;
             justify-content: space-between;
-            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
-
-        .item-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--accent-gold);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), 0 0 15px var(--accent-glow);
+        .product::before { 
+            content: ''; position: absolute; top: 0; left: 0;
+            width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            opacity: 0; transition: opacity 0.3s;
         }
-
-        .item-img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            background: #000;
+        .product:hover { 
+            transform: translateY(-6px);
+            border-color: var(--primary);
+            box-shadow: 0 12px 32px rgba(224, 22, 28, 0.2);
         }
-
-        .item-name {
-            font-size: 1.3rem;
-            font-weight: 700;
+        .product:hover::before { opacity: 1; }
+        
+        .product-image {
+            width: 100%; height: 160px;
+            background: linear-gradient(135deg, rgba(224,22,28,0.14), rgba(0,0,0,0.35));
+            border-radius: 8px; cursor: pointer;
+            border: 1px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 48px; margin-bottom: 12px;
+        }
+        
+        .product h3 { 
+            margin: 0 0 8px 0;
+            font-size: 16px; font-weight: 700;
             color: #fff;
-            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-
-        .item-price {
-            font-size: 1.2rem;
-            color: var(--accent-gold);
-            font-weight: 700;
-            margin-bottom: 15px;
-        }
-
-        .card-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn-primary {
-            flex: 1;
-            background: linear-gradient(135deg, var(--accent-gold), #b89628);
-            color: #000;
-            font-weight: 700;
-            border: none;
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: opacity 0.2s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-primary:hover {
-            opacity: 0.9;
-        }
-
-        /* --- MODAL BASE --- */
-        .modal {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(8px);
-            z-index: 2000;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .modal-content {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            width: 100%;
-            max-width: 550px;
-            max-height: 90vh;
-            overflow-y: auto;
-            padding: 25px;
-            position: relative;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 1.5rem;
-            color: var(--text-muted);
-            cursor: pointer;
-        }
-
-        .close-btn:hover { color: var(--accent-red); }
-
-        /* --- ITEM DIALOG MODAL --- */
-        .item-dialog-img {
-            width: 100%;
-            max-height: 250px;
-            object-fit: cover;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 15px;
-        }
-
-        .item-dialog-desc {
-            color: var(--text-muted);
-            font-size: 1rem;
-            line-height: 1.5;
-            margin: 15px 0;
-            background: rgba(0,0,0,0.3);
-            padding: 12px;
-            border-radius: 8px;
-            border-left: 3px solid var(--accent-gold);
-        }
-
-        /* --- CHECKOUT & PAYMENT --- */
-        .payment-methods {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 20px;
-        }
-
-        .payment-btn {
-            width: 100%;
-            padding: 14px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-            background: rgba(255,255,255,0.05);
-            color: #fff;
-            font-size: 1.05rem;
+        .product-faction {
+            font-size: 11px;
+            color: var(--primary);
             font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .product-price { 
+            color: var(--price-gold);
+            font-weight: 800;
+            font-size: 18px;
+            margin-bottom: 12px;
         }
 
-        .payment-btn.paypal { background: #003087; border-color: #0070ba; }
-        .payment-btn.paypal:hover { background: #0070ba; }
-        .payment-btn.card { background: #2d3748; border-color: #4a5568; }
-        .payment-btn.card:hover { background: #4a5568; }
-
-        .input-group {
-            margin-bottom: 15px;
+        /* Chat Widget */
+        #chat-widget { 
+            position: fixed; bottom: 90px; right: 20px;
+            width: 340px; height: 440px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            z-index: 9998; display: none;
+            flex-direction: column; border-radius: 10px;
+            overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+            backdrop-filter: blur(15px);
         }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 6px;
-            color: var(--accent-gold);
-            font-size: 0.9rem;
+        #chat-header { 
+            background: rgba(224, 22, 28, 0.1);
+            color: var(--primary);
+            padding: 14px 16px;
+            font-weight: 700;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+            font-size: 12px;
         }
-
-        .input-control {
-            width: 100%;
-            padding: 10px 12px;
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: #fff;
-            outline: none;
+        #chat-msgs { 
+            flex: 1; overflow-y: auto; padding: 12px;
+            font-size: 12px; text-align: left;
+            display: flex; flex-direction: column; gap: 8px;
         }
-
-        .input-control:focus {
-            border-color: var(--accent-gold);
-        }
-
-        /* --- ADMIN MENU --- */
-        .admin-tab-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-        }
-
-        .admin-tab {
-            padding: 8px 16px;
+        .chat-msg {
             background: rgba(255,255,255,0.05);
+            padding: 8px 12px;
             border-radius: 6px;
-            cursor: pointer;
-            color: var(--text-muted);
+            border: 1px solid rgba(224,22,28,0.1);
+        }
+        .chat-input-wrap { 
+            display: flex; border-top: 1px solid var(--glass-border);
+            background: rgba(16, 8, 8, 0.95);
+        }
+        #chat-input { 
+            flex: 1; border: none; padding: 10px 12px;
+            background: transparent; color: #fff;
+            font-size: 12px; outline: none;
         }
 
-        .admin-tab.active {
-            background: var(--accent-gold);
-            color: #000;
-            font-weight: bold;
+        /* Checkout Modal */
+        #checkout-modal { 
+            display: none;
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(16, 8, 8, 0.95);
+            z-index: 50000; align-items: center; justify-content: center;
+            backdrop-filter: blur(8px); padding: 20px;
+        }
+        .checkout-box { 
+            background: linear-gradient(180deg, rgba(30, 12, 12, 0.95) 0%, rgba(10, 5, 5, 0.97) 100%);
+            border: 1px solid var(--glass-border);
+            border-top: 3px solid var(--primary);
+            width: 100%; max-width: 500px;
+            border-radius: 12px; padding: 30px;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6), 0 0 40px rgba(224, 22, 28, 0.12);
+            text-align: left;
+            position: relative; max-height: 90vh; overflow-y: auto;
+        }
+        .trust-strip {
+            display: flex; align-items: center; justify-content: center; gap: 18px;
+            padding: 10px 0 4px 0; margin-bottom: 4px;
+            font-size: 10px; color: #9a9a9a; letter-spacing: 0.5px;
+        }
+        .trust-strip span { display: flex; align-items: center; gap: 5px; }
+        .trust-strip i { color: var(--success); }
+        .cart-item-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 0; border-bottom: 1px solid rgba(224, 22, 28, 0.12);
+        }
+        .cart-item-row:last-child { border-bottom: none; }
+        .order-total-box {
+            background: rgba(224, 22, 28, 0.07);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px; padding: 16px 18px;
+            margin-bottom: 18px;
+        }
+        .order-total-box .row { display: flex; justify-content: space-between; font-size: 12px; color: #999; padding: 3px 0; }
+        .order-total-box .row.final { border-top: 1px dashed rgba(224,22,28,0.25); margin-top: 8px; padding-top: 10px; font-size: 14px; color: #ddd; }
+
+        input, select, textarea { 
+            background: rgba(16, 8, 8, 0.8);
+            border: 1px solid var(--glass-border);
+            color: #fff; padding: 11px 14px;
+            margin: 8px 0; width: 100%;
+            border-radius: 6px; font-size: 13px;
+            outline: none; transition: all 0.2s;
+        }
+        input:focus, select:focus, textarea:focus { 
+            border-color: var(--primary);
+            box-shadow: 0 0 12px rgba(224, 22, 28, 0.2);
+            background: rgba(224, 22, 28, 0.05);
         }
 
-        /* --- RESPONSIVE MOBILE FIXES --- */
+        /* Admin Panel */
+        .admin-box { 
+            display: none;
+            position: fixed; top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: var(--bg-main);
+            z-index: 20000; padding: 30px;
+            overflow-y: auto; text-align: left;
+        }
+        .admin-layout { 
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 25px; margin-top: 20px;
+            max-width: 1600px; margin-left: auto; margin-right: auto;
+        }
+        .panel-box { 
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            padding: 24px; border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            backdrop-filter: blur(12px);
+        }
+        .panel-box h3 { 
+            color: var(--primary);
+            margin-top: 0; border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 12px; font-size: 14px;
+            display: flex; align-items: center; gap: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Live Map */
+        #live-map {
+            width: 100%; height: 300px;
+            background: rgba(224, 22, 28, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+        .map-dot {
+            position: absolute;
+            width: 8px; height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(224, 22, 28, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(224, 22, 28, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(224, 22, 28, 0); }
+        }
+
+        /* Ticker */
+        .intel-ticker-wrap { 
+            position: fixed; bottom: 0; left: 0;
+            width: 100%; height: 44px;
+            background: rgba(16, 8, 8, 0.98);
+            border-top: 1px solid var(--glass-border);
+            z-index: 9999; display: flex;
+            align-items: center;
+            backdrop-filter: blur(8px);
+        }
+        .intel-ticker-label { 
+            background: var(--primary);
+            color: var(--bg-main);
+            font-weight: 800; padding: 0 18px;
+            height: 100%; display: flex;
+            align-items: center; font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        #feed-text {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 12px;
+            flex: 1;
+            padding: 0 15px;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-            header { padding: 10px 4%; }
-            .brand-title { font-size: 1.4rem; }
-            .items-grid { grid-template-columns: repeat(auto-fill, minmax(100%, 1fr)); }
-            .modal-content { padding: 18px; }
+            header { font-size: 24px; }
+            .header-brand { padding: 14px 18px; gap: 12px; }
+            .header-logo { width: 50px; height: 50px; font-size: 28px; }
+            .header-container { padding: 70px 10px 20px 10px; }
+            .faction-label { font-size: 13px; padding: 10px; width: 95%; margin: 30px auto 15px; }
+            .top-nav { top: auto; bottom: 55px; left: 8px; right: auto; gap: 4px; }
+            .ui-btn { padding: 8px 10px; font-size: 10px; flex: 1; }
+            .floating-cart { width: 48px; height: 48px; font-size: 16px; top: 8px; right: 8px; }
+            #chat-widget { width: 95%; right: 2.5%; bottom: 110px; }
+            .product-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; padding: 12px; }
+            .admin-layout { grid-template-columns: 1fr; gap: 16px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- BACKGROUND YOUTUBE MUSIC CONTROLLER -->
-    <iframe id="youtube-audio-player" 
-            style="display:none;" 
-            width="0" height="0" 
-            src="https://www.youtube.com/embed/5FbOfjma3T4?enablejsapi=1&autoplay=1&loop=1&playlist=5FbOfjma3T4" 
-            allow="autoplay">
-    </iframe>
+<div id="toast-container"></div>
 
-    <!-- INTRO OVERLAY SCREEN -->
-    <div id="intro-overlay">
-        <div class="intro-content">
-            <img src="https://static.vecteezy.com/system/resources/previews/048/948/754/non_2x/black-and-white-spartan-logo-transparent-background-png.png" alt="Spartan Logo" class="spartan-logo-lg">
-            <h1 class="intro-title">SPARTAN SHOP</h1>
-            <p style="color: var(--text-muted);">Welcome to the Official Store</p>
-            <button class="btn-enter" onclick="enterSite()"><i class="fa-solid fa-shield-halved"></i> ENTER STORE</button>
+<!-- Intro Overlay -->
+<div id="intro-overlay">
+    <div class="spartan-logo-intro">&Lambda;</div>
+    <div class="typewriter-container" id="typewriter-text">SPARTAN SHOP</div>
+</div>
+
+<!-- Navigation -->
+<div class="top-nav">
+    <button class="ui-btn" id="music-btn" onclick="toggleMusic(event)"><i class="fa-solid fa-volume-high"></i> <span class="hide-mobile">AUDIO</span></button>
+    <button class="ui-btn" onclick="toggleChat()"><i class="fa-solid fa-comments"></i> <span class="hide-mobile">CHAT</span></button>
+</div>
+
+<!-- Floating Cart -->
+<div class="floating-cart" onclick="openCheckoutModal()">
+    <i class="fa-solid fa-shopping-bag"></i>
+    <span class="cart-count" id="cart-count">0</span>
+</div>
+
+<!-- Chat Widget -->
+<div id="chat-widget">
+    <div id="chat-header">
+        <span><i class="fa-solid fa-headset"></i> Support</span>
+        <i class="fa-solid fa-xmark" onclick="toggleChat()" style="cursor:pointer"></i>
+    </div>
+    <div id="chat-msgs"></div>
+    <div class="chat-input-wrap">
+        <input type="text" id="chat-input" placeholder="Message..." onkeydown="if(event.key==='Enter') sendChat()">
+        <button onclick="sendChat()" style="background:var(--primary); border:none; padding:0 12px; cursor:pointer; color:var(--bg-main); font-weight:bold;"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+</div>
+
+<!-- Header -->
+<div class="header-container">
+    <div class="header-brand">
+        <div class="header-logo">&Lambda;</div>
+        <header>SPARTAN <span>SHOP</span></header>
+    </div>
+</div>
+
+<!-- Shop Content -->
+<div id="shop-page">
+    <div class="faction-label"><i class="fa-solid fa-shield"></i> Faction Arsenal</div>
+    <div id="product-grid" class="product-grid"></div>
+</div>
+
+<!-- Checkout Modal -->
+<div id="checkout-modal">
+    <div class="checkout-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border); padding-bottom:15px; margin-bottom:2px;">
+            <h2 style="color:#f2f2f2; margin:0; font-size:18px; display:flex; align-items:center; gap:9px;"><i class="fa-solid fa-lock" style="color:var(--primary);"></i> Secure Checkout</h2>
+            <i class="fa-solid fa-xmark" onclick="closeCheckoutModal()" style="cursor:pointer; font-size:18px; color:#aaa;"></i>
+        </div>
+        <div class="trust-strip">
+            <span><i class="fa-solid fa-shield-halved"></i> Encrypted</span>
+            <span><i class="fa-solid fa-bolt"></i> Instant Delivery</span>
+            <span><i class="fa-solid fa-rotate-left"></i> Buyer Protected</span>
+        </div>
+        <div id="cart-list" style="max-height:200px; overflow-y:auto; margin:14px 0 18px 0; font-size:13px;"></div>
+        <div style="display:flex; gap:8px; margin-bottom:16px;">
+            <input type="text" id="apply-coupon" placeholder="Coupon code..." style="margin:0;">
+            <button onclick="applyCoupon()" class="ui-btn" style="white-space:nowrap; margin:0; padding:10px 14px;"><i class="fa-solid fa-ticket"></i></button>
+        </div>
+        <div class="order-total-box">
+            <div class="row"><span>Subtotal</span><span id="subtotal-usd">$0.00</span></div>
+            <div class="row"><span>Discount</span><span id="discount-usd">&minus;$0.00</span></div>
+            <div class="row final"><span>Total Due</span><span id="total-usd" style="color:var(--price-gold); font-weight:800; font-size:17px;">$0.00</span></div>
+        </div>
+        <div id="paypal-button-container" style="margin-bottom:14px;"></div>
+        <button onclick="mockCheckout()" style="width:100%; background:var(--primary); border:none; color:#fff; padding:14px; border-radius:8px; font-weight:700; cursor:pointer; font-size:13px; margin-bottom:10px; letter-spacing:0.5px; box-shadow:0 8px 22px rgba(224,22,28,0.35);"><i class="fa-solid fa-lock"></i> Complete Purchase</button>
+        <button onclick="clearCart()" style="width:100%; background:transparent; border:1px solid var(--glass-border); color:#aaa; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px;"><i class="fa-solid fa-trash"></i> Clear Cart</button>
+    </div>
+</div>
+
+<!-- Admin Terminal -->
+<div class="admin-box" id="admin-terminal">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--glass-border); padding-bottom: 15px;">
+        <h2 style="color:var(--primary); margin:0; font-size:22px;"><i class="fa-solid fa-terminal"></i> Command Suite</h2>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="openUICustomizer()" class="ui-btn" style="background:rgba(224,22,28,0.1); color:var(--primary);"><i class="fa-solid fa-palette"></i> UI Designer</button>
+            <button onclick="closeAdmin()" class="ui-btn" style="background:var(--danger); color:#fff;"><i class="fa-solid fa-power-off"></i> Exit</button>
         </div>
     </div>
 
-    <!-- MAIN HEADER -->
-    <header>
-        <div class="brand-container">
-            <img src="https://static.vecteezy.com/system/resources/previews/048/948/754/non_2x/black-and-white-spartan-logo-transparent-background-png.png" alt="Spartan Logo" class="brand-logo">
-            <div class="brand-title">SPARTAN</div>
-        </div>
-
-        <div class="nav-controls">
-            <button class="icon-btn" title="Toggle Music" onclick="toggleMusic()">
-                <i id="music-icon" class="fa-solid fa-volume-high"></i>
-            </button>
-            <button class="icon-btn" title="Live Chat" onclick="toggleChat()">
-                <i class="fa-solid fa-comments"></i>
-            </button>
-            <button class="icon-btn" title="Cart" onclick="openCartModal()">
-                <i class="fa-solid fa-cart-shopping"></i>
-                <span id="cart-badge" class="badge">0</span>
-            </button>
-            <button class="icon-btn" title="Admin Login" onclick="openAdminModal()">
-                <i class="fa-solid fa-user-shield"></i>
-            </button>
-        </div>
-    </header>
-
-    <!-- BROADCAST BANNER -->
-    <div id="broadcast-banner"></div>
-
-    <!-- STORE CONTAINER -->
-    <div class="container">
-        <h2 class="section-title">Store Items</h2>
-        <div id="items-grid" class="items-grid">
-            <!-- Dynamic Items Injected Here -->
+    <div id="login-section" style="text-align:center; padding-top:80px;">
+        <div style="max-width:400px; margin:0 auto; background:var(--glass); padding:35px; border-radius:10px; border:1px solid var(--glass-border); box-shadow:0 20px 50px rgba(0,0,0,0.4);">
+            <i class="fa-solid fa-fingerprint" style="font-size:48px; color:var(--primary); margin-bottom:20px;"></i>
+            <h3 style="color:#fff; margin-bottom:20px; font-size:16px;">Master Access Required</h3>
+            <input type="password" id="admin-pass" placeholder="Password" style="text-align:center; font-size:14px; letter-spacing:2px;">
+            <button onclick="login()" class="ui-btn" style="width:100%; margin-top:15px; justify-content:center; padding:12px; font-size:13px; background:rgba(224,22,28,0.15); border-color:var(--primary); color:var(--primary);"><i class="fa-solid fa-unlock"></i> Authenticate</button>
+            <p style="font-size:11px; color:#aaa; margin-top:15px;"><i class="fa-solid fa-info-circle"></i> Password: <code style="color:var(--primary);">spartan123</code></p>
         </div>
     </div>
 
-    <!-- ITEM DETAIL DIALOG MODAL -->
-    <div id="item-dialog-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('item-dialog-modal')">&times;</span>
-            <img id="dialog-item-img" class="item-dialog-img" src="" alt="Item Image">
-            <h2 id="dialog-item-name" style="color: var(--accent-gold); margin-bottom: 5px;"></h2>
-            <div id="dialog-item-price" style="font-size: 1.3rem; font-weight: bold; margin-bottom: 10px;"></div>
-            <div id="dialog-item-desc" class="item-dialog-desc"></div>
+    <div id="admin-controls" style="display:none;" class="admin-layout">
+        <!-- User Management -->
+        <div class="panel-box">
+            <h3><i class="fa-solid fa-users"></i> User Management</h3>
+            <div id="users-list" style="max-height:300px; overflow-y:auto; font-size:12px; margin-top:12px; display:flex; flex-direction:column; gap:8px;"></div>
+            <div style="margin-top:15px; padding-top:15px; border-top:1px solid var(--glass-border);">
+                <input type="text" id="block-user-id" placeholder="User IP to block...">
+                <button onclick="blockUser()" class="ui-btn" style="width:100%; margin-top:8px; justify-content:center; background:rgba(255,45,45,0.15); border-color:var(--danger); color:var(--danger);"><i class="fa-solid fa-ban"></i> Block User</button>
+            </div>
+        </div>
+
+        <!-- Live Map -->
+        <div class="panel-box">
+            <h3><i class="fa-solid fa-map"></i> Live Activity Map</h3>
+            <div id="live-map"></div>
+            <div id="online-count" style="margin-top:12px; font-size:12px; color:var(--primary); text-align:center;"><i class="fa-solid fa-circle-dot"></i> Online: 0</div>
+        </div>
+
+        <!-- Transaction Monitor -->
+        <div class="panel-box">
+            <h3><i class="fa-solid fa-credit-card"></i> Transactions</h3>
+            <div id="transactions-list" style="max-height:350px; overflow-y:auto; font-size:11px; margin-top:12px; display:flex; flex-direction:column; gap:6px;"></div>
+        </div>
+
+        <!-- Faction Manager -->
+        <div class="panel-box">
+            <h3><i class="fa-solid fa-hammer"></i> Faction Manager</h3>
+            <input type="text" id="f-name" placeholder="Faction name...">
+            <input type="number" id="f-price" placeholder="Price ($)">
+            <textarea id="f-desc" placeholder="Description..." style="height:60px;"></textarea>
+            <input type="text" id="f-icon" placeholder="Emoji icon (e.g., ⚡)">
+            <button onclick="addFaction()" class="ui-btn" style="width:100%; margin-top:10px; justify-content:center;"><i class="fa-solid fa-plus"></i> Create Faction</button>
             
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button class="btn-primary" style="background: #4a5568; color: #fff;" onclick="closeModal('item-dialog-modal')">
-                    <i class="fa-solid fa-arrow-left"></i> Back
-                </button>
-                <button id="dialog-add-cart-btn" class="btn-primary">
-                    <i class="fa-solid fa-cart-plus"></i> Add to Cart
-                </button>
+            <h3 style="margin-top:20px;"><i class="fa-solid fa-list"></i> Inventory</h3>
+            <div id="inventory-list" style="max-height:250px; overflow-y:auto; font-size:11px; margin-top:10px; display:flex; flex-direction:column; gap:6px;"></div>
+        </div>
+
+        <!-- Coupon System -->
+        <div class="panel-box">
+            <h3><i class="fa-solid fa-ticket"></i> Coupon Forge</h3>
+            <input type="text" id="c-code" placeholder="Code (e.g., SPARTAN20)">
+            <input type="number" id="c-perc" placeholder="Discount %">
+            <button onclick="addCoupon()" class="ui-btn" style="width:100%; margin-top:10px; justify-content:center;"><i class="fa-solid fa-plus"></i> Create Coupon</button>
+            
+            <h3 style="margin-top:20px;"><i class="fa-solid fa-megaphone"></i> Broadcast</h3>
+            <input type="text" id="broadcast-input" placeholder="Announcement message...">
+            <button onclick="updateBroadcast()" class="ui-btn" style="width:100%; margin-top:8px; justify-content:center;"><i class="fa-solid fa-rss"></i> Broadcast</button>
+        </div>
+
+        <!-- Theme Customizer -->
+        <div class="panel-box">
+            <h3><i class="fa-solid fa-palette"></i> Theme Colors</h3>
+            <label style="font-size:11px; color:#aaa;">Primary Color:</label>
+            <input type="color" id="ui-primary" value="#e0161c" onchange="applyTheme()" style="height:45px; padding:2px; cursor:pointer;">
+            <label style="font-size:11px; color:#aaa; display:block; margin-top:10px;">Secondary:</label>
+            <input type="color" id="ui-secondary" value="#7a0000" onchange="applyTheme()" style="height:45px; padding:2px; cursor:pointer;">
+            <label style="font-size:11px; color:#aaa; display:block; margin-top:10px;">Accent:</label>
+            <input type="color" id="ui-accent" value="#ff4d4d" onchange="applyTheme()" style="height:45px; padding:2px; cursor:pointer;">
+            <button onclick="resetTheme()" class="ui-btn" style="width:100%; margin-top:12px; justify-content:center;"><i class="fa-solid fa-redo"></i> Reset Colors</button>
+        </div>
+
+        <!-- System Info -->
+        <div class="panel-box">
+            <h3><i class="fa-solid fa-info"></i> System Status</h3>
+            <div style="font-size:12px; line-height:1.8;">
+                <div><span style="color:var(--primary);">● Status:</span> Online</div>
+                <div><span style="color:var(--primary);">● Database:</span> Connected</div>
+                <div id="system-time" style="color:var(--primary);"></div>
+                <div id="total-revenue" style="color:var(--price-gold); font-weight:bold;"></div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- CART & CHECKOUT MODAL -->
-    <div id="cart-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('cart-modal')">&times;</span>
-            <h2 style="color: var(--accent-gold); margin-bottom: 15px;"><i class="fa-solid fa-cart-shopping"></i> Your Cart</h2>
-            
-            <div id="cart-items-list" style="margin-bottom: 15px; max-height: 200px; overflow-y: auto;">
-                <!-- Cart items dynamically listed -->
-            </div>
-
-            <div class="input-group">
-                <label>Discount Coupon</label>
-                <div style="display: flex; gap: 8px;">
-                    <input type="text" id="coupon-code" class="input-control" placeholder="Enter coupon...">
-                    <button class="btn-primary" style="width: 100px;" onclick="applyCoupon()">Apply</button>
-                </div>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; margin: 15px 0; border-top: 1px solid var(--border-color); padding-top: 10px;">
-                <span>Total:</span>
-                <span id="cart-total-price" style="color: var(--accent-gold);">$0.00</span>
-            </div>
-
-            <div class="payment-methods">
-                <button class="payment-btn paypal" onclick="processPayment('PayPal')">
-                    <i class="fa-brands fa-paypal"></i> Pay with PayPal
-                </button>
-                <button class="payment-btn card" onclick="openBankCardModal()">
-                    <i class="fa-solid fa-credit-card"></i> Pay with Bank Card
-                </button>
-                <button class="btn-primary" style="background: transparent; border: 1px solid var(--accent-red); color: var(--accent-red);" onclick="clearCart()">
-                    Clear Cart
-                </button>
-            </div>
-        </div>
+<!-- UI Customizer Dialog -->
+<div id="ui-customizer-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(10,14,22,0.95); z-index:60000; padding:40px; overflow-y:auto;">
+    <div style="max-width:600px; margin:0 auto; background:var(--glass); border:1px solid var(--glass-border); padding:30px; border-radius:12px;">
+        <h2 style="color:var(--primary); margin-bottom:20px;"><i class="fa-solid fa-sliders"></i> Visual Layout Studio</h2>
+        <p style="font-size:13px; color:#ccc; margin-bottom:20px;">Adjust background options and visual density settings.</p>
+        <button onclick="closeUICustomizer()" class="ui-btn" style="background:var(--primary); color:#fff; width:100%; justify-content:center;">Save Changes</button>
     </div>
+</div>
 
-    <!-- CARD PAYMENT FORM MODAL -->
-    <div id="card-payment-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('card-payment-modal')">&times;</span>
-            <h2 style="color: var(--accent-gold); margin-bottom: 15px;"><i class="fa-solid fa-credit-card"></i> Card Payment</h2>
-            
-            <div class="input-group">
-                <label>Cardholder Name</label>
-                <input type="text" id="card-name" class="input-control" placeholder="John Doe">
-            </div>
-            <div class="input-group">
-                <label>Card Number</label>
-                <input type="text" id="card-number" class="input-control" placeholder="4532 •••• •••• 8890">
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <div class="input-group" style="flex: 1;">
-                    <label>Expiry Date</label>
-                    <input type="text" id="card-expiry" class="input-control" placeholder="MM/YY">
-                </div>
-                <div class="input-group" style="flex: 1;">
-                    <label>CVC</label>
-                    <input type="text" id="card-cvc" class="input-control" placeholder="123">
-                </div>
-            </div>
+<!-- Intel Ticker -->
+<div class="intel-ticker-wrap">
+    <div class="intel-ticker-label"><i class="fa-solid fa-shield-halved" style="margin-right:6px;"></i> INTEL</div>
+    <div id="feed-text">WELCOME TO SPARTAN SHOP // SYSTEM ONLINE</div>
+</div>
 
-            <button class="btn-primary" style="width: 100%; margin-top: 10px;" onclick="processPayment('Credit/Debit Card')">
-                Confirm & Pay Now
-            </button>
-        </div>
-    </div>
+<script>
+    // State Management
+    let cart = [];
+    let discountPercent = 0;
+    let products = [];
+    let audioCtx = null;
 
-    <!-- ADMIN MODAL -->
-    <div id="admin-modal" class="modal">
-        <div class="modal-content" style="max-width: 650px;">
-            <span class="close-btn" onclick="closeModal('admin-modal')">&times;</span>
-            
-            <div id="admin-login-sec">
-                <h2 style="color: var(--accent-gold); margin-bottom: 15px;"><i class="fa-solid fa-lock"></i> Admin Access</h2>
-                <div class="input-group">
-                    <label>Admin Secret Key</label>
-                    <input type="password" id="admin-pass" class="input-control" placeholder="Enter password...">
-                </div>
-                <button class="btn-primary" style="width: 100%;" onclick="loginAdmin()">Login</button>
-            </div>
+    // Toast Engine
+    function showToast(msg, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        let icon = type === 'error' ? 'fa-triangle-exclamation' : type === 'warning' ? 'fa-circle-exclamation' : 'fa-circle-check';
+        toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${msg}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    }
 
-            <div id="admin-panel-sec" style="display: none;">
-                <h2 style="color: var(--accent-gold); margin-bottom: 15px;"><i class="fa-solid fa-sliders"></i> Admin Control Center</h2>
-                
-                <div class="admin-tab-container">
-                    <div class="admin-tab active" onclick="switchAdminTab('items')">Items</div>
-                    <div class="admin-tab" onclick="switchAdminTab('paypal')">PayPal</div>
-                    <div class="admin-tab" onclick="switchAdminTab('broadcast')">Broadcast</div>
-                </div>
-
-                <!-- ITEMS MANAGEMENT -->
-                <div id="admin-tab-items">
-                    <h3 style="color: #fff; margin-bottom: 10px;">Add / Update Product</h3>
-                    <div class="input-group">
-                        <label>Item Name</label>
-                        <input type="text" id="admin-item-name" class="input-control">
-                    </div>
-                    <div class="input-group">
-                        <label>Price ($)</label>
-                        <input type="number" id="admin-item-price" class="input-control">
-                    </div>
-                    <div class="input-group">
-                        <label>Image URL</label>
-                        <input type="text" id="admin-item-img" class="input-control">
-                    </div>
-                    <div class="input-group">
-                        <label>Description</label>
-                        <textarea id="admin-item-desc" class="input-control" rows="3"></textarea>
-                    </div>
-                    <button class="btn-primary" style="width: 100%;" onclick="saveAdminItem()">Save Product</button>
-                </div>
-
-                <!-- PAYPAL CONFIGURATION -->
-                <div id="admin-tab-paypal" style="display: none;">
-                    <h3 style="color: #fff; margin-bottom: 10px;">PayPal Integration</h3>
-                    <div class="input-group">
-                        <label>PayPal Merchant Email / Client ID</label>
-                        <input type="text" id="admin-paypal-id" class="input-control" placeholder="sb-xxxx@business.example.com">
-                    </div>
-                    <button class="btn-primary" style="width: 100%;" onclick="savePayPalSettings()">Connect / Update PayPal</button>
-                </div>
-
-                <!-- BROADCAST CONFIGURATION -->
-                <div id="admin-tab-broadcast" style="display: none;">
-                    <h3 style="color: #fff; margin-bottom: 10px;">Announcement Banner</h3>
-                    <div class="input-group">
-                        <label>Banner Text</label>
-                        <input type="text" id="admin-broadcast-msg" class="input-control" placeholder="Special Discount Today!">
-                    </div>
-                    <button class="btn-primary" style="width: 100%;" onclick="saveBroadcast()">Update Banner</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- JAVASCRIPT APP LOGIC -->
-    <script>
-        // --- FIREBASE INITIALIZATION ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyDummyKeyReplaceWithYours",
-            authDomain: "spartan-shop.firebaseapp.com",
-            databaseURL: "https://spartan-shop-default-rtdb.firebaseio.com",
-            projectId: "spartan-shop",
-            storageBucket: "spartan-shop.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:abc123def456"
-        };
-        
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const db = firebase.database();
-
-        // --- LOCAL APP STATE ---
-        let cart = [];
-        let isMusicPlaying = true;
-        let activeCoupon = null;
-
-        // Default Sample Data (if database empty)
-        const sampleProducts = [
-            {
-                id: "item_1",
-                name: "Spartan VIP Pass",
-                price: 19.99,
-                img: "https://static.vecteezy.com/system/resources/previews/048/948/754/non_2x/black-and-white-spartan-logo-transparent-background-png.png",
-                desc: "Unlocks full VIP benefits, custom server access, and priority status."
-            },
-            {
-                id: "item_2",
-                name: "Elite Weapon Kit",
-                price: 9.99,
-                img: "https://static.vecteezy.com/system/resources/previews/048/948/754/non_2x/black-and-white-spartan-logo-transparent-background-png.png",
-                desc: "High-tier weapons and starter gear bundle for tactical advantage."
-            }
-        ];
-
-        // --- CORE APPLICATION LIFECYCLE ---
-        window.addEventListener('DOMContentLoaded', () => {
-            loadProducts();
-            listenToSettings();
-        });
-
-        function enterSite() {
-            const overlay = document.getElementById('intro-overlay');
-            overlay.style.opacity = '0';
-            overlay.style.visibility = 'hidden';
-            playMusic();
-        }
-
-        // --- AUDIO CONTROLLER ---
-        function playMusic() {
-            const iframe = document.getElementById('youtube-audio-player');
-            iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-            isMusicPlaying = true;
-            document.getElementById('music-icon').className = 'fa-solid fa-volume-high';
-        }
-
-        function toggleMusic() {
-            const iframe = document.getElementById('youtube-audio-player');
-            const icon = document.getElementById('music-icon');
-            
-            if (isMusicPlaying) {
-                iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-                icon.className = 'fa-solid fa-volume-xmark';
-                isMusicPlaying = false;
+    // Audio Engine
+    function toggleMusic(e) {
+        if(!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            showToast("Audio Engine Activated", "info");
+            e.currentTarget.classList.add('active');
+        } else {
+            if(audioCtx.state === 'suspended') {
+                audioCtx.resume();
+                e.currentTarget.classList.add('active');
             } else {
-                iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-                icon.className = 'fa-solid fa-volume-high';
-                isMusicPlaying = true;
+                audioCtx.suspend();
+                e.currentTarget.classList.remove('active');
             }
         }
+    }
 
-        // --- PRODUCTS & DIALOG UI ---
-        function loadProducts() {
-            const grid = document.getElementById('items-grid');
-            db.ref('products').on('value', (snapshot) => {
-                const data = snapshot.val();
-                grid.innerHTML = '';
-                const productList = data ? Object.values(data) : sampleProducts;
+    // Intro Overlay Dismissal
+    setTimeout(() => {
+        const overlay = document.getElementById('intro-overlay');
+        if(overlay) {
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.style.display = 'none', 800);
+        }
+    }, 2200);
 
-                productList.forEach(item => {
-                    const card = document.createElement('div');
-                    card.className = 'item-card';
-                    card.onclick = () => openItemDialog(item);
-                    card.innerHTML = `
-                        <img src="${item.img}" class="item-img" alt="${item.name}">
-                        <div class="item-name">${item.name}</div>
-                        <div class="item-price">$${parseFloat(item.price).toFixed(2)}</div>
-                        <div class="card-actions">
-                            <button class="btn-primary" onclick="event.stopPropagation(); addToCart('${item.id}', '${item.name}', ${item.price})">
-                                <i class="fa-solid fa-cart-plus"></i> Add
-                            </button>
-                        </div>
-                    `;
-                    grid.appendChild(card);
-                });
+    // Initial Data Preload & Firebase Synchronization
+    db.ref('products').on('value', (snap) => {
+        const data = snap.val();
+        products = [];
+        if(data) {
+            Object.keys(data).forEach(key => {
+                products.push({ id: key, ...data[key] });
             });
+        } else {
+            // Default Seed Data if DB Empty
+            products = [
+                { id: '1', name: 'Spartan VIP Membership', price: 29.99, icon: '⚔️', faction: 'Spartans', desc: 'Full premium access and tier rewards.' },
+                { id: '2', name: 'Titan Armor Pack', price: 49.99, icon: '🛡️', faction: 'Titans', desc: 'Maximized defense parameters.' },
+                { id: '3', name: 'Cyber Warfare Pass', price: 19.99, icon: '⚡', faction: 'Cyber', desc: 'Tactical tools and dynamic assets.' }
+            ];
         }
+        renderProducts();
+        renderAdminInventory();
+    });
 
-        function openItemDialog(item) {
-            document.getElementById('dialog-item-img').src = item.img;
-            document.getElementById('dialog-item-name').innerText = item.name;
-            document.getElementById('dialog-item-price').innerText = `$${parseFloat(item.price).toFixed(2)}`;
-            document.getElementById('dialog-item-desc').innerText = item.desc || 'No description provided.';
-            
-            const addBtn = document.getElementById('dialog-add-cart-btn');
-            addBtn.onclick = () => {
-                addToCart(item.id, item.name, item.price);
-                closeModal('item-dialog-modal');
-            };
+    db.ref('broadcast').on('value', (snap) => {
+        const msg = snap.val() || "WELCOME TO SPARTAN SHOP // SYSTEM ONLINE";
+        document.getElementById('feed-text').innerText = msg;
+    });
 
-            openModal('item-dialog-modal');
-        }
+    db.ref('chat').on('value', (snap) => {
+        const msgs = snap.val() || {};
+        const container = document.getElementById('chat-msgs');
+        container.innerHTML = '';
+        Object.values(msgs).forEach(m => {
+            const div = document.createElement('div');
+            div.className = 'chat-msg';
+            div.innerHTML = `<strong>${m.sender}:</strong> ${m.text}`;
+            container.appendChild(div);
+        });
+        container.scrollTop = container.scrollHeight;
+    });
 
-        // --- CART MANAGEMENT ---
-        function addToCart(id, name, price) {
-            cart.push({ id, name, price });
+    function renderProducts() {
+        const grid = document.getElementById('product-grid');
+        grid.innerHTML = '';
+        products.forEach(p => {
+            grid.innerHTML += `
+                <div class="product">
+                    <div class="product-image">${p.icon || '⚔️'}</div>
+                    <div class="product-faction">${p.faction || 'GENERAL'}</div>
+                    <h3>${p.name}</h3>
+                    <p style="font-size:12px; color:#aaa; margin-bottom:10px;">${p.desc || ''}</p>
+                    <div class="product-price">$${parseFloat(p.price).toFixed(2)}</div>
+                    <button class="ui-btn" style="width:100%; justify-content:center;" onclick="addToCart('${p.id}')">
+                        <i class="fa-solid fa-cart-plus"></i> Acquire
+                    </button>
+                </div>
+            `;
+        });
+    }
+
+    // Shopping Cart Operations
+    function addToCart(id) {
+        const item = products.find(p => p.id === id);
+        if(item) {
+            cart.push(item);
             updateCartUI();
+            showToast(`${item.name} added to cart`, "info");
         }
+    }
 
-        function updateCartUI() {
-            document.getElementById('cart-badge').innerText = cart.length;
-            const cartList = document.getElementById('cart-items-list');
-            cartList.innerHTML = '';
-
-            let total = 0;
-            cart.forEach((item, idx) => {
-                total += item.price;
-                const row = document.createElement('div');
-                row.style.cssText = 'display:flex; justify-between; align-items:center; margin-bottom:8px; background:rgba(255,255,255,0.05); padding:8px; border-radius:6px;';
-                row.innerHTML = `
+    function updateCartUI() {
+        document.getElementById('cart-count').innerText = cart.length;
+        const list = document.getElementById('cart-list');
+        list.innerHTML = '';
+        let subtotal = 0;
+        cart.forEach((item, index) => {
+            subtotal += parseFloat(item.price);
+            list.innerHTML += `
+                <div class="cart-item-row">
                     <span>${item.name}</span>
                     <div>
-                        <span style="color:var(--accent-gold); margin-right:10px;">$${item.price.toFixed(2)}</span>
-                        <i class="fa-solid fa-trash" style="color:var(--accent-red); cursor:pointer;" onclick="removeFromCart(${idx})"></i>
+                        <span style="color:var(--price-gold); margin-right:8px;">$${parseFloat(item.price).toFixed(2)}</span>
+                        <i class="fa-solid fa-xmark" style="color:var(--danger); cursor:pointer;" onclick="removeFromCart(${index})"></i>
                     </div>
-                `;
-                cartList.appendChild(row);
-            });
+                </div>
+            `;
+        });
+        
+        const discount = subtotal * (discountPercent / 100);
+        const total = Math.max(0, subtotal - discount);
 
-            if (activeCoupon) {
-                total = total * (1 - activeCoupon);
-            }
+        document.getElementById('subtotal-usd').innerText = `$${subtotal.toFixed(2)}`;
+        document.getElementById('discount-usd').innerText = `-$${discount.toFixed(2)}`;
+        document.getElementById('total-usd').innerText = `$${total.toFixed(2)}`;
+    }
 
-            document.getElementById('cart-total-price').innerText = `$${total.toFixed(2)}`;
-        }
+    function removeFromCart(index) {
+        cart.splice(index, 1);
+        updateCartUI();
+    }
 
-        function removeFromCart(index) {
-            cart.splice(index, 1);
-            updateCartUI();
-        }
+    function clearCart() {
+        cart = [];
+        discountPercent = 0;
+        updateCartUI();
+        showToast("Cart cleared", "warning");
+    }
 
-        function clearCart() {
-            cart = [];
-            activeCoupon = null;
-            updateCartUI();
-        }
-
-        function applyCoupon() {
-            const code = document.getElementById('coupon-code').value.trim();
-            if (code.toUpperCase() === 'SPARTAN10') {
-                activeCoupon = 0.10; // 10% discount
-                alert('Coupon Applied: 10% Off!');
+    function applyCoupon() {
+        const code = document.getElementById('apply-coupon').value.trim();
+        if(!code) return;
+        db.ref(`coupons/${code}`).once('value', (snap) => {
+            const perc = snap.val();
+            if(perc) {
+                discountPercent = parseFloat(perc);
+                updateCartUI();
+                showToast(`Coupon Applied: ${discountPercent}% OFF`, "info");
             } else {
-                alert('Invalid Coupon Code');
+                showToast("Invalid Coupon Code", "error");
             }
-            updateCartUI();
+        });
+    }
+
+    function openCheckoutModal() {
+        document.getElementById('checkout-modal').style.display = 'flex';
+        updateCartUI();
+    }
+
+    function closeCheckoutModal() {
+        document.getElementById('checkout-modal').style.display = 'none';
+    }
+
+    function mockCheckout() {
+        if(cart.length === 0) {
+            showToast("Cart is empty", "error");
+            return;
         }
+        const total = document.getElementById('total-usd').innerText;
+        db.ref('transactions').push({
+            items: cart.map(c => c.name).join(", "),
+            amount: total,
+            timestamp: Date.now()
+        });
+        showToast("Order Processed Successfully!", "info");
+        cart = [];
+        updateCartUI();
+        closeCheckoutModal();
+    }
 
-        // --- CHECKOUT & PAYMENTS ---
-        function processPayment(method) {
-            if (cart.length === 0) {
-                alert('Your cart is empty!');
-                return;
-            }
+    // Chat Functions
+    function toggleChat() {
+        const widget = document.getElementById('chat-widget');
+        widget.style.display = widget.style.display === 'flex' ? 'none' : 'flex';
+    }
 
-            alert(`Processing purchase via ${method}... Payment Successful! Thank you for supporting Spartan Shop.`);
-            clearCart();
-            closeModal('cart-modal');
-            closeModal('card-payment-modal');
-        }
-
-        function openBankCardModal() {
-            if (cart.length === 0) {
-                alert('Your cart is empty!');
-                return;
-            }
-            closeModal('cart-modal');
-            openModal('card-payment-modal');
-        }
-
-        // --- ADMIN MENU CONTROL ---
-        function loginAdmin() {
-            const pass = document.getElementById('admin-pass').value;
-            if (pass === 'spartan123') {
-                document.getElementById('admin-login-sec').style.display = 'none';
-                document.getElementById('admin-panel-sec').style.display = 'block';
-            } else {
-                alert('Incorrect Password!');
-            }
-        }
-
-        function switchAdminTab(tabName) {
-            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('admin-tab-items').style.display = 'none';
-            document.getElementById('admin-tab-paypal').style.display = 'none';
-            document.getElementById('admin-tab-broadcast').style.display = 'none';
-
-            if (tabName === 'items') {
-                document.getElementById('admin-tab-items').style.display = 'block';
-            } else if (tabName === 'paypal') {
-                document.getElementById('admin-tab-paypal').style.display = 'block';
-            } else if (tabName === 'broadcast') {
-                document.getElementById('admin-tab-broadcast').style.display = 'block';
-            }
-            event.target.classList.add('active');
-        }
-
-        function saveAdminItem() {
-            const name = document.getElementById('admin-item-name').value;
-            const price = parseFloat(document.getElementById('admin-item-price').value);
-            const img = document.getElementById('admin-item-img').value;
-            const desc = document.getElementById('admin-item-desc').value;
-
-            if (!name || isNaN(price)) {
-                alert('Please provide valid name and price');
-                return;
-            }
-
-            const itemId = 'item_' + Date.now();
-            db.ref('products/' + itemId).set({
-                id: itemId,
-                name: name,
-                price: price,
-                img: img || 'https://static.vecteezy.com/system/resources/previews/048/948/754/non_2x/black-and-white-spartan-logo-transparent-background-png.png',
-                desc: desc
-            }).then(() => {
-                alert('Product Saved Successfully!');
-                document.getElementById('admin-item-name').value = '';
-                document.getElementById('admin-item-price').value = '';
-                document.getElementById('admin-item-img').value = '';
-                document.getElementById('admin-item-desc').value = '';
+    function sendChat() {
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
+        if(text) {
+            db.ref('chat').push({
+                sender: 'User',
+                text: text,
+                timestamp: Date.now()
             });
+            input.value = '';
         }
+    }
 
-        function savePayPalSettings() {
-            const paypalId = document.getElementById('admin-paypal-id').value;
-            db.ref('settings/paypal_id').set(paypalId).then(() => {
-                alert('PayPal Connection Settings Updated Successfully!');
+    // Admin Terminal Engine
+    window.addEventListener('keydown', (e) => {
+        if(e.key === 'End') {
+            document.getElementById('admin-terminal').style.display = 'block';
+        }
+    });
+
+    function closeAdmin() {
+        document.getElementById('admin-terminal').style.display = 'none';
+    }
+
+    function login() {
+        const pass = document.getElementById('admin-pass').value;
+        if(pass === 'spartan123') {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('admin-controls').style.display = 'grid';
+            showToast("Access Granted", "info");
+            loadAdminData();
+        } else {
+            showToast("Access Denied", "error");
+        }
+    }
+
+    function loadAdminData() {
+        // Render Users
+        db.ref('banned_ips').on('value', (snap) => {
+            const list = snap.val() || [];
+            const container = document.getElementById('users-list');
+            container.innerHTML = list.length === 0 ? '<div style="color:#aaa;">No blocked IPs</div>' : '';
+            list.forEach(ip => {
+                container.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:6px 10px; border-radius:4px;"><span>${ip}</span> <button onclick="unblockIP('${ip}')" class="ui-btn" style="padding:2px 6px; font-size:10px;">Unblock</button></div>`;
             });
-        }
+        });
 
-        function saveBroadcast() {
-            const msg = document.getElementById('admin-broadcast-msg').value;
-            db.ref('settings/broadcast').set(msg).then(() => {
-                alert('Broadcast Banner Updated!');
+        // Transactions Monitor
+        db.ref('transactions').on('value', (snap) => {
+            const data = snap.val() || {};
+            const container = document.getElementById('transactions-list');
+            container.innerHTML = '';
+            let totalRev = 0;
+            Object.values(data).forEach(t => {
+                const amt = parseFloat(t.amount.replace('$','')) || 0;
+                totalRev += amt;
+                container.innerHTML += `<div style="padding:6px; border-bottom:1px solid rgba(224,22,28,0.1); display:flex; justify-content:space-between;"><span>${t.items}</span> <span style="color:var(--price-gold);">${t.amount}</span></div>`;
             });
+            document.getElementById('total-revenue').innerText = `Total Revenue: $${totalRev.toFixed(2)}`;
+        });
+
+        // Live Map dots simulation
+        const map = document.getElementById('live-map');
+        map.innerHTML = '';
+        for(let i=0; i<5; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'map-dot';
+            dot.style.top = Math.floor(Math.random()*80 + 10) + '%';
+            dot.style.left = Math.floor(Math.random()*80 + 10) + '%';
+            map.appendChild(dot);
         }
+        document.getElementById('online-count').innerHTML = `<i class="fa-solid fa-circle-dot"></i> Online: ${Math.floor(Math.random()*15 + 5)}`;
+    }
 
-        function listenToSettings() {
-            db.ref('settings').on('value', (snapshot) => {
-                const settings = snapshot.val() || {};
-                
-                // PayPal ID
-                if (settings.paypal_id) {
-                    document.getElementById('admin-paypal-id').value = settings.paypal_id;
-                }
+    function blockUser() {
+        const ip = document.getElementById('block-user-id').value.trim();
+        if(!ip) return;
+        db.ref('banned_ips').once('value', (snap) => {
+            const list = snap.val() || [];
+            if(!list.includes(ip)) {
+                list.push(ip);
+                db.ref('banned_ips').set(list);
+                showToast(`IP ${ip} blocked`, "warning");
+                document.getElementById('block-user-id').value = '';
+            }
+        });
+    }
 
-                // Broadcast Banner
-                const banner = document.getElementById('broadcast-banner');
-                if (settings.broadcast) {
-                    banner.innerText = settings.broadcast;
-                    banner.style.display = 'block';
-                } else {
-                    banner.style.display = 'none';
-                }
+    function unblockIP(ip) {
+        db.ref('banned_ips').once('value', (snap) => {
+            let list = snap.val() || [];
+            list = list.filter(item => item !== ip);
+            db.ref('banned_ips').set(list);
+            showToast(`IP ${ip} unblocked`, "info");
+        });
+    }
+
+    function addFaction() {
+        const name = document.getElementById('f-name').value.trim();
+        const price = document.getElementById('f-price').value.trim();
+        const desc = document.getElementById('f-desc').value.trim();
+        const icon = document.getElementById('f-icon').value.trim();
+
+        if(name && price) {
+            db.ref('products').push({
+                name, price: parseFloat(price), desc, icon: icon || '⚔️', faction: 'CUSTOM'
             });
+            showToast("Item created successfully", "info");
+            document.getElementById('f-name').value = '';
+            document.getElementById('f-price').value = '';
+            document.getElementById('f-desc').value = '';
+            document.getElementById('f-icon').value = '';
         }
+    }
 
-        // --- UTILITY MODAL HELPERS ---
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function openCartModal() { updateCartUI(); openModal('cart-modal'); }
-        function openAdminModal() { openModal('admin-modal'); }
-        function toggleChat() { alert('Live support chat initialized. An admin will respond shortly.'); }
-    </script>
+    function renderAdminInventory() {
+        const container = document.getElementById('inventory-list');
+        if(!container) return;
+        container.innerHTML = '';
+        products.forEach(p => {
+            container.innerHTML += `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:6px 10px; border-radius:4px;">
+                    <span>${p.name} ($${p.price})</span>
+                    <i class="fa-solid fa-trash" style="color:var(--danger); cursor:pointer;" onclick="deleteProduct('${p.id}')"></i>
+                </div>
+            `;
+        });
+    }
+
+    function deleteProduct(id) {
+        db.ref(`products/${id}`).remove();
+        showToast("Product deleted", "warning");
+    }
+
+    function addCoupon() {
+        const code = document.getElementById('c-code').value.trim();
+        const perc = document.getElementById('c-perc').value.trim();
+        if(code && perc) {
+            db.ref(`coupons/${code}`).set(parseFloat(perc));
+            showToast(`Coupon ${code} saved`, "info");
+            document.getElementById('c-code').value = '';
+            document.getElementById('c-perc').value = '';
+        }
+    }
+
+    function updateBroadcast() {
+        const msg = document.getElementById('broadcast-input').value.trim();
+        if(msg) {
+            db.ref('broadcast').set(msg);
+            showToast("Broadcast updated", "info");
+            document.getElementById('broadcast-input').value = '';
+        }
+    }
+
+    function applyTheme() {
+        const primary = document.getElementById('ui-primary').value;
+        const secondary = document.getElementById('ui-secondary').value;
+        const accent = document.getElementById('ui-accent').value;
+
+        document.documentElement.style.setProperty('--primary', primary);
+        document.documentElement.style.setProperty('--secondary', secondary);
+        document.documentElement.style.setProperty('--accent', accent);
+    }
+
+    function resetTheme() {
+        document.documentElement.style.setProperty('--primary', '#e0161c');
+        document.documentElement.style.setProperty('--secondary', '#7a0000');
+        document.documentElement.style.setProperty('--accent', '#ff4d4d');
+    }
+
+    function openUICustomizer() {
+        document.getElementById('ui-customizer-modal').style.display = 'block';
+    }
+
+    function closeUICustomizer() {
+        document.getElementById('ui-customizer-modal').style.display = 'none';
+    }
+
+    // System Time Loop
+    setInterval(() => {
+        const timeElem = document.getElementById('system-time');
+        if(timeElem) {
+            timeElem.innerText = `● Time: ${new Date().toLocaleTimeString()}`;
+        }
+    }, 1000);
+</script>
 </body>
 </html>
