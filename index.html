@@ -2,738 +2,1006 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SPARTAN SHOP | ELITE GAMING</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPARTAN SHOP</title>
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDE6qMplWktZASB2AjUKuY_dSRCUKiZyOA",
-            authDomain: "maxiom-r3.firebaseapp.com",
-            databaseURL: "https://maxiom-r3-default-rtdb.firebaseio.com",
-            projectId: "maxiom-r3",
-            storageBucket: "maxiom-r3.firebasestorage.app",
-            messagingSenderId: "221473460329",
-            appId: "1:221473460329:web:21a278a86cfdcff8b1d2f8",
-            measurementId: "G-82WFV6S568"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
-        (function() {
-            const checkBans = async () => {
-                try {
-                    const r = await fetch('https://api.ipify.org?format=json');
-                    const d = await r.json();
-                    const userIP = d.ip;
-                    db.ref('banned_ips').on('value', (snap) => {
-                        const list = snap.val() || [];
-                        if(list.includes(userIP)) {
-                            window.stop();
-                            document.documentElement.innerHTML = "";
-                            alert("ACCESS DENIED: TERMINATED BY SYSTEM ADMIN");
-                            window.location.href = "about:blank";
-                        }
-                    });
-                } catch(e) { console.log("Shield Active"); }
-            };
-            checkBans();
-
-            db.ref('settings/paypal_id').once('value', (snap) => {
-                const savedID = snap.val() || "test";
-                const script = document.createElement('script');
-                script.src = `https://www.paypal.com/sdk/js?client-id=${savedID}&currency=USD`;
-                document.head.appendChild(script);
-            });
-        })();
-    </script>
-
     <style>
         :root {
-            --primary: #ff1e23;
-            --secondary: #00ff66;
-            --accent: #00e5ff;
-            --bg-main: #07090e;
-            --glass: rgba(15, 20, 30, 0.9);
-            --glass-border: rgba(255, 30, 35, 0.3);
-            --price-gold: #ffcc00;
+            --bg-primary: #0a0c10;
+            --bg-card: rgba(18, 22, 31, 0.75);
+            --bg-glass: rgba(255, 255, 255, 0.04);
+            --border-glow: rgba(0, 230, 255, 0.3);
+            --accent-cyan: #00e6ff;
+            --accent-gold: #ffb700;
+            --accent-red: #ff3366;
+            --text-main: #f0f4f8;
+            --text-muted: #8a99ad;
+            --font-head: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
         }
 
-        * { cursor: crosshair !important; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #e2e8f0; text-align: center; background: var(--bg-main); transition: 0.3s; overflow-x: hidden; padding-bottom: 90px; }
-        
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #05070a; }
-        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
-
-        /* Notification Toast */
-        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 1000000; display: flex; flex-direction: column; gap: 10px; }
-        .toast { background: rgba(10, 15, 22, 0.95); border-left: 4px solid var(--primary); color: white; padding: 12px 20px; border-radius: 6px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s ease; }
-        .toast.error { border-left-color: var(--secondary); }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-        /* Opening Spartan Logo & Typewriter Intro */
-        #intro-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #030508; z-index: 999999; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; transition: opacity 0.8s ease;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
         }
-        .spartan-logo-intro {
-            width: 130px; height: 130px; object-fit: cover; border-radius: 50%;
-            border: 3px solid var(--primary);
-            box-shadow: 0 0 35px var(--primary);
-            animation: pulseLogo 1.5s infinite alternate;
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(0, 230, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(255, 183, 0, 0.06) 0%, transparent 40%);
         }
-        @keyframes pulseLogo { from { transform: scale(1); box-shadow: 0 0 15px var(--primary); } to { transform: scale(1.08); box-shadow: 0 0 40px var(--primary); } }
-        
-        .typewriter-container {
-            margin-top: 25px; font-family: 'Courier New', monospace; font-size: 26px;
-            font-weight: 800; color: #fff; letter-spacing: 6px; text-transform: uppercase;
-            border-right: 3px solid var(--primary); white-space: nowrap;
-            width: 0; animation: typing 1.8s steps(20, end) forwards, blink 0.75s step-end infinite;
+
+        /* --- INTRO SCREEN SPLASH --- */
+        #intro-splash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(8, 10, 14, 0.96);
+            backdrop-filter: blur(15px);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
         }
-        @keyframes typing { from { width: 0 } to { width: 100% } }
-        @keyframes blink { from, to { border-color: transparent } 50% { border-color: var(--primary); } }
 
-        /* Header & Navigation (Fixed PC layout & spacing) */
-        .top-nav { position: fixed; top: 20px; left: 20px; z-index: 4000; display: flex; gap: 10px; flex-wrap: wrap; }
-        .ui-btn { padding: 10px 18px; background: rgba(255, 30, 35, 0.15); color: var(--primary); border: 1px solid var(--primary); font-weight: 700; border-radius: 8px; font-size: 12px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; backdrop-filter: blur(5px); }
-        .ui-btn:hover { background: var(--primary); color: #fff; box-shadow: 0 0 20px var(--primary); }
-
-        .floating-cart {
-            position: fixed; top: 20px; right: 20px; background: rgba(15, 20, 30, 0.9); width: 55px; height: 55px;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;
-            z-index: 10000; color: var(--primary); box-shadow: 0 0 20px rgba(255,30,35,0.3); border: 1px solid var(--primary);
-            font-size: 20px; transition: 0.3s;
+        .splash-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glow);
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 0 50px rgba(0, 230, 255, 0.15);
+            animation: pulseGlow 3s infinite ease-in-out;
         }
-        .floating-cart:hover { transform: scale(1.08); background: var(--primary); color: #fff; }
-        .cart-count { position: absolute; top: -5px; right: -5px; background: var(--secondary); color: #000; font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 50%; border: 2px solid var(--bg-main); }
 
-        .header-container { padding: 90px 20px 30px 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
-        .header-brand { display: flex; align-items: center; gap: 20px; background: var(--glass); padding: 18px 45px; border-radius: 20px; border: 1px solid var(--glass-border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px); max-width: 700px; width: 100%; justify-content: center; }
-        .header-logo { width: 70px; height: 70px; object-fit: cover; border-radius: 50%; border: 2px solid var(--primary); box-shadow: 0 0 20px var(--primary); }
-        header { font-size: 42px; font-weight: 900; color: #fff; text-shadow: 0 0 25px rgba(255,30,35,0.5); letter-spacing: 3px; margin: 0; }
-        header span { color: var(--primary); }
-
-        /* Store Layout & Product Cards */
-        .cat-label { margin: 40px auto 20px auto; padding: 14px 30px; background: var(--glass); border-left: 4px solid var(--primary); border-right: 4px solid var(--primary); max-width: 1200px; font-size: 18px; font-weight: 800; color: #fff; letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 12px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; padding: 10px 20px; max-width: 1250px; margin: 0 auto; }
-        
-        .product { 
-            background: var(--glass); border: 1px solid var(--glass-border); padding: 22px; border-radius: 16px; 
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;
-            backdrop-filter: blur(12px); display: flex; flex-direction: column; justify-content: space-between;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        .splash-logo {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.4));
         }
-        .product::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, transparent, var(--primary), transparent); opacity: 0; transition: 0.3s; }
-        .product:hover { transform: translateY(-8px); border-color: var(--primary); box-shadow: 0 15px 40px rgba(255,30,35,0.25); }
-        .product:hover::before { opacity: 1; }
-        .product img { width: 100%; height: 190px; object-fit: cover; border-radius: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); }
-        .product h3 { margin: 15px 0 8px 0; font-size: 18px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* Chat Widget */
-        #chat-widget { position: fixed; bottom: 80px; right: 20px; width: 340px; height: 440px; background: rgba(10, 14, 22, 0.96); border: 1px solid var(--primary); z-index: 9998; display: none; flex-direction: column; border-radius: 14px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.8); backdrop-filter: blur(15px); }
-        #chat-header { background: rgba(255, 30, 35, 0.2); color: var(--primary); padding: 14px 18px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); font-size: 13px; }
-        #chat-msgs { flex: 1; overflow-y: auto; padding: 15px; font-size: 12px; text-align: left; display: flex; flex-direction: column; gap: 8px; }
-        .chat-input-wrap { display: flex; border-top: 1px solid var(--glass-border); background: #05070a; }
-        #chat-input { flex: 1; border: none; padding: 12px 15px; background: transparent; color: #fff; font-size: 12px; outline: none; margin: 0; }
+        .splash-title {
+            font-family: var(--font-head);
+            font-size: 2rem;
+            letter-spacing: 3px;
+            color: var(--accent-cyan);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
 
-        /* Checkout Modal */
-        #checkout-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 5, 8, 0.9); z-index: 50000; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 20px; }
-        .checkout-box { background: rgba(12, 17, 26, 0.95); border: 1px solid var(--primary); width: 100%; max-width: 500px; border-radius: 16px; padding: 30px; box-shadow: 0 20px 50px rgba(255,30,35,0.3); text-align: left; position: relative; max-height: 90vh; overflow-y: auto; }
-        
-        input, select, textarea { background: rgba(5, 7, 10, 0.9); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 12px 15px; margin: 8px 0; width: 100%; border-radius: 8px; font-size: 13px; outline: none; transition: 0.2s; }
-        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 12px rgba(255,30,35,0.3); }
+        .splash-btn {
+            margin-top: 25px;
+            padding: 14px 35px;
+            font-family: var(--font-head);
+            font-weight: 700;
+            font-size: 1rem;
+            color: #000;
+            background: linear-gradient(135deg, var(--accent-cyan), #00a2ff);
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(0, 230, 255, 0.4);
+            transition: all 0.3s ease;
+        }
 
-        /* Beast Admin Terminal Suite (Upgraded Layout) */
-        .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #04060a; z-index: 20000; padding: 30px; overflow-y: auto; text-align: left; }
-        .admin-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 25px; margin-top: 20px; max-width: 1500px; margin-left: auto; margin-right: auto; }
-        .panel-box { background: rgba(12, 17, 26, 0.95); border: 1px solid rgba(255,255,255,0.12); padding: 25px; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.6); backdrop-filter: blur(12px); }
-        .panel-box h3 { color: var(--primary); margin-top: 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; font-size: 16px; display: flex; align-items: center; gap: 10px; font-weight: 800; }
+        .splash-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 230, 255, 0.7);
+        }
 
-        /* Intel Ticker */
-        .intel-ticker-wrap { position: fixed; bottom: 0; left: 0; width: 100%; height: 42px; background: rgba(6, 9, 15, 0.98); border-top: 1px solid var(--glass-border); z-index: 9999; display: flex; align-items: center; backdrop-filter: blur(8px); }
-        .intel-ticker-label { background: var(--primary); color: #fff; font-weight: 800; padding: 0 20px; height: 100%; display: flex; align-items: center; font-size: 11px; letter-spacing: 1px; }
+        /* --- HEADER & NAVIGATION --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 5%;
+            background: rgba(10, 12, 16, 0.85);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
 
-        @media (max-width: 768px) {
-            header { font-size: 24px; }
-            .header-brand { padding: 10px 20px; gap: 10px; }
-            .header-logo { width: 45px; height: 45px; }
-            .header-container { padding: 60px 10px 10px 10px; }
-            .cat-label { font-size: 14px; padding: 10px; width: 92%; }
-            .top-nav { top: auto; bottom: 50px; left: 10px; right: 10px; justify-content: center; gap: 6px; }
-            .ui-btn { padding: 8px 12px; font-size: 10px; flex: 1; justify-content: center; }
-            .floating-cart { width: 48px; height: 48px; font-size: 16px; top: 12px; right: 12px; }
-            .admin-box { padding: 15px; }
-            #chat-widget { width: 92%; right: 4%; bottom: 100px; }
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .brand-logo {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 8px rgba(0, 230, 255, 0.5));
+        }
+
+        .brand-title {
+            font-family: var(--font-head);
+            font-size: 1.4rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, #fff, var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .icon-btn {
+            background: var(--bg-glass);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .icon-btn:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            box-shadow: 0 0 12px rgba(0, 230, 255, 0.3);
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--accent-red);
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: bold;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- MAIN STORE CONTAINER --- */
+        .main-layout {
+            max-width: 1300px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .store-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .store-title {
+            font-family: var(--font-head);
+            font-size: 2.5rem;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+        }
+
+        .store-subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        /* --- PRODUCT GRID --- */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 25px;
+        }
+
+        .product-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-card:hover {
+            transform: translateY(-6px);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 8px 25px rgba(0, 230, 255, 0.15);
+        }
+
+        .product-img-wrapper {
+            width: 100%;
+            height: 180px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.3);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .product-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .product-card:hover .product-img {
+            transform: scale(1.08);
+        }
+
+        .product-title {
+            font-family: var(--font-head);
+            font-size: 1.15rem;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .product-desc-snippet {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .product-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .product-price {
+            font-family: var(--font-head);
+            font-size: 1.25rem;
+            color: var(--accent-gold);
+            font-weight: 700;
+        }
+
+        .add-cart-btn {
+            background: rgba(0, 230, 255, 0.1);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-family: var(--font-head);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .add-cart-btn:hover {
+            background: var(--accent-cyan);
+            color: #000;
+            box-shadow: 0 0 12px rgba(0, 230, 255, 0.4);
+        }
+
+        /* --- MODAL DIALOGS (GENERIC) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-body {
+            background: #0f131a;
+            border: 1px solid var(--border-glow);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .close-modal:hover {
+            color: var(--accent-red);
+        }
+
+        /* --- ITEM DETAIL MODAL --- */
+        .item-detail-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .item-detail-img {
+            width: 100%;
+            max-height: 280px;
+            object-fit: contain;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            padding: 10px;
+        }
+
+        .item-detail-title {
+            font-family: var(--font-head);
+            font-size: 1.6rem;
+            color: var(--accent-cyan);
+        }
+
+        .item-detail-price {
+            font-family: var(--font-head);
+            font-size: 1.5rem;
+            color: var(--accent-gold);
+            font-weight: bold;
+        }
+
+        .item-detail-desc {
+            line-height: 1.6;
+            color: var(--text-main);
+            font-size: 1.05rem;
+            background: var(--bg-glass);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 3px solid var(--accent-cyan);
+        }
+
+        .modal-actions-row {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            background: transparent;
+            border: 1px solid var(--text-muted);
+            color: var(--text-main);
+            padding: 12px;
+            border-radius: 10px;
+            font-family: var(--font-head);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            flex: 2;
+            background: linear-gradient(135deg, var(--accent-cyan), #0099ff);
+            border: none;
+            color: #000;
+            padding: 12px;
+            border-radius: 10px;
+            font-family: var(--font-head);
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 230, 255, 0.3);
+        }
+
+        /* --- CART & CHECKOUT --- */
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .cart-item-title {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .cart-item-price {
+            color: var(--accent-gold);
+        }
+
+        .checkout-tabs {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: var(--bg-glass);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: var(--font-head);
+        }
+
+        .tab-btn.active {
+            border-color: var(--accent-cyan);
+            background: rgba(0, 230, 255, 0.15);
+            color: var(--accent-cyan);
+        }
+
+        .checkout-section {
+            display: none;
+        }
+
+        .checkout-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            color: #fff;
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        /* --- ADMIN MENU MODAL --- */
+        .admin-tab-nav {
+            display: flex;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+
+        .admin-tab-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-family: var(--font-head);
+            border-radius: 6px;
+        }
+
+        .admin-tab-item.active {
+            color: var(--accent-gold);
+            background: rgba(255, 183, 0, 0.1);
+        }
+
+        /* --- ANIMATIONS & MEDIA QUERIES --- */
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 30px rgba(0, 230, 255, 0.2); }
+            50% { box-shadow: 0 0 60px rgba(0, 230, 255, 0.4); }
+        }
+
+        @media (max-width: 600px) {
+            .store-title { font-size: 1.8rem; }
+            .brand-title { font-size: 1.1rem; }
+            .product-grid { grid-template-columns: 1fr; }
+            .modal-body { padding: 20px; }
         }
     </style>
 </head>
-<body onclick="startAudio()">
+<body>
 
-<div id="toast-container"></div>
-
-<!-- Opening Intro Animation -->
-<div id="intro-overlay">
-    <img src="photo_2023-01-07_03-28-27.jpg" class="spartan-logo-intro" alt="Spartan Logo">
-    <div class="typewriter-container" id="typewriter-text">SPARTAN SHOP</div>
-</div>
-
-<div class="top-nav">
-    <button class="ui-btn" id="music-btn" onclick="toggleMusic(event)"><i class="fa-solid fa-volume-high"></i> MUSIC: 40%</button>
-    <button class="ui-btn" onclick="toggleChat()"><i class="fa-solid fa-comments"></i> CHAT</button>
-    <button class="ui-btn" onclick="openAdminLogin()"><i class="fa-solid fa-shield-halved"></i> ADMIN</button>
-</div>
-
-<div id="chat-widget">
-    <div id="chat-header">
-        <span id="chat-title"><i class="fa-solid fa-headset"></i> SECURE SUPPORT</span> 
-        <i class="fa-solid fa-xmark" onclick="toggleChat()" style="cursor:pointer"></i>
-    </div>
-    <div id="chat-msgs"></div>
-    <div class="chat-input-wrap">
-        <input type="text" id="chat-input" placeholder="Type message..." onkeydown="if(event.key==='Enter') sendChat()">
-        <button onclick="sendChat()" style="background:var(--primary); border:none; padding:0 15px; cursor:pointer; color:#fff; font-weight:bold;"><i class="fa-solid fa-paper-plane"></i></button>
-    </div>
-</div>
-
-<div class="floating-cart" onclick="openCheckoutModal()">
-    <i class="fa-solid fa-cart-shopping"></i> <span class="cart-count" id="cart-count">0</span>
-</div>
-
-<div class="header-container">
-    <div class="header-brand">
-        <img src="photo_2023-01-07_03-28-27.jpg" class="header-logo" alt="Spartan Logo">
-        <header>SPARTAN <span>SHOP</span></header>
-    </div>
-</div>
-
-<div id="shop-page">
-    <div class="cat-label"><i class="fa-brands fa-android"></i> ANDROID CHEATS & MODS</div>
-    <div id="android-grid" class="product-grid"></div>
-    <div class="cat-label"><i class="fa-brands fa-apple"></i> IOS CHEATS & MODS</div>
-    <div id="ios-grid" class="product-grid"></div>
-</div>
-
-<!-- Enhanced Checkout Modal -->
-<div id="checkout-modal">
-    <div class="checkout-box">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:15px; margin-bottom:15px;">
-            <h2 style="color:var(--primary); margin:0; font-size:20px;"><i class="fa-solid fa-lock"></i> SECURE CHECKOUT</h2>
-            <i class="fa-solid fa-xmark" onclick="closeCheckoutModal()" style="cursor:pointer; font-size:20px; color:#aaa;"></i>
-        </div>
-        <div id="cart-list" style="max-height:180px; overflow-y:auto; margin-bottom:15px; font-size:13px;"></div>
-        <div style="display:flex; gap:10px; margin-bottom:15px;">
-            <input type="text" id="apply-coupon" placeholder="COUPON CODE (e.g. SPARTAN20)" style="margin:0;">
-            <button onclick="applyCoupon()" class="ui-btn" style="white-space:nowrap; margin:0;">APPLY</button>
-        </div>
-        <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:8px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:14px; color:#aaa;">TOTAL DUE:</span>
-            <span id="total-usd" style="color:var(--price-gold); font-size:22px; font-weight:800;">$0.00</span>
-        </div>
-        <div id="paypal-button-container" style="margin-bottom:15px;"></div>
-        <button onclick="clearCart()" style="width:100%; background:transparent; border:1px solid rgba(255,30,35,0.4); color:var(--primary); padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; font-size:12px;">EMPTY CART</button>
-    </div>
-</div>
-
-<!-- Product Info Modal -->
-<div id="info-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(3,5,8,0.9); z-index:50000; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(8px);">
-    <div style="background:rgba(12,17,26,0.95); border:1px solid var(--primary); width:100%; max-width:600px; border-radius:16px; padding:30px; text-align:left; position:relative; max-height:90vh; overflow-y:auto; box-shadow:0 20px 50px rgba(255,30,35,0.3);">
-        <i class="fa-solid fa-xmark" onclick="document.getElementById('info-modal').style.display='none'" style="position:absolute; top:20px; right:20px; cursor:pointer; font-size:20px; color:#aaa;"></i>
-        <img id="info-img" style="width:100%; height:220px; object-fit:cover; border-radius:10px; margin-bottom:15px; border:1px solid rgba(255,255,255,0.1);">
-        <h2 id="info-title" style="color:var(--primary); margin:0 0 10px 0;"></h2>
-        <h3 id="info-price" style="color:var(--price-gold); margin:0 0 15px 0;"></h3>
-        <p id="info-desc" style="color:#cbd5e1; font-size:14px; line-height:1.6;"></p>
-        <div id="info-btns" style="margin-top:20px;"></div>
-    </div>
-</div>
-
-<!-- Beast Admin Terminal Suite (Upgraded Grid & Management Controls) -->
-<div class="admin-box" id="admin-terminal">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:15px; max-width:1500px; margin-left:auto; margin-right:auto;">
-        <h2 style="color:var(--primary); margin:0; font-size:24px;"><i class="fa-solid fa-terminal"></i> SPARTAN BEAST COMMAND SUITE</h2>
-        <button onclick="closeAdmin()" class="ui-btn" style="background:var(--primary); color:#fff;"><i class="fa-solid fa-power-off"></i> EXIT</button>
+    <!-- YOUTUBE AMBIENT MUSIC AUDIO PLAYER (HIDDEN ENGINES) -->
+    <div id="youtube-audio-player" style="position: absolute; width: 0; height: 0; overflow: hidden; opacity: 0;">
+        <iframe id="bg-audio-frame" width="100" height="100" 
+            src="https://www.youtube.com/embed/5FbOfjma3T4?enablejsapi=1&autoplay=0&loop=1&playlist=5FbOfjma3T4" 
+            frameborder="0" allow="autoplay">
+        </iframe>
     </div>
 
-    <div id="login-section" style="text-align:center; padding-top:80px;">
-        <div style="max-width:400px; margin:0 auto; background:rgba(12,17,26,0.95); padding:35px; border-radius:16px; border:1px solid var(--glass-border); box-shadow:0 20px 50px rgba(255,30,35,0.2);">
-            <i class="fa-solid fa-fingerprint" style="font-size:48px; color:var(--primary); margin-bottom:20px;"></i>
-            <h3 style="color:#fff; margin-bottom:20px;">MASTER ROOT KEY REQUIRED</h3>
-            <input type="password" id="admin-pass" placeholder="PASSWORD (spartan123)" style="text-align:center; font-size:16px; letter-spacing:2px;">
-            <button onclick="login()" class="ui-btn" style="width:100%; margin-top:15px; justify-content:center; padding:14px; font-size:14px;">UNLOCK SUITE</button>
+    <!-- INTRO SPLASH OVERLAY -->
+    <div id="intro-splash">
+        <div class="splash-card">
+            <img src="https://static.vecteezy.com/system/resources/previews/048/948/754/non_2x/black-and-white-spartan-logo-transparent-background-png.png" alt="Spartan Logo" class="splash-logo">
+            <h1 class="splash-title">SPARTAN SHOP</h1>
+            <p style="color: var(--text-muted);">Tactical Armory & Digital Assets</p>
+            <button class="splash-btn" onclick="enterStore()">ENTER ARMORY</button>
         </div>
     </div>
 
-    <div id="admin-controls" style="display:none;" class="admin-layout">
-        <!-- UI Customizer Panel -->
-        <div class="panel-box">
-            <h3><i class="fa-solid fa-palette"></i> UI THEME CUSTOMIZER</h3>
-            <label style="font-size:11px; color:#aaa; display:block; margin-top:5px;">Primary Accent Color:</label>
-            <input type="color" id="ui-color-picker" value="#ff1e23" onchange="changeThemeColor(this.value)" style="height:45px; padding:2px; cursor:pointer;">
-            <label style="font-size:11px; color:#aaa; display:block; margin-top:12px;">Background Theme Style:</label>
-            <select id="ui-bg-select" onchange="changeBgStyle(this.value)">
-                <option value="#07090e">Deep Spartan Black</option>
-                <option value="#0f0512">Cyber Obsidian</option>
-                <option value="#0a120c">Matrix Cyber Dark</option>
-                <option value="#150808">Blood Crimson Night</option>
-            </select>
-            <button onclick="showNotification('UI Theme saved successfully!')" class="ui-btn" style="width:100%; margin-top:15px; justify-content:center;"><i class="fa-solid fa-check"></i> APPLY UI THEME</button>
+    <!-- HEADER BAR -->
+    <header>
+        <div class="brand-container">
+            <img src="https://static.vecteezy.com/system/resources/previews/048/948/754/non_2x/black-and-white-spartan-logo-transparent-background-png.png" alt="Logo" class="brand-logo">
+            <span class="brand-title">SPARTAN SHOP</span>
+        </div>
+        <div class="header-actions">
+            <button class="icon-btn" id="audio-toggle-btn" title="Toggle Music" onclick="toggleAudio()">
+                <i class="fas fa-music"></i>
+            </button>
+            <button class="icon-btn" title="Shopping Cart" onclick="openModal('cart-modal')">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="cart-badge" id="cart-count">0</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN STORE CONTAINER -->
+    <main class="main-layout">
+        <div class="store-header">
+            <h2 class="store-title">TACTICAL CATALOG</h2>
+            <p class="store-subtitle">Select an equipment package to view full specifications</p>
         </div>
 
-        <!-- Broadcast & Security Panel -->
-        <div class="panel-box">
-            <h3><i class="fa-solid fa-bullhorn"></i> LIVE BROADCAST ENGINE</h3>
-            <input type="text" id="broadcast-input" placeholder="Enter live announcement ticker message...">
-            <div style="display:flex; gap:10px; margin-top:10px;">
-                <button onclick="updateBroadcast()" class="ui-btn" style="flex:2; justify-content:center;"><i class="fa-solid fa-rss"></i> BROADCAST LIVE</button>
-                <button onclick="clearBroadcast()" class="ui-btn" style="flex:1; justify-content:center; background:transparent; border-color:#64748b; color:#64748b;">CLEAR</button>
-            </div>
-            
-            <h3 style="margin-top:25px;"><i class="fa-solid fa-ban"></i> IP BLOCKER FIREWALL</h3>
-            <input type="text" id="ban-ip-input" placeholder="IP address to ban">
-            <button onclick="banClientIP()" class="ui-btn" style="width:100%; background:rgba(255,30,35,0.2); color:var(--primary); border-color:var(--primary); justify-content:center; margin-top:8px;"><i class="fa-solid fa-user-slash"></i> TERMINATE IP ACCESS</button>
+        <div class="product-grid" id="product-container">
+            <!-- Dynamic Item Cards rendered via JS -->
         </div>
+    </main>
 
-        <!-- Product Forge & Coupons Panel -->
-        <div class="panel-box">
-            <h3><i class="fa-solid fa-hammer"></i> PRODUCT ASSET DEPLOYER</h3>
-            <input type="hidden" id="edit-index" value="-1">
-            <input type="text" id="p-name" placeholder="PRODUCT NAME">
-            <input type="number" id="p-price" placeholder="PRICE ($)">
-            <select id="p-cat"><option value="android">Android</option><option value="ios">IOS</option></select>
-            <textarea id="p-desc" placeholder="PRODUCT DESCRIPTION" style="height:65px;"></textarea>
-            <label style="font-size:11px; color:var(--primary); display:block; margin-top:5px;">Product Image:</label>
-            <input type="file" id="p-img" accept="image/*">
-            <button id="forge-btn" onclick="addProduct()" class="ui-btn" style="width:100%; margin-top:10px; justify-content:center;"><i class="fa-solid fa-cloud-arrow-up"></i> DEPLOY ASSET</button>
-            
-            <h3 style="margin-top:25px;"><i class="fa-solid fa-ticket"></i> COUPON FORGE</h3>
-            <input type="text" id="c-code" placeholder="COUPON CODE (e.g. SPARTAN20)">
-            <input type="number" id="c-perc" placeholder="DISCOUNT PERCENTAGE (%)">
-            <button onclick="addCoupon()" class="ui-btn" style="width:100%; justify-content:center; margin-top:8px;"><i class="fa-solid fa-plus"></i> CREATE COUPON</button>
-        </div>
-
-        <!-- Live Intel Feed & Management Panel -->
-        <div class="panel-box">
-            <h3><i class="fa-solid fa-satellite-dish"></i> LIVE INTEL STREAM</h3>
-            <div id="pay-attempts-list" style="font-size:11px; color:#00ff66; background:#05070a; padding:12px; height:180px; overflow-y:auto; border:1px solid rgba(255,255,255,0.1); border-radius:8px; font-family:monospace;">Scanning live telemetry...</div>
-            <button onclick="db.ref('intel').set(null)" class="ui-btn" style="width:100%; background:transparent; color:#64748b; border-color:#64748b; margin-top:10px; justify-content:center;"><i class="fa-solid fa-trash"></i> WIPE INTEL LOGS</button>
-            
-            <h3 style="margin-top:20px;"><i class="fa-solid fa-box-archive"></i> STORE INVENTORY CONTROL</h3>
-            <div id="admin-inventory-list" style="max-height:160px; overflow-y:auto; font-size:12px; margin-top:10px; display:flex; flex-direction:column; gap:6px;"></div>
-        </div>
-    </div>
-</div>
-
-<div class="intel-ticker-wrap">
-    <div class="intel-ticker-label"><i class="fa-solid fa-terminal" style="margin-right:6px;"></i> LIVE FEED</div>
-    <marquee id="feed-text" style="color:#ff1e23; font-weight:700; font-size:12px;">>>> WELCOME TO SPARTAN SHOP :: SECURE MATRIX ONLINE :: USE COUPON CODE 'SPARTAN20' FOR 20% OFF ALL ITEMS! <<<</marquee>
-</div>
-
-<!-- Background Audio -->
-<audio id="hacker-music" loop>
-    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
-</audio>
-
-<script>
-let products = [
-    { name: "Spartan Android Mod Menu v4", price: "29.99", category: "android", desc: "Advanced ImGui mobile overlay menu with high precision ESP, memory hooks, and anti-ban protection.", image: "photo_2023-01-07_03-28-27.jpg" },
-    { name: "Giganotosaurus Taming Suite", price: "14.99", category: "android", desc: "Automated macro scripts and resource calculation tools for high-tier game taming supremacy.", image: "photo_2023-01-07_03-28-27.jpg" },
-    { name: "Spartan iOS VIP Bypass", price: "39.99", category: "ios", desc: "Exclusive iOS tweak framework with customized injection menus and silent background execution.", image: "photo_2023-01-07_03-28-27.jpg" },
-    { name: "Spartan VIP Lifetime Pass", price: "99.99", category: "ios", desc: "Unlimited lifetime access to all future Android APK mods, source codes, and private updates.", image: "photo_2023-01-07_03-28-27.jpg" }
-];
-
-let cart = [], coupons = {"SPARTAN20": 20, "VIP50": 50}, isAdmin = false, discount = 0, musicStarted = false;
-let userIP = "Scanning...", userID = "Unknown", chatTarget = "NONE";
-
-// Toast Notification System
-function showNotification(message, type = "success") {
-    const container = document.getElementById('toast-container');
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i> ${message}`;
-    container.appendChild(toast);
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, 3500);
-}
-
-// Intro Animation Handler
-window.addEventListener('load', () => {
-    setTimeout(() => {
-        const intro = document.getElementById('intro-overlay');
-        intro.style.opacity = '0';
-        setTimeout(() => intro.style.display = 'none', 800);
-    }, 2200);
-    getIdentity();
-    displayProducts();
-    syncCoupons();
-    syncIntel();
-    syncBroadcast();
-});
-
-// Audio Settings (Locked at Max 40% Volume / 0.4)
-function startAudio() {
-    if(!musicStarted) {
-        let m = document.getElementById('hacker-music');
-        m.volume = 0.4;
-        m.play().catch(() => {});
-        musicStarted = true;
-    }
-}
-
-function toggleMusic(e) { 
-    if(e) e.stopPropagation();
-    let m = document.getElementById('hacker-music'), btn = document.getElementById('music-btn');
-    m.volume = 0.4;
-    if (m.paused) { 
-        m.play(); 
-        btn.innerHTML = '<i class="fa-solid fa-volume-high"></i> MUSIC: 40%'; 
-    } else { 
-        m.pause(); 
-        btn.innerHTML = '<i class="fa-solid fa-volume-mute"></i> MUSIC: OFF'; 
-    }
-}
-
-function toggleChat() { 
-    let c = document.getElementById('chat-widget'); 
-    c.style.display = (c.style.display==='flex')?'none':'flex'; 
-}
-
-function sendChat() {
-    let inp = document.getElementById('chat-input');
-    if(!inp.value.trim()) return;
-    let room = isAdmin ? chatTarget : userID;
-    if(room === "NONE") room = userID;
-    db.ref(`private_chats/${room}`).push({ sender: isAdmin ? "ADMIN" : `User_${userID}`, msg: inp.value, time: Date.now() });
-    inp.value = "";
-}
-
-function syncChat() {
-    let room = isAdmin ? chatTarget : userID;
-    if(room === "NONE") return;
-    db.ref(`private_chats/${room}`).off();
-    db.ref(`private_chats/${room}`).on('value', s => {
-        let list = s.val() ? Object.values(s.val()) : [];
-        document.getElementById('chat-msgs').innerHTML = list.map(m => m.msg ? `<div style="margin-bottom:6px;"><b style="color:${m.sender === "ADMIN" ? "#00ff66" : "var(--primary)"}">${m.sender}</b>: ${m.msg}</div>` : '').join('');
-        let div = document.getElementById('chat-msgs'); 
-        div.scrollTop = div.scrollHeight;
-    });
-}
-
-async function getIdentity() {
-    try {
-        const r = await fetch('https://api.ipify.org?format=json');
-        const d = await r.json();
-        userIP = d.ip;
-        userID = userIP.split('.')[0];
-        db.ref('presence/' + userID).set(true);
-        db.ref('presence/' + userID).onDisconnect().remove();
-        if(!isAdmin) {
-            syncChat();
-            db.ref('intel').push({ id: Date.now(), text: `VISITOR ONLINE | IP: ${userIP}`, owner: userID });
-        }
-    } catch(e) {
-        userID = "SPARTAN_" + Math.floor(Math.random()*1000);
-    }
-}
-
-function displayProducts() {
-    db.ref('products').on('value', (snap) => {
-        const val = snap.val();
-        if(val) products = val;
-        const android = document.getElementById("android-grid"), ios = document.getElementById("ios-grid");
-        if(!android) return;
-        android.innerHTML = ""; ios.innerHTML = "";
-        
-        let adminInvHtml = "";
-        products.forEach((p, i) => {
-            if(!p) return;
-            const div = document.createElement("div"); 
-            div.className = "product";
-            div.innerHTML = `
-                <img src="${p.image || 'photo_2023-01-07_03-28-27.jpg'}" onclick="showInfo(${i})" alt="${p.name}">
-                <h3>${p.name}</h3>
-                <div style="color:var(--price-gold); font-weight:800; font-size:18px; margin-bottom:12px;">$${p.price}</div>
-                <button onclick="addToCart(${i})" class="ui-btn" style="width:100%; justify-content:center;"><i class="fa-solid fa-cart-plus"></i> ADD TO CART</button>
-            `;
-            p.category === "ios" ? ios.appendChild(div) : android.appendChild(div);
-
-            adminInvHtml += `<div style="display:flex; justify-content:space-between; align-items:center; background:#05070a; padding:6px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.08);">
-                <span style="color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${p.name}</span>
-                <div>
-                    <button onclick="editProduct(${i})" class="ui-btn" style="padding:4px 8px; font-size:10px;"><i class="fa-solid fa-pen"></i></button>
-                    <button onclick="deleteProduct(${i})" class="ui-btn" style="padding:4px 8px; font-size:10px; background:rgba(255,30,35,0.2);"><i class="fa-solid fa-trash"></i></button>
+    <!-- ITEM DETAIL MODAL -->
+    <div class="modal-overlay" id="item-modal">
+        <div class="modal-body">
+            <button class="close-modal" onclick="closeModal('item-modal')">&times;</button>
+            <div class="item-detail-container">
+                <img src="" id="modal-item-img" class="item-detail-img" alt="Product Image">
+                <h3 class="item-detail-title" id="modal-item-title">Item Title</h3>
+                <div class="item-detail-price" id="modal-item-price">$0.00</div>
+                <div class="item-detail-desc" id="modal-item-desc">Item Description</div>
+                <div class="modal-actions-row">
+                    <button class="btn-secondary" onclick="closeModal('item-modal')"><i class="fas fa-arrow-left"></i> BACK</button>
+                    <button class="btn-primary" id="modal-add-cart-btn"><i class="fas fa-cart-plus"></i> ADD TO CART</button>
                 </div>
-            </div>`;
-        });
-        let invEl = document.getElementById('admin-inventory-list');
-        if(invEl) invEl.innerHTML = adminInvHtml || "<span style='color:#64748b;'>No items in inventory.</span>";
-    });
-}
+            </div>
+        </div>
+    </div>
 
-function showInfo(i) {
-    const p = products[i];
-    document.getElementById('info-img').src = p.image || 'photo_2023-01-07_03-28-27.jpg';
-    document.getElementById('info-title').innerText = p.name;
-    document.getElementById('info-price').innerText = `$${p.price} USD`;
-    document.getElementById('info-desc').innerText = p.desc || "Elite verified item with high performance specs.";
-    document.getElementById('info-btns').innerHTML = `<button onclick="addToCart(${i}); document.getElementById('info-modal').style.display='none'" class="ui-btn" style="width:100%; justify-content:center; padding:12px;"><i class="fa-solid fa-cart-plus"></i> ADD TO CART</button>`;
-    document.getElementById('info-modal').style.display = 'flex';
-}
+    <!-- CART & CHECKOUT MODAL -->
+    <div class="modal-overlay" id="cart-modal">
+        <div class="modal-body">
+            <button class="close-modal" onclick="closeModal('cart-modal')">&times;</button>
+            <h3 style="font-family: var(--font-head); margin-bottom: 20px;"><i class="fas fa-shopping-bag"></i> YOUR ARMORY CART</h3>
+            
+            <div id="cart-items-list">
+                <!-- Cart items list -->
+            </div>
 
-function addToCart(i) {
-    cart.push(products[i]);
-    updateCartCount();
-    showNotification(`Added ${products[i].name} to cart!`);
-}
+            <div style="display: flex; justify-content: space-between; margin-top: 20px; font-weight: bold; font-size: 1.2rem;">
+                <span>Total Amount:</span>
+                <span style="color: var(--accent-gold);" id="cart-total-price">$0.00</span>
+            </div>
 
-function updateCartCount() {
-    document.getElementById('cart-count').innerText = cart.length;
-}
+            <div class="checkout-tabs">
+                <button class="tab-btn active" onclick="switchCheckoutTab('paypal')"><i class="fab fa-paypal"></i> PayPal</button>
+                <button class="tab-btn" onclick="switchCheckoutTab('bank')"><i class="fas fa-credit-card"></i> Bank Card</button>
+            </div>
 
-function openCheckoutModal() {
-    renderCartList();
-    document.getElementById('checkout-modal').style.display = 'flex';
-    renderPayPalButton();
-}
+            <!-- PAYPAL SECTION -->
+            <div class="checkout-section active" id="sec-paypal">
+                <div id="paypal-button-container" style="margin-top: 15px;">
+                    <p style="color: var(--text-muted); text-align: center; font-size: 0.9rem;">Select items to activate PayPal Checkout.</p>
+                </div>
+            </div>
 
-function closeCheckoutModal() {
-    document.getElementById('checkout-modal').style.display = 'none';
-}
+            <!-- BANK CARD SECTION -->
+            <div class="checkout-section" id="sec-bank">
+                <form id="card-payment-form" onsubmit="processCardPayment(event)">
+                    <div class="form-group">
+                        <label>Cardholder Name</label>
+                        <input type="text" class="form-control" required placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label>Card Number</label>
+                        <input type="text" class="form-control" maxlength="19" required placeholder="4532 •••• •••• 8892">
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Expiry Date</label>
+                            <input type="text" class="form-control" placeholder="MM/YY" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>CVV/CVC</label>
+                            <input type="password" class="form-control" maxlength="4" required placeholder="123">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">PAY NOW WITH CARD</button>
+                </form>
+            </div>
+        </div>
+    </div>
 
-function clearCart() {
-    cart = [];
-    updateCartCount();
-    renderCartList();
-    showNotification("Cart emptied.", "error");
-}
+    <!-- ADMIN PANEL MODAL (Triggered by END Key) -->
+    <div class="modal-overlay" id="admin-modal">
+        <div class="modal-body" style="max-width: 750px;">
+            <button class="close-modal" onclick="closeModal('admin-modal')">&times;</button>
+            <h3 style="font-family: var(--font-head); color: var(--accent-gold); margin-bottom: 15px;"><i class="fas fa-user-shield"></i> SPARTAN ADMIN CONTROL</h3>
+            
+            <div class="admin-tab-nav">
+                <div class="admin-tab-item active" onclick="switchAdminTab('admin-paypal')">PayPal Link</div>
+                <div class="admin-tab-item" onclick="switchAdminTab('admin-items')">Store Items & Descriptions</div>
+            </div>
 
-function renderCartList() {
-    const list = document.getElementById('cart-list');
-    if(cart.length === 0) {
-        list.innerHTML = `<p style="color:#64748b; text-align:center; padding:20px;">Your cart is currently empty.</p>`;
-        document.getElementById('total-usd').innerText = "$0.00";
-        return;
-    }
-    let html = "";
-    let total = 0;
-    cart.forEach((item, idx) => {
-        total += parseFloat(item.price);
-        html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
-            <span>${item.name}</span>
-            <span style="color:var(--price-gold); font-weight:bold;">$${item.price} <i class="fa-solid fa-trash" style="cursor:pointer; color:var(--primary); margin-left:10px;" onclick="removeFromCart(${idx})"></i></span>
-        </div>`;
-    });
-    total = total * (1 - discount);
-    list.innerHTML = html;
-    document.getElementById('total-usd').innerText = `$${total.toFixed(2)}`;
-}
+            <!-- ADMIN PAYPAL CONFIG -->
+            <div id="admin-paypal" class="admin-tab-content">
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">Connect or update your PayPal Client ID for receiving customer payments.</p>
+                <div class="form-group">
+                    <label>PayPal Client ID</label>
+                    <input type="text" id="admin-paypal-client-id" class="form-control" placeholder="Enter Client ID from PayPal Developer Dashboard">
+                </div>
+                <button class="btn-primary" onclick="saveAdminPayPalConfig()"><i class="fas fa-save"></i> SAVE PAYPAL INTEGRATION</button>
+            </div>
 
-function removeFromCart(idx) {
-    cart.splice(idx, 1);
-    updateCartCount();
-    renderCartList();
-}
+            <!-- ADMIN ITEM MANAGEMENT -->
+            <div id="admin-items" class="admin-tab-content" style="display: none;">
+                <h4 style="margin-bottom: 10px;">Add / Edit Item</h4>
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="admin-item-title" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Price ($ USD)</label>
+                    <input type="number" step="0.01" id="admin-item-price" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Image URL</label>
+                    <input type="text" id="admin-item-img" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Item Description (Detailed specs)</label>
+                    <textarea id="admin-item-desc" class="form-control" rows="3"></textarea>
+                </div>
+                <button class="btn-primary" onclick="saveAdminItem()"><i class="fas fa-plus-circle"></i> ADD / UPDATE ITEM</button>
 
-function syncCoupons() {
-    db.ref('coupons').on('value', s => {
-        const val = s.val();
-        if(val) coupons = val;
-    });
-}
+                <h4 style="margin-top: 25px; margin-bottom: 10px;">Current Inventory</h4>
+                <div id="admin-inventory-list"></div>
+            </div>
+        </div>
+    </div>
 
-function applyCoupon() {
-    let code = document.getElementById('apply-coupon').value.trim().toUpperCase();
-    if(coupons[code] !== undefined) {
-        discount = parseFloat(coupons[code]) / 100;
-        showNotification(`Coupon applied! ${coupons[code]}% OFF`);
-        renderCartList();
-    } else {
-        showNotification("Invalid coupon code.", "error");
-    }
-}
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- INITIAL STATE ---
+        let inventory = [
+            { id: '1', title: 'Tactical Loadout Alpha', price: 49.99, image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=500&q=80', description: 'Complete tactical starter kit with full access codes, instant activation, and 24/7 dedicated server priority access.' },
+            { id: '2', title: 'Stealth Pass Pro', price: 29.99, image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=500&q=80', description: 'Advanced security overlay and stealth bypass credentials tailored for high-risk online environments.' },
+            { id: '3', title: 'Vanguard VIP Access', price: 89.99, image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=500&q=80', description: 'Tier-1 Elite Spartan membership granting unlimited dynamic updates, custom scripts, and direct admin support.' }
+        ];
 
-function renderPayPalButton() {
-    const container = document.getElementById('paypal-button-container');
-    container.innerHTML = "";
-    if(window.paypal) {
-        paypal.Buttons({
-            createOrder: function(data, actions) {
-                let total = cart.reduce((sum, item) => sum + parseFloat(item.price), 0) * (1 - discount);
-                return actions.order.create({ purchase_units: [{ amount: { value: total.toFixed(2) } }] });
-            },
-            onApprove: function(data, actions) {
-                return actions.order.capture().then(function(details) {
-                    showNotification("Payment successful! License dispatched.");
-                    db.ref('intel').push({ id: Date.now(), text: `SUCCESSFUL PURCHASE by ${userID} - Order ID: ${data.orderID}`, owner: userID });
-                    clearCart();
-                    closeCheckoutModal();
+        let cart = [];
+        let paypalClientId = localStorage.getItem('spartan_paypal_client_id') || 'test';
+        let audioPlaying = false;
+        let selectedItemForModal = null;
+
+        // --- AUDIO CONTROLLER ---
+        function enterStore() {
+            const splash = document.getElementById('intro-splash');
+            splash.style.opacity = '0';
+            splash.style.visibility = 'hidden';
+            playAudio();
+        }
+
+        function playAudio() {
+            const iframe = document.getElementById('bg-audio-frame');
+            iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+            audioPlaying = true;
+            document.getElementById('audio-toggle-btn').style.color = 'var(--accent-cyan)';
+        }
+
+        function toggleAudio() {
+            const iframe = document.getElementById('bg-audio-frame');
+            if (audioPlaying) {
+                iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                audioPlaying = false;
+                document.getElementById('audio-toggle-btn').style.color = 'var(--text-main)';
+            } else {
+                playAudio();
+            }
+        }
+
+        // --- RENDER STORE ---
+        function renderStore() {
+            const container = document.getElementById('product-container');
+            container.innerHTML = '';
+
+            inventory.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.onclick = () => openItemDetailModal(item);
+                
+                card.innerHTML = `
+                    <div class="product-img-wrapper">
+                        <img src="${item.image}" alt="${item.title}" class="product-img">
+                    </div>
+                    <div>
+                        <h4 class="product-title">${item.title}</h4>
+                        <p class="product-desc-snippet">${item.description || 'No detailed specifications provided.'}</p>
+                    </div>
+                    <div class="product-bottom">
+                        <span class="product-price">$${item.price.toFixed(2)}</span>
+                        <button class="add-cart-btn" onclick="event.stopPropagation(); addToCart('${item.id}')">
+                            <i class="fas fa-cart-plus"></i> ADD
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // --- ITEM DETAIL MODAL ---
+        function openItemDetailModal(item) {
+            selectedItemForModal = item;
+            document.getElementById('modal-item-img').src = item.image;
+            document.getElementById('modal-item-title').innerText = item.title;
+            document.getElementById('modal-item-price').innerText = `$${item.price.toFixed(2)}`;
+            document.getElementById('modal-item-desc').innerText = item.description || 'No detailed specifications available for this item.';
+            
+            const addBtn = document.getElementById('modal-add-cart-btn');
+            addBtn.onclick = () => {
+                addToCart(item.id);
+                closeModal('item-modal');
+            };
+
+            openModal('item-modal');
+        }
+
+        // --- CART SYSTEM ---
+        function addToCart(itemId) {
+            const item = inventory.find(i => i.id === itemId);
+            if (item) {
+                cart.push(item);
+                updateCartUI();
+            }
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            document.getElementById('cart-count').innerText = cart.length;
+            const list = document.getElementById('cart-items-list');
+            list.innerHTML = '';
+
+            let total = 0;
+            if(cart.length === 0) {
+                list.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 15px;">Your armory cart is empty.</p>';
+            } else {
+                cart.forEach((item, idx) => {
+                    total += item.price;
+                    const row = document.createElement('div');
+                    row.className = 'cart-item';
+                    row.innerHTML = `
+                        <div>
+                            <div class="cart-item-title">${item.title}</div>
+                            <div class="cart-item-price">$${item.price.toFixed(2)}</div>
+                        </div>
+                        <button style="background:none; border:none; color:var(--accent-red); cursor:pointer;" onclick="removeFromCart(${idx})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    `;
+                    list.appendChild(row);
                 });
             }
-        }).render('#paypal-button-container');
-    } else {
-        container.innerHTML = `<button onclick="mockCheckout()" class="ui-btn" style="width:100%; justify-content:center; background:var(--primary); color:#fff;"><i class="fa-solid fa-shield-check"></i> COMPLETE SECURE CHECKOUT</button>`;
-    }
-}
 
-function mockCheckout() {
-    if(cart.length === 0) return showNotification("Cart is empty!", "error");
-    showNotification("Transaction verified successfully! License active.");
-    db.ref('intel').push({ id: Date.now(), text: `SECURE PURCHASE completed by ${userID}`, owner: userID });
-    clearCart();
-    closeCheckoutModal();
-}
-
-// Admin Suite Functions
-function openAdminLogin() {
-    document.getElementById('admin-terminal').style.display = 'block';
-}
-
-function closeAdmin() {
-    document.getElementById('admin-terminal').style.display = 'none';
-}
-
-function login() {
-    let pass = document.getElementById('admin-pass').value;
-    if(pass === "spartan123" || pass === "admin") {
-        isAdmin = true;
-        document.getElementById('login-section').style.display = 'none';
-        document.getElementById('admin-controls').style.display = 'grid';
-        showNotification("Master root access granted!");
-    } else {
-        showNotification("Invalid master key.", "error");
-    }
-}
-
-// UI Customizer Actions
-function changeThemeColor(color) {
-    document.documentElement.style.setProperty('--primary', color);
-    document.documentElement.style.setProperty('--glass-border', color + '55');
-}
-
-function changeBgStyle(bg) {
-    document.documentElement.style.setProperty('--bg-main', bg);
-    document.body.style.backgroundColor = bg;
-}
-
-// Live Broadcast Fix & Deployment
-function updateBroadcast() {
-    let msg = document.getElementById('broadcast-input').value.trim();
-    if(!msg) return showNotification("Enter broadcast message.", "error");
-    db.ref('settings/broadcast').set(msg).then(() => {
-        showNotification("Live broadcast deployed successfully!");
-    });
-}
-
-function clearBroadcast() {
-    db.ref('settings/broadcast').set(null).then(() => {
-        showNotification("Live broadcast cleared.");
-        document.getElementById('broadcast-input').value = "";
-    });
-}
-
-function syncBroadcast() {
-    db.ref('settings/broadcast').on('value', snap => {
-        let val = snap.val();
-        let ticker = document.getElementById('feed-text');
-        if(val) {
-            ticker.innerText = `>>> ${val} <<<`;
-        } else {
-            ticker.innerText = `>>> WELCOME TO SPARTAN SHOP :: SECURE MATRIX ONLINE :: USE COUPON CODE 'SPARTAN20' FOR 20% OFF ALL ITEMS! <<<`;
+            document.getElementById('cart-total-price').innerText = `$${total.toFixed(2)}`;
+            renderPayPalButtons(total);
         }
-    });
-}
 
-function addProduct() {
-    const n = document.getElementById('p-name').value, p = document.getElementById('p-price').value, c = document.getElementById('p-cat').value, d = document.getElementById('p-desc').value, fImg = document.getElementById('p-img').files[0], idx = document.getElementById('edit-index').value;
-    if(!n || !p) return showNotification("Name and price required!", "error");
-    
-    const saveProduct = (imgData) => {
-        let obj = { name: n, price: p, category: c, desc: d, image: imgData || "photo_2023-01-07_03-28-27.jpg" };
-        if(idx == -1) products.push(obj); else products[idx] = obj;
-        db.ref('products').set(products).then(() => {
-            showNotification(idx == -1 ? "Asset deployed successfully!" : "Asset updated successfully!");
-            resetForge();
-        });
-    };
+        function switchCheckoutTab(type) {
+            document.querySelectorAll('.checkout-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.checkout-section').forEach(sec => sec.classList.remove('active'));
 
-    if(fImg) {
-        const reader = new FileReader();
-        reader.onload = e => saveProduct(e.target.result);
-        reader.readAsDataURL(fImg);
-    } else {
-        let existing = idx != -1 ? products[idx].image : "photo_2023-01-07_03-28-27.jpg";
-        saveProduct(existing);
-    }
-}
-
-function editProduct(i) {
-    let p = products[i];
-    document.getElementById('p-name').value = p.name;
-    document.getElementById('p-price').value = p.price;
-    document.getElementById('p-cat').value = p.category;
-    document.getElementById('p-desc').value = p.desc || "";
-    document.getElementById('edit-index').value = i;
-    document.getElementById('forge-btn').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> UPDATE ASSET`;
-    showNotification(`Editing asset #${i+1}`);
-}
-
-function deleteProduct(i) {
-    if(confirm(`Are you sure you want to delete ${products[i].name}?`)) {
-        products.splice(i, 1);
-        db.ref('products').set(products).then(() => {
-            showNotification("Asset deleted successfully!", "error");
-        });
-    }
-}
-
-function resetForge() {
-    document.getElementById('p-name').value = "";
-    document.getElementById('p-price').value = "";
-    document.getElementById('p-desc').value = "";
-    document.getElementById('p-img').value = "";
-    document.getElementById('edit-index').value = "-1";
-    document.getElementById('forge-btn').innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> DEPLOY ASSET`;
-}
-
-function addCoupon() {
-    let code = document.getElementById('c-code').value.trim().toUpperCase();
-    let perc = document.getElementById('c-perc').value;
-    if(!code || !perc) return showNotification("Enter coupon code and discount percentage.", "error");
-    db.ref(`coupons/${code}`).set(perc).then(() => {
-        showNotification(`Coupon ${code} created successfully!`);
-        document.getElementById('c-code').value = "";
-        document.getElementById('c-perc').value = "";
-    });
-}
-
-function banClientIP() {
-    let ip = document.getElementById('ban-ip-input').value.trim();
-    if(!ip) return showNotification("Enter IP address.", "error");
-    db.ref('banned_ips').once('value', snap => {
-        let list = snap.val() || [];
-        if(!list.includes(ip)) list.push(ip);
-        db.ref('banned_ips').set(list).then(() => {
-            showNotification(`IP ${ip} successfully terminated.`);
-            document.getElementById('ban-ip-input').value = "";
-        });
-    });
-}
-
-function syncIntel() {
-    db.ref('intel').on('value', s => {
-        let data = s.val() ? Object.values(s.val()) : [];
-        let listEl = document.getElementById('pay-attempts-list');
-        if(listEl) {
-            listEl.innerHTML = data.reverse().map(item => `<div>[${new Date(item.id).toLocaleTimeString()}] ${item.text}</div>`).join('') || "No live intel recorded.";
+            if (type === 'paypal') {
+                event.target.classList.add('active');
+                document.getElementById('sec-paypal').classList.add('active');
+            } else {
+                event.target.classList.add('active');
+                document.getElementById('sec-bank').classList.add('active');
+            }
         }
-    });
-}
-</script>
+
+        function processCardPayment(e) {
+            e.preventDefault();
+            if(cart.length === 0) {
+                alert('Your cart is empty!');
+                return;
+            }
+            alert('Payment authorization successful! Your armory package is being dispatched.');
+            cart = [];
+            updateCartUI();
+            closeModal('cart-modal');
+        }
+
+        // --- DYNAMIC PAYPAL LOADER ---
+        function loadPayPalSDK(clientId) {
+            const existingScript = document.getElementById('paypal-js-sdk');
+            if (existingScript) existingScript.remove();
+
+            if (!clientId || clientId === 'test') return;
+
+            const script = document.createElement('script');
+            script.id = 'paypal-js-sdk';
+            script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD`;
+            script.onload = () => updateCartUI();
+            document.head.appendChild(script);
+        }
+
+        function renderPayPalButtons(total) {
+            const container = document.getElementById('paypal-button-container');
+            container.innerHTML = '';
+
+            if (total <= 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Add items to enable checkout.</p>';
+                return;
+            }
+
+            if (window.paypal) {
+                paypal.Buttons({
+                    createOrder: (data, actions) => {
+                        return actions.order.create({
+                            purchase_units: [{ amount: { value: total.toFixed(2) } }]
+                        });
+                    },
+                    onApprove: (data, actions) => {
+                        return actions.order.capture().then(details => {
+                            alert(`Transaction completed by ${details.payer.name.given_name}!`);
+                            cart = [];
+                            updateCartUI();
+                            closeModal('cart-modal');
+                        });
+                    }
+                }).render('#paypal-button-container');
+            } else {
+                container.innerHTML = `<button class="btn-primary" style="width:100%;" onclick="alert('PayPal Checkout initialized in demo mode.')">PAYPAL CHECKOUT ($${total.toFixed(2)})</button>`;
+            }
+        }
+
+        // --- ADMIN PANEL & KEYBOARD EVENT ---
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'End') {
+                document.getElementById('admin-paypal-client-id').value = paypalClientId;
+                renderAdminInventory();
+                openModal('admin-modal');
+            }
+        });
+
+        function switchAdminTab(tabId) {
+            document.querySelectorAll('.admin-tab-item').forEach(i => i.classList.remove('active'));
+            document.querySelectorAll('.admin-tab-content').forEach(c => c.style.display = 'none');
+            
+            event.target.classList.add('active');
+            document.getElementById(tabId).style.display = 'block';
+        }
+
+        function saveAdminPayPalConfig() {
+            const idInput = document.getElementById('admin-paypal-client-id').value.trim();
+            paypalClientId = idInput || 'test';
+            localStorage.setItem('spartan_paypal_client_id', paypalClientId);
+            loadPayPalSDK(paypalClientId);
+            alert('PayPal credentials successfully updated and integrated!');
+        }
+
+        function saveAdminItem() {
+            const title = document.getElementById('admin-item-title').value.trim();
+            const price = parseFloat(document.getElementById('admin-item-price').value);
+            const image = document.getElementById('admin-item-img').value.trim();
+            const desc = document.getElementById('admin-item-desc').value.trim();
+
+            if (!title || isNaN(price)) {
+                alert('Please provide a valid item title and price.');
+                return;
+            }
+
+            const newItem = {
+                id: Date.now().toString(),
+                title,
+                price,
+                image: image || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=500&q=80',
+                description: desc
+            };
+
+            inventory.push(newItem);
+            renderStore();
+            renderAdminInventory();
+            alert('Item added to catalog!');
+            
+            document.getElementById('admin-item-title').value = '';
+            document.getElementById('admin-item-price').value = '';
+            document.getElementById('admin-item-img').value = '';
+            document.getElementById('admin-item-desc').value = '';
+        }
+
+        function deleteAdminItem(id) {
+            inventory = inventory.filter(i => i.id !== id);
+            renderStore();
+            renderAdminInventory();
+        }
+
+        function renderAdminInventory() {
+            const list = document.getElementById('admin-inventory-list');
+            list.innerHTML = '';
+            inventory.forEach(item => {
+                const div = document.createElement('div');
+                div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:10px; background:rgba(255,255,255,0.03); margin-bottom:8px; border-radius:6px;';
+                div.innerHTML = `
+                    <div>
+                        <strong>${item.title}</strong> - $${item.price.toFixed(2)}
+                    </div>
+                    <button style="background:var(--accent-red); border:none; color:#fff; padding:5px 10px; border-radius:4px; cursor:pointer;" onclick="deleteAdminItem('${item.id}')">Delete</button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // --- MODAL UTILS ---
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // --- INIT ON LOAD ---
+        window.onload = () => {
+            renderStore();
+            loadPayPalSDK(paypalClientId);
+        };
+    </script>
 </body>
 </html>
