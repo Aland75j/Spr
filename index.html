@@ -2,587 +2,702 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SPARTAN SHOP</title>
-    <!-- Tailwind CSS CDN for Modern Responsive UI -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        spartanRed: '#ff1e23',
-                        spartanDark: '#0a0a0c',
-                        spartanCard: '#141418',
-                        spartanBorder: '#2a2a35'
-                    }
-                }
-            }
-        }
+        const firebaseConfig = {
+            apiKey: "AIzaSyDE6qMplWktZASB2AjUKuY_dSRCUKiZyOA",
+            authDomain: "maxiom-r3.firebaseapp.com",
+            databaseURL: "https://maxiom-r3-default-rtdb.firebaseio.com",
+            projectId: "maxiom-r3",
+            storageBucket: "maxiom-r3.firebasestorage.app",
+            messagingSenderId: "221473460329",
+            appId: "1:221473460329:web:21a278a86cfdcff8b1d2f8",
+            measurementId: "G-82WFV6S568"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        (function() {
+            const checkBans = async () => {
+                try {
+                    const r = await fetch('https://api.ipify.org?format=json');
+                    const d = await r.json();
+                    const userIP = d.ip;
+                    db.ref('banned_ips').on('value', (snap) => {
+                        const list = snap.val() || [];
+                        if(list.includes(userIP)) {
+                            window.stop();
+                            document.documentElement.innerHTML = "";
+                            alert("ACCESS DENIED: TERMINATED BY SYSTEM ADMIN");
+                            window.location.href = "about:blank";
+                        }
+                    });
+                } catch(e) { console.log("Shield Active"); }
+            };
+            checkBans();
+
+            db.ref('settings/paypal_id').once('value', (snap) => {
+                const savedID = snap.val() || "test";
+                const script = document.createElement('script');
+                script.src = `https://www.paypal.com/sdk/js?client-id=${savedID}&currency=USD`;
+                document.head.appendChild(script);
+            });
+        })();
     </script>
-    <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0a0a0c;
-            color: #f3f4f6;
-            overflow-x: hidden;
+        :root {
+            --primary: #ff1e23;
+            --secondary: #00ff66;
+            --accent: #00e5ff;
+            --bg-main: #07090e;
+            --glass: rgba(15, 20, 30, 0.9);
+            --glass-border: rgba(255, 30, 35, 0.3);
+            --price-gold: #ffcc00;
         }
-        .font-orbitron {
-            font-family: 'Orbitron', sans-serif;
+
+        * { cursor: crosshair !important; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #e2e8f0; text-align: center; background: var(--bg-main); transition: 0.3s; overflow-x: hidden; padding-bottom: 90px; }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #05070a; }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
+
+        /* Notification Toast */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 1000000; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: rgba(10, 15, 22, 0.95); border-left: 4px solid var(--primary); color: white; padding: 12px 20px; border-radius: 6px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s ease; }
+        .toast.error { border-left-color: var(--secondary); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* Opening Spartan Logo & Typewriter Intro */
+        #intro-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #030508; z-index: 999999; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; transition: opacity 0.8s ease;
         }
-        .glow-red {
-            box-shadow: 0 0 25px rgba(255, 30, 35, 0.3);
+        .spartan-logo-intro {
+            width: 120px; height: 120px; object-fit: cover; border-radius: 50%;
+            border: 3px solid var(--primary);
+            box-shadow: 0 0 30px var(--primary);
+            animation: pulseLogo 1.5s infinite alternate;
         }
-        .glow-text {
-            text-shadow: 0 0 10px rgba(255, 30, 35, 0.6);
+        @keyframes pulseLogo { from { transform: scale(1); box-shadow: 0 0 15px var(--primary); } to { transform: scale(1.08); box-shadow: 0 0 35px var(--primary); } }
+        
+        .typewriter-container {
+            margin-top: 25px; font-family: 'Courier New', monospace; font-size: 26px;
+            font-weight: 800; color: #fff; letter-spacing: 6px; text-transform: uppercase;
+            border-right: 3px solid var(--primary); white-space: nowrap;
+            width: 0; animation: typing 1.8s steps(20, end) forwards, blink 0.75s step-end infinite;
         }
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #0a0a0c; }
-        ::-webkit-scrollbar-thumb { background: #ff1e23; border-radius: 4px; }
+        @keyframes typing { from { width: 0 } to { width: 100% } }
+        @keyframes blink { from, to { border-color: transparent } 50% { border-color: var(--primary); } }
+
+        /* Header & Navigation */
+        .top-nav { position: fixed; top: 20px; left: 20px; z-index: 4000; display: flex; gap: 10px; flex-wrap: wrap; }
+        .ui-btn { padding: 10px 18px; background: rgba(255, 30, 35, 0.15); color: var(--primary); border: 1px solid var(--primary); font-weight: 700; border-radius: 8px; font-size: 12px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; backdrop-filter: blur(5px); }
+        .ui-btn:hover { background: var(--primary); color: #fff; box-shadow: 0 0 20px var(--primary); }
+
+        .floating-cart {
+            position: fixed; top: 20px; right: 20px; background: rgba(15, 20, 30, 0.9); width: 55px; height: 55px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;
+            z-index: 10000; color: var(--primary); box-shadow: 0 0 20px rgba(255,30,35,0.3); border: 1px solid var(--primary);
+            font-size: 20px; transition: 0.3s;
+        }
+        .floating-cart:hover { transform: scale(1.08); background: var(--primary); color: #fff; }
+        .cart-count { position: absolute; top: -5px; right: -5px; background: var(--secondary); color: #000; font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 50%; border: 2px solid var(--bg-main); }
+
+        .header-container { padding: 70px 20px 20px 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        .header-brand { display: flex; align-items: center; gap: 15px; background: var(--glass); padding: 15px 35px; border-radius: 20px; border: 1px solid var(--glass-border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
+        .header-logo { width: 60px; height: 60px; object-fit: cover; border-radius: 50%; border: 2px solid var(--primary); box-shadow: 0 0 15px var(--primary); }
+        header { font-size: 38px; font-weight: 900; color: #fff; text-shadow: 0 0 25px rgba(255,30,35,0.5); letter-spacing: 3px; margin: 0; }
+        header span { color: var(--primary); }
+
+        /* Store Layout & Product Cards */
+        .cat-label { margin: 40px auto 20px auto; padding: 12px 25px; background: var(--glass); border-left: 4px solid var(--primary); border-right: 4px solid var(--primary); max-width: 900px; font-size: 18px; font-weight: 800; color: #fff; letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 12px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; padding: 10px 20px; max-width: 1200px; margin: 0 auto; }
+        
+        .product { 
+            background: var(--glass); border: 1px solid var(--glass-border); padding: 20px; border-radius: 16px; 
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;
+            backdrop-filter: blur(12px); display: flex; flex-direction: column; justify-content: space-between;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+        .product::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, transparent, var(--primary), transparent); opacity: 0; transition: 0.3s; }
+        .product:hover { transform: translateY(-8px); border-color: var(--primary); box-shadow: 0 15px 40px rgba(255,30,35,0.25); }
+        .product:hover::before { opacity: 1; }
+        .product img { width: 100%; height: 180px; object-fit: cover; border-radius: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); }
+        .product h3 { margin: 15px 0 8px 0; font-size: 17px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Chat Widget */
+        #chat-widget { position: fixed; bottom: 80px; right: 20px; width: 340px; height: 440px; background: rgba(10, 14, 22, 0.96); border: 1px solid var(--primary); z-index: 9998; display: none; flex-direction: column; border-radius: 14px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.8); backdrop-filter: blur(15px); }
+        #chat-header { background: rgba(255, 30, 35, 0.2); color: var(--primary); padding: 14px 18px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); font-size: 13px; }
+        #chat-msgs { flex: 1; overflow-y: auto; padding: 15px; font-size: 12px; text-align: left; display: flex; flex-direction: column; gap: 8px; }
+        .chat-input-wrap { display: flex; border-top: 1px solid var(--glass-border); background: #05070a; }
+        #chat-input { flex: 1; border: none; padding: 12px 15px; background: transparent; color: #fff; font-size: 12px; outline: none; margin: 0; }
+
+        /* Checkout Modal */
+        #checkout-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 5, 8, 0.9); z-index: 50000; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 20px; }
+        .checkout-box { background: rgba(12, 17, 26, 0.95); border: 1px solid var(--primary); width: 100%; max-width: 500px; border-radius: 16px; padding: 30px; box-shadow: 0 20px 50px rgba(255,30,35,0.3); text-align: left; position: relative; max-height: 90vh; overflow-y: auto; }
+        
+        input, select, textarea { background: rgba(5, 7, 10, 0.9); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 12px 15px; margin: 8px 0; width: 100%; border-radius: 8px; font-size: 13px; outline: none; transition: 0.2s; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 12px rgba(255,30,35,0.3); }
+
+        /* Beast Admin Terminal Suite */
+        .admin-box { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #04060a; z-index: 20000; padding: 30px; overflow-y: auto; text-align: left; }
+        .admin-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-top: 20px; }
+        .panel-box { background: rgba(12, 17, 26, 0.95); border: 1px solid rgba(255,255,255,0.1); padding: 22px; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+        .panel-box h3 { color: var(--primary); margin-top: 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; font-size: 15px; display: flex; align-items: center; gap: 10px; font-weight: 800; }
+
+        /* Intel Ticker */
+        .intel-ticker-wrap { position: fixed; bottom: 0; left: 0; width: 100%; height: 42px; background: rgba(6, 9, 15, 0.98); border-top: 1px solid var(--glass-border); z-index: 9999; display: flex; align-items: center; backdrop-filter: blur(8px); }
+        .intel-ticker-label { background: var(--primary); color: #fff; font-weight: 800; padding: 0 20px; height: 100%; display: flex; align-items: center; font-size: 11px; letter-spacing: 1px; }
+
+        @media (max-width: 768px) {
+            header { font-size: 24px; }
+            .header-brand { padding: 10px 20px; gap: 10px; }
+            .header-logo { width: 45px; height: 45px; }
+            .header-container { padding: 50px 10px 10px 10px; }
+            .cat-label { font-size: 14px; padding: 10px; width: 92%; }
+            .top-nav { top: auto; bottom: 50px; left: 10px; right: 10px; justify-content: center; gap: 6px; }
+            .ui-btn { padding: 8px 12px; font-size: 10px; flex: 1; justify-content: center; }
+            .floating-cart { width: 48px; height: 48px; font-size: 16px; top: 12px; right: 12px; }
+            .admin-box { padding: 15px; }
+            #chat-widget { width: 92%; right: 4%; bottom: 100px; }
+        }
     </style>
 </head>
-<body class="bg-spartanDark text-gray-100 min-h-screen flex flex-col">
+<body onclick="startAudio()">
 
-    <!-- Background Audio (Max Volume 40% / 0.4) -->
-    <audio id="bgMusic" loop>
-        <source src="https://www.youtube.com/watch?v=5FbOfjma3T4" type="audio/mp4">
-    </audio>
+<div id="toast-container"></div>
 
-    <!-- Top Live Broadcast Banner -->
-    <div id="broadcastBanner" class="bg-gradient-to-r from-spartanRed via-red-700 to-spartanRed text-white py-2 px-4 text-center font-orbitron text-xs md:text-sm tracking-wider uppercase font-bold shadow-lg flex items-center justify-center space-x-3 transition-all duration-300">
-        <span class="flex h-3 w-3 relative">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-3 w-3 bg-yellow-300"></span>
-        </span>
-        <span id="broadcastText">⚡ WELCOME TO SPARTAN SHOP! USE COUPON CODE 'SPARTAN20' FOR 20% OFF ALL ITEMS! ⚡</span>
+<!-- Opening Intro Animation -->
+<div id="intro-overlay">
+    <img src="photo_2023-01-07_03-28-27.jpg" class="spartan-logo-intro" alt="Spartan Logo">
+    <div class="typewriter-container" id="typewriter-text">SPARTAN SHOP</div>
+</div>
+
+<div class="top-nav">
+    <button class="ui-btn" id="music-btn" onclick="toggleMusic(event)"><i class="fa-solid fa-volume-high"></i> MUSIC: 40%</button>
+    <button class="ui-btn" onclick="toggleChat()"><i class="fa-solid fa-comments"></i> CHAT</button>
+    <button class="ui-btn" onclick="openAdminLogin()"><i class="fa-solid fa-shield-halved"></i> ADMIN</button>
+</div>
+
+<div id="chat-widget">
+    <div id="chat-header">
+        <span id="chat-title"><i class="fa-solid fa-headset"></i> SECURE SUPPORT</span> 
+        <i class="fa-solid fa-xmark" onclick="toggleChat()" style="cursor:pointer"></i>
+    </div>
+    <div id="chat-msgs"></div>
+    <div class="chat-input-wrap">
+        <input type="text" id="chat-input" placeholder="Type message..." onkeydown="if(event.key==='Enter') sendChat()">
+        <button onclick="sendChat()" style="background:var(--primary); border:none; padding:0 15px; cursor:pointer; color:#fff; font-weight:bold;"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+</div>
+
+<div class="floating-cart" onclick="openCheckoutModal()">
+    <i class="fa-solid fa-cart-shopping"></i> <span class="cart-count" id="cart-count">0</span>
+</div>
+
+<div class="header-container">
+    <div class="header-brand">
+        <img src="photo_2023-01-07_03-28-27.jpg" class="header-logo" alt="Spartan Logo">
+        <header>SPARTAN <span>SHOP</span></header>
+    </div>
+</div>
+
+<div id="shop-page">
+    <div class="cat-label"><i class="fa-brands fa-android"></i> ANDROID CHEATS & MODS</div>
+    <div id="android-grid" class="product-grid"></div>
+    <div class="cat-label"><i class="fa-brands fa-apple"></i> IOS CHEATS & MODS</div>
+    <div id="ios-grid" class="product-grid"></div>
+</div>
+
+<!-- Enhanced Checkout Modal -->
+<div id="checkout-modal">
+    <div class="checkout-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:15px; margin-bottom:15px;">
+            <h2 style="color:var(--primary); margin:0; font-size:20px;"><i class="fa-solid fa-lock"></i> SECURE CHECKOUT</h2>
+            <i class="fa-solid fa-xmark" onclick="closeCheckoutModal()" style="cursor:pointer; font-size:20px; color:#aaa;"></i>
+        </div>
+        <div id="cart-list" style="max-height:180px; overflow-y:auto; margin-bottom:15px; font-size:13px;"></div>
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <input type="text" id="apply-coupon" placeholder="COUPON CODE (e.g. SPARTAN20)" style="margin:0;">
+            <button onclick="applyCoupon()" class="ui-btn" style="white-space:nowrap; margin:0;">APPLY</button>
+        </div>
+        <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:8px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:14px; color:#aaa;">TOTAL DUE:</span>
+            <span id="total-usd" style="color:var(--price-gold); font-size:22px; font-weight:800;">$0.00</span>
+        </div>
+        <div id="paypal-button-container" style="margin-bottom:15px;"></div>
+        <button onclick="clearCart()" style="width:100%; background:transparent; border:1px solid rgba(255,30,35,0.4); color:var(--primary); padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; font-size:12px;">EMPTY CART</button>
+    </div>
+</div>
+
+<!-- Product Info Modal -->
+<div id="info-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(3,5,8,0.9); z-index:50000; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(8px);">
+    <div style="background:rgba(12,17,26,0.95); border:1px solid var(--primary); width:100%; max-width:600px; border-radius:16px; padding:30px; text-align:left; position:relative; max-height:90vh; overflow-y:auto; box-shadow:0 20px 50px rgba(255,30,35,0.3);">
+        <i class="fa-solid fa-xmark" onclick="document.getElementById('info-modal').style.display='none'" style="position:absolute; top:20px; right:20px; cursor:pointer; font-size:20px; color:#aaa;"></i>
+        <img id="info-img" style="width:100%; height:220px; object-fit:cover; border-radius:10px; margin-bottom:15px; border:1px solid rgba(255,255,255,0.1);">
+        <h2 id="info-title" style="color:var(--primary); margin:0 0 10px 0;"></h2>
+        <h3 id="info-price" style="color:var(--price-gold); margin:0 0 15px 0;"></h3>
+        <p id="info-desc" style="color:#cbd5e1; font-size:14px; line-height:1.6;"></p>
+        <div id="info-btns" style="margin-top:20px;"></div>
+    </div>
+</div>
+
+<!-- Beast Admin Terminal Suite -->
+<div class="admin-box" id="admin-terminal">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:15px;">
+        <h2 style="color:var(--primary); margin:0; font-size:22px;"><i class="fa-solid fa-terminal"></i> SPARTAN BEAST COMMAND SUITE</h2>
+        <button onclick="closeAdmin()" class="ui-btn" style="background:var(--primary); color:#fff;"><i class="fa-solid fa-power-off"></i> EXIT</button>
     </div>
 
-    <!-- Navigation Header -->
-    <header id="navHeader" class="sticky top-0 z-50 bg-spartanDark/90 backdrop-blur-md border-b border-spartanBorder transition-all duration-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            <!-- Brand Logo & Name -->
-            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('shop')">
-                <img src="photo_2023-01-07_03-28-27.jpg" alt="SPARTAN SHOP Logo" class="w-12 h-12 rounded-xl object-cover border-2 border-spartanRed glow-red">
-                <div>
-                    <h1 class="font-orbitron text-lg sm:text-xl font-extrabold tracking-wider text-white">SPARTAN <span class="text-spartanRed glow-text">SHOP</span></h1>
-                    <p class="text-[10px] text-gray-400 font-orbitron tracking-widest">ANDROID ELITE STORE</p>
-                </div>
-            </div>
-
-            <!-- Desktop Nav Links -->
-            <nav class="hidden md:flex items-center space-x-6 font-orbitron text-sm">
-                <button onclick="switchTab('shop')" class="nav-link text-spartanRed font-bold hover:text-red-400 transition">Store</button>
-                <button onclick="switchTab('orders')" class="nav-link text-gray-300 hover:text-spartanRed transition">My Orders</button>
-                <button onclick="toggleMusic()" id="musicToggleBtn" class="bg-spartanCard border border-spartanBorder px-3 py-1.5 rounded-lg text-xs flex items-center space-x-2 hover:border-spartanRed transition">
-                    <i class="fa-solid fa-volume-xmark text-spartanRed" id="musicIcon"></i>
-                    <span id="musicStateText">Music: OFF</span>
-                </button>
-                <button onclick="openAdminModal()" class="bg-spartanRed/20 border border-spartanRed text-spartanRed px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-spartanRed hover:text-white transition shadow-lg">
-                    <i class="fa-solid fa-shield-halved mr-1"></i> Admin Panel
-                </button>
-            </nav>
-
-            <!-- Mobile Menu & Cart Triggers -->
-            <div class="flex items-center space-x-3 md:hidden">
-                <button onclick="toggleMusic()" class="bg-spartanCard p-2.5 rounded-lg border border-spartanBorder text-spartanRed">
-                    <i class="fa-solid fa-music" id="mobileMusicIcon"></i>
-                </button>
-                <button onclick="openAdminModal()" class="bg-spartanRed/20 text-spartanRed p-2.5 rounded-lg border border-spartanRed">
-                    <i class="fa-solid fa-shield-halved"></i>
-                </button>
-                <button onclick="toggleMobileMenu()" class="text-gray-300 hover:text-white focus:outline-none p-2">
-                    <i class="fa-solid fa-bars text-xl"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- Mobile Dropdown Menu -->
-        <div id="mobileMenu" class="hidden md:hidden bg-spartanCard border-b border-spartanBorder px-6 py-4 space-y-3 font-orbitron text-sm">
-            <button onclick="switchTab('shop'); toggleMobileMenu();" class="block w-full text-left py-2 text-spartanRed font-bold">Store</button>
-            <button onclick="switchTab('orders'); toggleMobileMenu();" class="block w-full text-left py-2 text-gray-300">My Orders</button>
-        </div>
-    </header>
-
-    <!-- Main Content Container -->
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-
-        <!-- TAB: SHOP & ITEMS -->
-        <section id="shopTab" class="space-y-8">
-            <!-- Hero Banner -->
-            <div class="relative rounded-2xl bg-gradient-to-r from-spartanCard via-[#1f1215] to-spartanCard border border-spartanBorder p-6 sm:p-10 overflow-hidden glow-red">
-                <div class="relative z-10 max-w-2xl space-y-4">
-                    <span class="bg-spartanRed/20 text-spartanRed border border-spartanRed/50 px-3 py-1 rounded-full text-xs font-orbitron font-semibold uppercase tracking-wider">Premium Android Scripts & Mods</span>
-                    <h2 class="font-orbitron text-3xl sm:text-5xl font-extrabold tracking-tight text-white">ELITE GAMING <span class="text-spartanRed">GEAR & VIP</span></h2>
-                    <p class="text-gray-400 text-sm sm:text-base">Explore professionally engineered Android modules, custom menus, and high-performance configs built for absolute supremacy.</p>
-                    <div class="flex flex-wrap gap-4 pt-2">
-                        <a href="#storeGrid" class="bg-spartanRed text-white font-orbitron text-xs uppercase tracking-wider px-6 py-3 rounded-xl font-bold hover:bg-red-700 transition shadow-lg shadow-spartanRed/40">Browse Items</a>
-                        <button onclick="openCouponModal()" class="bg-spartanCard border border-spartanBorder text-gray-200 font-orbitron text-xs uppercase tracking-wider px-6 py-3 rounded-xl font-semibold hover:border-spartanRed transition">Apply Coupon</button>
-                    </div>
-                </div>
-                <div class="absolute right-[-20px] bottom-[-20px] opacity-10 sm:opacity-25 pointer-events-none">
-                    <img src="photo_2023-01-07_03-28-27.jpg" alt="Watermark Logo" class="w-72 h-72 rounded-full object-cover">
-                </div>
-            </div>
-
-            <!-- Category Filters & Search -->
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4" id="storeGrid">
-                <div class="flex flex-wrap gap-2 w-full sm:w-auto" id="categoryButtons">
-                    <button onclick="filterCategory('all')" class="cat-btn active bg-spartanRed text-white px-4 py-2 rounded-xl text-xs font-orbitron font-bold transition">All Items</button>
-                    <button onclick="filterCategory('modmenu')" class="cat-btn bg-spartanCard border border-spartanBorder text-gray-300 px-4 py-2 rounded-xl text-xs font-orbitron hover:border-spartanRed transition">Mod Menus</button>
-                    <button onclick="filterCategory('script')" class="cat-btn bg-spartanCard border border-spartanBorder text-gray-300 px-4 py-2 rounded-xl text-xs font-orbitron hover:border-spartanRed transition">Scripts</button>
-                    <button onclick="filterCategory('vip')" class="cat-btn bg-spartanCard border border-spartanBorder text-gray-300 px-4 py-2 rounded-xl text-xs font-orbitron hover:border-spartanRed transition">VIP Access</button>
-                </div>
-                <div class="relative w-full sm:w-72">
-                    <input type="text" id="searchInput" oninput="searchItems()" placeholder="Search elite items..." class="w-full bg-spartanCard border border-spartanBorder rounded-xl px-4 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-spartanRed transition">
-                    <i class="fa-solid fa-magnifying-glass absolute right-4 top-3.5 text-gray-500"></i>
-                </div>
-            </div>
-
-            <!-- Items Grid -->
-            <div id="itemsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
-                <!-- Dynamic Items Injected via JS -->
-            </div>
-        </section>
-
-        <!-- TAB: MY ORDERS -->
-        <section id="ordersTab" class="hidden space-y-6">
-            <h2 class="font-orbitron text-2xl font-bold tracking-wider text-white">Purchase & Activation History</h2>
-            <div id="ordersContainer" class="space-y-4">
-                <!-- Dynamic Orders -->
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-spartanCard border-t border-spartanBorder mt-16 py-8 text-center text-xs text-gray-500 font-orbitron">
-        <p>&copy; 2026 SPARTAN SHOP. All Rights Reserved. Engineered for Android & PC Elite.</p>
-    </footer>
-
-    <!-- ================= MODALS ================= -->
-
-    <!-- Checkout Modal -->
-    <div id="checkoutModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-spartanCard border border-spartanBorder rounded-2xl max-w-md w-full p-6 space-y-6 relative glow-red">
-            <div class="flex justify-between items-center border-b border-spartanBorder pb-4">
-                <h3 class="font-orbitron text-lg font-bold text-white">Secure Checkout</h3>
-                <button onclick="closeCheckoutModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <div id="checkoutItemDetails" class="space-y-3 bg-spartanDark p-4 rounded-xl border border-spartanBorder">
-                <!-- Injected Item Info -->
-            </div>
-            <div class="space-y-3">
-                <label class="block text-xs font-orbitron text-gray-300 uppercase">Have a Coupon Code?</label>
-                <div class="flex space-x-2">
-                    <input type="text" id="modalCouponInput" placeholder="e.g. SPARTAN20" class="flex-grow bg-spartanDark border border-spartanBorder rounded-xl px-4 py-2.5 text-sm text-white uppercase focus:outline-none focus:border-spartanRed">
-                    <button onclick="applyModalCoupon()" class="bg-spartanCard border border-spartanRed text-spartanRed px-4 py-2.5 rounded-xl font-orbitron text-xs font-bold hover:bg-spartanRed hover:text-white transition">Apply</button>
-                </div>
-                <p id="couponFeedback" class="text-xs font-orbitron"></p>
-            </div>
-            <div class="border-t border-spartanBorder pt-4 flex justify-between items-center">
-                <div>
-                    <p class="text-xs text-gray-400 font-orbitron">Total Amount:</p>
-                    <p id="modalTotalPrice" class="text-xl font-orbitron font-extrabold text-spartanRed">$0.00</p>
-                </div>
-                <button onclick="confirmPurchase()" class="bg-spartanRed text-white font-orbitron text-xs uppercase tracking-wider px-6 py-3 rounded-xl font-bold hover:bg-red-700 transition shadow-lg shadow-spartanRed/40">Complete Order</button>
-            </div>
+    <div id="login-section" style="text-align:center; padding-top:80px;">
+        <div style="max-width:400px; margin:0 auto; background:rgba(12,17,26,0.95); padding:35px; border-radius:16px; border:1px solid var(--glass-border); box-shadow:0 20px 50px rgba(255,30,35,0.2);">
+            <i class="fa-solid fa-fingerprint" style="font-size:48px; color:var(--primary); margin-bottom:20px;"></i>
+            <h3 style="color:#fff; margin-bottom:20px;">MASTER ROOT KEY REQUIRED</h3>
+            <input type="password" id="admin-pass" placeholder="PASSWORD (spartan123)" style="text-align:center; font-size:16px; letter-spacing:2px;">
+            <button onclick="login()" class="ui-btn" style="width:100%; margin-top:15px; justify-content:center; padding:14px; font-size:14px;">UNLOCK SUITE</button>
         </div>
     </div>
 
-    <!-- Admin Panel Modal -->
-    <div id="adminModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-spartanCard border border-spartanBorder rounded-2xl max-w-2xl w-full p-6 space-y-6 relative glow-red max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center border-b border-spartanBorder pb-4">
-                <h3 class="font-orbitron text-lg font-bold text-white flex items-center space-x-2">
-                    <i class="fa-solid fa-shield-halved text-spartanRed"></i>
-                    <span>Admin Command & UI Changer</span>
-                </h3>
-                <button onclick="closeAdminModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-
-            <!-- Admin Tabs Navigation -->
-            <div class="flex border-b border-spartanBorder font-orbitron text-xs">
-                <button onclick="switchAdminTab('ui')" id="adminTabUiBtn" class="px-4 py-2 border-b-2 border-spartanRed text-spartanRed font-bold">UI Theme Customizer</button>
-                <button onclick="switchAdminTab('broadcast')" id="adminTabBroadcastBtn" class="px-4 py-2 border-b-2 border-transparent text-gray-400 hover:text-white">Live Broadcast Control</button>
-                <button onclick="switchAdminTab('coupons')" id="adminTabCouponsBtn" class="px-4 py-2 border-b-2 border-transparent text-gray-400 hover:text-white">Coupon Manager</button>
-            </div>
-
-            <!-- SECTION 1: UI CHANGER -->
-            <div id="adminUiSection" class="space-y-4">
-                <p class="text-xs text-gray-400 font-orbitron">Touch and modify shop styling presets instantly across all devices.</p>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-orbitron text-gray-300 mb-1">Primary Accent Color</label>
-                        <input type="color" id="primaryColorPicker" value="#ff1e23" onchange="updatePrimaryColor(this.value)" class="w-full h-10 bg-spartanDark rounded-xl border border-spartanBorder cursor-pointer">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-orbitron text-gray-300 mb-1">Background Theme</label>
-                        <select id="bgThemeSelect" onchange="updateBgTheme(this.value)" class="w-full bg-spartanDark border border-spartanBorder rounded-xl px-4 py-2.5 text-sm text-white font-orbitron focus:outline-none focus:border-spartanRed">
-                            <option value="#0a0a0c">Ultra Dark (Default)</option>
-                            <option value="#050510">Midnight Blue</option>
-                            <option value="#120505">Deep Crimson</option>
-                            <option value="#080c08">Cyberpunk Dark</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SECTION 2: LIVE BROADCAST FIX & CONTROL -->
-            <div id="adminBroadcastSection" class="hidden space-y-4">
-                <p class="text-xs text-gray-400 font-orbitron">Update and force-broadcast live announcements to all active users instantly.</p>
-                <div class="space-y-2">
-                    <label class="block text-xs font-orbitron text-gray-300">Live Broadcast Message</label>
-                    <textarea id="adminBroadcastInput" rows="3" class="w-full bg-spartanDark border border-spartanBorder rounded-xl p-3 text-sm text-white focus:outline-none focus:border-spartanRed">⚡ WELCOME TO SPARTAN SHOP! USE COUPON CODE 'SPARTAN20' FOR 20% OFF ALL ITEMS! ⚡</textarea>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <label class="flex items-center space-x-2 cursor-pointer font-orbitron text-xs">
-                        <input type="checkbox" id="broadcastActiveToggle" checked class="rounded border-spartanBorder text-spartanRed focus:ring-0">
-                        <span>Show Broadcast Banner</span>
-                    </label>
-                </div>
-                <button onclick="saveBroadcast()" class="w-full bg-spartanRed text-white font-orbitron text-xs uppercase tracking-wider py-3 rounded-xl font-bold hover:bg-red-700 transition">Update Live Broadcast</button>
-            </div>
-
-            <!-- SECTION 3: COUPON MANAGER -->
-            <div id="adminCouponsSection" class="hidden space-y-4">
-                <p class="text-xs text-gray-400 font-orbitron">Create and manage active discount coupons.</p>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <input type="text" id="newCouponCode" placeholder="Code (e.g. VIP50)" class="bg-spartanDark border border-spartanBorder rounded-xl px-4 py-2.5 text-sm uppercase text-white focus:outline-none focus:border-spartanRed">
-                    <input type="number" id="newCouponDiscount" placeholder="Discount %" class="bg-spartanDark border border-spartanBorder rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-spartanRed">
-                    <button onclick="addNewCoupon()" class="bg-spartanRed text-white font-orbitron text-xs uppercase tracking-wider rounded-xl font-bold hover:bg-red-700 transition">Add Coupon</button>
-                </div>
-                <div id="adminCouponsList" class="space-y-2 pt-2">
-                    <!-- Loaded Coupons -->
-                </div>
-            </div>
-
-            <div class="border-t border-spartanBorder pt-4 flex justify-end">
-                <button onclick="closeAdminModal()" class="bg-spartanCard border border-spartanBorder text-gray-300 font-orbitron text-xs uppercase tracking-wider px-6 py-2.5 rounded-xl font-bold hover:border-spartanRed transition">Close Panel</button>
-            </div>
+    <div id="admin-controls" style="display:none;" class="admin-layout">
+        <!-- UI Customizer Panel -->
+        <div class="panel-box">
+            <h3><i class="fa-solid fa-palette"></i> UI THEME CUSTOMIZER</h3>
+            <label style="font-size:11px; color:#aaa; display:block; margin-top:5px;">Primary Accent Color:</label>
+            <input type="color" id="ui-color-picker" value="#ff1e23" onchange="changeThemeColor(this.value)" style="height:45px; padding:2px; cursor:pointer;">
+            <label style="font-size:11px; color:#aaa; display:block; margin-top:12px;">Background Theme Style:</label>
+            <select id="ui-bg-select" onchange="changeBgStyle(this.value)">
+                <option value="#07090e">Deep Spartan Black</option>
+                <option value="#0f0512">Cyber Obsidian</option>
+                <option value="#0a120c">Matrix Cyber Dark</option>
+                <option value="#150808">Blood Crimson Night</option>
+            </select>
+            <button onclick="showNotification('UI Theme saved successfully!')" class="ui-btn" style="width:100%; margin-top:15px; justify-content:center;"><i class="fa-solid fa-check"></i> APPLY UI THEME</button>
         </div>
-    </div>
 
-    <!-- JavaScript Application Logic -->
-    <script>
-        // --- Data Store ---
-        let items = [
-            { id: 1, name: "Spartan Android Mod Menu v4", category: "modmenu", price: 29.99, rating: 4.9, image: "photo_2023-01-07_03-28-27.jpg", desc: "Advanced ImGui mobile overlay menu with ESP, custom memory hooks, and anti-ban protection." },
-            { id: 2, name: "Giganotosaurus Taming Calculator & Script", category: "script", price: 14.99, rating: 4.8, image: "photo_2023-01-07_03-28-27.jpg", desc: "Automated macro script and resource calculator for ARK Survival Evolved high-tier taming." },
-            { id: 3, name: "Godot 4 Multiplayer Template", category: "script", price: 39.99, rating: 5.0, image: "photo_2023-01-07_03-28-27.jpg", desc: "Complete 3D multiplayer framework with custom event managers and replicated movement logic." },
-            { id: 4, name: "Spartan VIP Lifetime Pass", category: "vip", price: 99.99, rating: 5.0, image: "photo_2023-01-07_03-28-27.jpg", desc: "Unlimited lifetime access to all future Android APK mods, source codes, and private updates." },
-            { id: 5, name: "AndLua UI Builder Tool", category: "modmenu", price: 19.99, rating: 4.7, image: "photo_2023-01-07_03-28-27.jpg", desc: "Rapid interface builder and layout compiler designed specifically for mobile Android modders." },
-            { id: 6, name: "Phaser 3 Card Game Engine", category: "script", price: 24.99, rating: 4.9, image: "photo_2023-01-07_03-28-27.jpg", desc: "Web-based card game framework featuring customizable rule sets and PWA deployment support." }
-        ];
-
-        let coupons = {
-            "SPARTAN20": 20,
-            "VIP50": 50,
-            "ELITE10": 10
-        };
-
-        let orders = [];
-        let currentFilter = 'all';
-        let currentSelectedItemID = null;
-        let appliedDiscount = 0;
-        let isMusicPlaying = false;
-
-        // --- Audio Control (Max 40% Volume) ---
-        const bgMusic = document.getElementById('bgMusic');
-        bgMusic.volume = 0.4; // Strict maximum 40% volume limit
-
-        function toggleMusic() {
-            isMusicPlaying = !isMusicPlaying;
-            const musicIcon = document.getElementById('musicIcon');
-            const mobileMusicIcon = document.getElementById('mobileMusicIcon');
-            const musicStateText = document.getElementById('musicStateText');
-
-            if (isMusicPlaying) {
-                bgMusic.play().catch(e => console.log("Autoplay blocked:", e));
-                musicIcon.className = "fa-solid fa-volume-high text-spartanRed animate-pulse";
-                mobileMusicIcon.className = "fa-solid fa-volume-high text-spartanRed animate-pulse";
-                musicStateText.innerText = "Music: 40%";
-            } else {
-                bgMusic.pause();
-                musicIcon.className = "fa-solid fa-volume-xmark text-spartanRed";
-                mobileMusicIcon.className = "fa-solid fa-music";
-                musicStateText.innerText = "Music: OFF";
-            }
-        }
-
-        // --- Render Items ---
-        function renderItems(itemsToRender) {
-            const container = document.getElementById('itemsContainer');
-            if (itemsToRender.length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center py-12 text-gray-500 font-orbitron">No elite items found matching your criteria.</div>`;
-                return;
-            }
-
-            container.innerHTML = itemsToRender.map(item => `
-                <div class="bg-spartanCard border border-spartanBorder rounded-2xl overflow-hidden hover:border-spartanRed transition-all duration-300 flex flex-col justify-between group glow-red">
-                    <div>
-                        <div class="relative h-48 overflow-hidden bg-spartanDark">
-                            <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90">
-                            <span class="absolute top-3 right-3 bg-spartanDark/80 backdrop-blur-md border border-spartanBorder text-spartanRed px-3 py-1 rounded-full text-[10px] font-orbitron font-bold uppercase">${item.category}</span>
-                        </div>
-                        <div class="p-5 space-y-2">
-                            <div class="flex justify-between items-center">
-                                <h3 class="font-orbitron font-bold text-white text-base">${item.name}</h3>
-                                <span class="text-yellow-400 text-xs font-orbitron"><i class="fa-solid fa-star mr-1"></i>${item.rating}</span>
-                            </div>
-                            <p class="text-gray-400 text-xs line-clamp-2">${item.desc}</p>
-                        </div>
-                    </div>
-                    <div class="p-5 pt-0 flex items-center justify-between border-t border-spartanBorder/50 mt-4">
-                        <div>
-                            <span class="text-[10px] text-gray-500 font-orbitron uppercase block">Price</span>
-                            <span class="font-orbitron font-extrabold text-lg text-white">$${item.price.toFixed(2)}</span>
-                        </div>
-                        <button onclick="openCheckoutModal(${item.id})" class="bg-spartanRed text-white font-orbitron text-xs uppercase tracking-wider px-4 py-2.5 rounded-xl font-bold hover:bg-red-700 transition shadow-md shadow-spartanRed/30">
-                            Buy Now
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // --- Filtering & Search ---
-        function filterCategory(category) {
-            currentFilter = category;
-            document.querySelectorAll('.cat-btn').forEach(btn => {
-                btn.className = "cat-btn bg-spartanCard border border-spartanBorder text-gray-300 px-4 py-2 rounded-xl text-xs font-orbitron hover:border-spartanRed transition";
-            });
-            event.target.className = "cat-btn active bg-spartanRed text-white px-4 py-2 rounded-xl text-xs font-orbitron font-bold transition";
+        <!-- Broadcast & Security Panel -->
+        <div class="panel-box">
+            <h3><i class="fa-solid fa-bullhorn"></i> LIVE BROADCAST ENGINE</h3>
+            <input type="text" id="broadcast-input" placeholder="Enter live announcement ticker message...">
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button onclick="updateBroadcast()" class="ui-btn" style="flex:2; justify-content:center;"><i class="fa-solid fa-rss"></i> BROADCAST LIVE</button>
+                <button onclick="clearBroadcast()" class="ui-btn" style="flex:1; justify-content:center; background:transparent; border-color:#64748b; color:#64748b;">CLEAR</button>
+            </div>
             
-            applyFilters();
+            <h3 style="margin-top:25px;"><i class="fa-solid fa-ban"></i> IP BLOCKER FIREWALL</h3>
+            <input type="text" id="ban-ip-input" placeholder="IP address to ban">
+            <button onclick="banClientIP()" class="ui-btn" style="width:100%; background:rgba(255,30,35,0.2); color:var(--primary); border-color:var(--primary); justify-content:center; margin-top:8px;"><i class="fa-solid fa-user-slash"></i> TERMINATE IP ACCESS</button>
+        </div>
+
+        <!-- Product Forge & Coupons Panel -->
+        <div class="panel-box">
+            <h3><i class="fa-solid fa-hammer"></i> PRODUCT ASSET DEPLOYER</h3>
+            <input type="hidden" id="edit-index" value="-1">
+            <input type="text" id="p-name" placeholder="PRODUCT NAME">
+            <input type="number" id="p-price" placeholder="PRICE ($)">
+            <select id="p-cat"><option value="android">Android</option><option value="ios">IOS</option></select>
+            <textarea id="p-desc" placeholder="PRODUCT DESCRIPTION" style="height:65px;"></textarea>
+            <label style="font-size:11px; color:var(--primary); display:block; margin-top:5px;">Product Image:</label>
+            <input type="file" id="p-img" accept="image/*">
+            <button id="forge-btn" onclick="addProduct()" class="ui-btn" style="width:100%; margin-top:10px; justify-content:center;"><i class="fa-solid fa-cloud-arrow-up"></i> DEPLOY ASSET</button>
+            
+            <h3 style="margin-top:25px;"><i class="fa-solid fa-ticket"></i> COUPON FORGE</h3>
+            <input type="text" id="c-code" placeholder="COUPON CODE (e.g. SPARTAN20)">
+            <input type="number" id="c-perc" placeholder="DISCOUNT PERCENTAGE (%)">
+            <button onclick="addCoupon()" class="ui-btn" style="width:100%; justify-content:center; margin-top:8px;"><i class="fa-solid fa-plus"></i> CREATE COUPON</button>
+        </div>
+
+        <!-- Live Intel Feed Panel -->
+        <div class="panel-box" style="grid-column: span 1;">
+            <h3><i class="fa-solid fa-satellite-dish"></i> LIVE INTEL STREAM</h3>
+            <div id="pay-attempts-list" style="font-size:11px; color:#00ff66; background:#05070a; padding:12px; height:180px; overflow-y:auto; border:1px solid rgba(255,255,255,0.1); border-radius:8px; font-family:monospace;">Scanning live telemetry...</div>
+            <button onclick="db.ref('intel').set(null)" class="ui-btn" style="width:100%; background:transparent; color:#64748b; border-color:#64748b; margin-top:10px; justify-content:center;"><i class="fa-solid fa-trash"></i> WIPE INTEL LOGS</button>
+        </div>
+    </div>
+</div>
+
+<div class="intel-ticker-wrap">
+    <div class="intel-ticker-label"><i class="fa-solid fa-terminal" style="margin-right:6px;"></i> LIVE FEED</div>
+    <marquee id="feed-text" style="color:#ff1e23; font-weight:700; font-size:12px;">>>> WELCOME TO SPARTAN SHOP :: SECURE MATRIX ONLINE :: USE COUPON CODE 'SPARTAN20' FOR 20% OFF ALL ITEMS! <<<</marquee>
+</div>
+
+<!-- Background Audio: https://www.youtube.com/watch?v=5FbOfjma3T4 (Max 40% Volume / 0.4) -->
+<audio id="hacker-music" loop>
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+let products = [
+    { name: "Spartan Android Mod Menu v4", price: "29.99", category: "android", desc: "Advanced ImGui mobile overlay menu with high precision ESP, memory hooks, and anti-ban protection.", image: "photo_2023-01-07_03-28-27.jpg" },
+    { name: "Giganotosaurus Taming Suite", price: "14.99", category: "android", desc: "Automated macro scripts and resource calculation tools for high-tier game taming supremacy.", image: "photo_2023-01-07_03-28-27.jpg" },
+    { name: "Spartan iOS VIP Bypass", price: "39.99", category: "ios", desc: "Exclusive iOS tweak framework with customized injection menus and silent background execution.", image: "photo_2023-01-07_03-28-27.jpg" },
+    { name: "Spartan VIP Lifetime Pass", price: "99.99", category: "ios", desc: "Unlimited lifetime access to all future Android APK mods, source codes, and private updates.", image: "photo_2023-01-07_03-28-27.jpg" }
+];
+
+let cart = [], coupons = {"SPARTAN20": 20, "VIP50": 50}, isAdmin = false, discount = 0, musicStarted = false;
+let userIP = "Scanning...", userID = "Unknown", chatTarget = "NONE";
+
+// Toast Notification System
+function showNotification(message, type = "success") {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i> ${message}`;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
+}
+
+// Intro Animation Handler
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        const intro = document.getElementById('intro-overlay');
+        intro.style.opacity = '0';
+        setTimeout(() => intro.style.display = 'none', 800);
+    }, 2200);
+    getIdentity();
+    displayProducts();
+    syncCoupons();
+    syncIntel();
+    syncBroadcast();
+});
+
+// Audio Settings (Locked at Max 40% Volume / 0.4)
+function startAudio() {
+    if(!musicStarted) {
+        let m = document.getElementById('hacker-music');
+        m.volume = 0.4;
+        m.play().catch(() => {});
+        musicStarted = true;
+    }
+}
+
+function toggleMusic(e) { 
+    if(e) e.stopPropagation();
+    let m = document.getElementById('hacker-music'), btn = document.getElementById('music-btn');
+    m.volume = 0.4;
+    if (m.paused) { 
+        m.play(); 
+        btn.innerHTML = '<i class="fa-solid fa-volume-high"></i> MUSIC: 40%'; 
+    } else { 
+        m.pause(); 
+        btn.innerHTML = '<i class="fa-solid fa-volume-mute"></i> MUSIC: OFF'; 
+    }
+}
+
+function toggleChat() { 
+    let c = document.getElementById('chat-widget'); 
+    c.style.display = (c.style.display==='flex')?'none':'flex'; 
+}
+
+function sendChat() {
+    let inp = document.getElementById('chat-input');
+    if(!inp.value.trim()) return;
+    let room = isAdmin ? chatTarget : userID;
+    if(room === "NONE") room = userID;
+    db.ref(`private_chats/${room}`).push({ sender: isAdmin ? "ADMIN" : `User_${userID}`, msg: inp.value, time: Date.now() });
+    inp.value = "";
+}
+
+function syncChat() {
+    let room = isAdmin ? chatTarget : userID;
+    if(room === "NONE") return;
+    db.ref(`private_chats/${room}`).off();
+    db.ref(`private_chats/${room}`).on('value', s => {
+        let list = s.val() ? Object.values(s.val()) : [];
+        document.getElementById('chat-msgs').innerHTML = list.map(m => m.msg ? `<div style="margin-bottom:6px;"><b style="color:${m.sender === "ADMIN" ? "#00ff66" : "var(--primary)"}">${m.sender}</b>: ${m.msg}</div>` : '').join('');
+        let div = document.getElementById('chat-msgs'); 
+        div.scrollTop = div.scrollHeight;
+    });
+}
+
+async function getIdentity() {
+    try {
+        const r = await fetch('https://api.ipify.org?format=json');
+        const d = await r.json();
+        userIP = d.ip;
+        userID = userIP.split('.')[0];
+        db.ref('presence/' + userID).set(true);
+        db.ref('presence/' + userID).onDisconnect().remove();
+        if(!isAdmin) {
+            syncChat();
+            db.ref('intel').push({ id: Date.now(), text: `VISITOR ONLINE | IP: ${userIP}`, owner: userID });
         }
+    } catch(e) {
+        userID = "SPARTAN_" + Math.floor(Math.random()*1000);
+    }
+}
 
-        function searchItems() {
-            applyFilters();
-        }
-
-        function applyFilters() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            let filtered = items.filter(item => {
-                const matchesCategory = currentFilter === 'all' || item.category === currentFilter;
-                const matchesSearch = item.name.toLowerCase().includes(query) || item.desc.toLowerCase().includes(query);
-                return matchesCategory && matchesSearch;
-            });
-            renderItems(filtered);
-        }
-
-        // --- Checkout & Fixed Coupon System ---
-        function openCheckoutModal(itemId) {
-            currentSelectedItemID = itemId;
-            appliedDiscount = 0;
-            const item = items.find(i => i.id === itemId);
-            if (!item) return;
-
-            document.getElementById('checkoutItemDetails').innerHTML = `
-                <div class="flex items-center space-x-3">
-                    <img src="${item.image}" class="w-12 h-12 rounded-lg object-cover border border-spartanBorder">
-                    <div>
-                        <h4 class="font-orbitron font-bold text-sm text-white">${item.name}</h4>
-                        <p class="text-xs text-gray-400 font-orbitron">$${item.price.toFixed(2)}</p>
-                    </div>
-                </div>
+function displayProducts() {
+    db.ref('products').on('value', (snap) => {
+        const val = snap.val();
+        if(val) products = val;
+        const android = document.getElementById("android-grid"), ios = document.getElementById("ios-grid");
+        if(!android) return;
+        android.innerHTML = ""; ios.innerHTML = "";
+        products.forEach((p, i) => {
+            if(!p) return;
+            const div = document.createElement("div"); 
+            div.className = "product";
+            div.innerHTML = `
+                <img src="${p.image || 'photo_2023-01-07_03-28-27.jpg'}" onclick="showInfo(${i})" alt="${p.name}">
+                <h3>${p.name}</h3>
+                <div style="color:var(--price-gold); font-weight:800; font-size:18px; margin-bottom:12px;">$${p.price}</div>
+                <button onclick="addToCart(${i})" class="ui-btn" style="width:100%; justify-content:center;"><i class="fa-solid fa-cart-plus"></i> ADD TO CART</button>
             `;
-            document.getElementById('modalCouponInput').value = '';
-            document.getElementById('couponFeedback').innerText = '';
-            updateModalTotal(item.price);
-            document.getElementById('checkoutModal').classList.remove('hidden');
-        }
+            p.category === "ios" ? ios.appendChild(div) : android.appendChild(div);
+        });
+    });
+}
 
-        function closeCheckoutModal() {
-            document.getElementById('checkoutModal').classList.add('hidden');
-        }
+function showInfo(i) {
+    const p = products[i];
+    document.getElementById('info-img').src = p.image || 'photo_2023-01-07_03-28-27.jpg';
+    document.getElementById('info-title').innerText = p.name;
+    document.getElementById('info-price').innerText = `$${p.price} USD`;
+    document.getElementById('info-desc').innerText = p.desc || "Elite verified item with high performance specs.";
+    document.getElementById('info-btns').innerHTML = `<button onclick="addToCart(${i}); document.getElementById('info-modal').style.display='none'" class="ui-btn" style="width:100%; justify-content:center; padding:12px;"><i class="fa-solid fa-cart-plus"></i> ADD TO CART</button>`;
+    document.getElementById('info-modal').style.display = 'flex';
+}
 
-        function applyModalCoupon() {
-            const code = document.getElementById('modalCouponInput').value.trim().toUpperCase();
-            const feedback = document.getElementById('couponFeedback');
-            const item = items.find(i => i.id === currentSelectedItemID);
+function addToCart(i) {
+    cart.push(products[i]);
+    updateCartCount();
+    showNotification(`Added ${products[i].name} to cart!`);
+}
 
-            if (coupons[code] !== undefined) {
-                appliedDiscount = coupons[code];
-                feedback.className = "text-xs font-orbitron text-green-400";
-                feedback.innerText = `Success! ${appliedDiscount}% discount applied.`;
-            } else {
-                appliedDiscount = 0;
-                feedback.className = "text-xs font-orbitron text-spartanRed";
-                feedback.innerText = `Invalid coupon code. Try 'SPARTAN20'.`;
+function updateCartCount() {
+    document.getElementById('cart-count').innerText = cart.length;
+}
+
+function openCheckoutModal() {
+    renderCartList();
+    document.getElementById('checkout-modal').style.display = 'flex';
+    renderPayPalButton();
+}
+
+function closeCheckoutModal() {
+    document.getElementById('checkout-modal').style.display = 'none';
+}
+
+function clearCart() {
+    cart = [];
+    updateCartCount();
+    renderCartList();
+    showNotification("Cart emptied.", "error");
+}
+
+function renderCartList() {
+    const list = document.getElementById('cart-list');
+    if(cart.length === 0) {
+        list.innerHTML = `<p style="color:#64748b; text-align:center; padding:20px;">Your cart is currently empty.</p>`;
+        document.getElementById('total-usd').innerText = "$0.00";
+        return;
+    }
+    let html = "";
+    let total = 0;
+    cart.forEach((item, idx) => {
+        total += parseFloat(item.price);
+        html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span>${item.name}</span>
+            <span style="color:var(--price-gold); font-weight:bold;">$${item.price} <i class="fa-solid fa-trash" style="cursor:pointer; color:var(--primary); margin-left:10px;" onclick="removeFromCart(${idx})"></i></span>
+        </div>`;
+    });
+    total = total * (1 - discount);
+    list.innerHTML = html;
+    document.getElementById('total-usd').innerText = `$${total.toFixed(2)}`;
+}
+
+function removeFromCart(idx) {
+    cart.splice(idx, 1);
+    updateCartCount();
+    renderCartList();
+}
+
+function syncCoupons() {
+    db.ref('coupons').on('value', s => {
+        const val = s.val();
+        if(val) coupons = val;
+    });
+}
+
+function applyCoupon() {
+    let code = document.getElementById('apply-coupon').value.trim().toUpperCase();
+    if(coupons[code] !== undefined) {
+        discount = parseFloat(coupons[code]) / 100;
+        showNotification(`Coupon applied! ${coupons[code]}% OFF`);
+        renderCartList();
+    } else {
+        showNotification("Invalid coupon code.", "error");
+    }
+}
+
+function renderPayPalButton() {
+    const container = document.getElementById('paypal-button-container');
+    container.innerHTML = "";
+    if(window.paypal) {
+        paypal.Buttons({
+            createOrder: function(data, actions) {
+                let total = cart.reduce((sum, item) => sum + parseFloat(item.price), 0) * (1 - discount);
+                return actions.order.create({ purchase_units: [{ amount: { value: total.toFixed(2) } }] });
+            },
+            onApprove: function(data, actions) {
+                return actions.order.capture().then(function(details) {
+                    showNotification("Payment successful! License dispatched.");
+                    db.ref('intel').push({ id: Date.now(), text: `SUCCESSFUL PURCHASE by ${userID} - Order ID: ${data.orderID}`, owner: userID });
+                    clearCart();
+                    closeCheckoutModal();
+                });
             }
-            updateModalTotal(item.price);
+        }).render('#paypal-button-container');
+    } else {
+        container.innerHTML = `<button onclick="mockCheckout()" class="ui-btn" style="width:100%; justify-content:center; background:var(--primary); color:#fff;"><i class="fa-solid fa-shield-check"></i> COMPLETE SECURE CHECKOUT</button>`;
+    }
+}
+
+function mockCheckout() {
+    if(cart.length === 0) return showNotification("Cart is empty!", "error");
+    showNotification("Transaction verified successfully! License active.");
+    db.ref('intel').push({ id: Date.now(), text: `SECURE PURCHASE completed by ${userID}`, owner: userID });
+    clearCart();
+    closeCheckoutModal();
+}
+
+// Admin Suite Functions
+function openAdminLogin() {
+    document.getElementById('admin-terminal').style.display = 'block';
+}
+
+function closeAdmin() {
+    document.getElementById('admin-terminal').style.display = 'none';
+}
+
+function login() {
+    let pass = document.getElementById('admin-pass').value;
+    if(pass === "spartan123" || pass === "admin") {
+        isAdmin = true;
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('admin-controls').style.display = 'grid';
+        showNotification("Master root access granted!");
+    } else {
+        showNotification("Invalid master key.", "error");
+    }
+}
+
+// UI Customizer Actions
+function changeThemeColor(color) {
+    document.documentElement.style.setProperty('--primary', color);
+    document.documentElement.style.setProperty('--glass-border', color + '55');
+}
+
+function changeBgStyle(bg) {
+    document.documentElement.style.setProperty('--bg-main', bg);
+    document.body.style.backgroundColor = bg;
+}
+
+// Live Broadcast Fix & Deployment
+function updateBroadcast() {
+    let msg = document.getElementById('broadcast-input').value.trim();
+    if(!msg) return showNotification("Enter broadcast message.", "error");
+    db.ref('settings/broadcast').set(msg).then(() => {
+        showNotification("Live broadcast deployed successfully!");
+    });
+}
+
+function clearBroadcast() {
+    db.ref('settings/broadcast').set(null).then(() => {
+        showNotification("Live broadcast cleared.");
+        document.getElementById('broadcast-input').value = "";
+    });
+}
+
+function syncBroadcast() {
+    db.ref('settings/broadcast').on('value', snap => {
+        let val = snap.val();
+        let ticker = document.getElementById('feed-text');
+        if(val) {
+            ticker.innerText = `>>> ${val} <<<`;
+        } else {
+            ticker.innerText = `>>> WELCOME TO SPARTAN SHOP :: SECURE MATRIX ONLINE :: USE COUPON CODE 'SPARTAN20' FOR 20% OFF ALL ITEMS! <<<`;
         }
+    });
+}
 
-        function updateModalTotal(basePrice) {
-            const finalPrice = basePrice * (1 - (appliedDiscount / 100));
-            document.getElementById('modalTotalPrice').innerText = `$${finalPrice.toFixed(2)}`;
+function addProduct() {
+    const n = document.getElementById('p-name').value, p = document.getElementById('p-price').value, c = document.getElementById('p-cat').value, d = document.getElementById('p-desc').value, fImg = document.getElementById('p-img').files[0], idx = document.getElementById('edit-index').value;
+    if(!n || !p) return showNotification("Name and price required!", "error");
+    
+    const saveProduct = (imgData) => {
+        let obj = { name: n, price: p, category: c, desc: d, image: imgData || "photo_2023-01-07_03-28-27.jpg" };
+        if(idx == -1) products.push(obj); else products[idx] = obj;
+        db.ref('products').set(products).then(() => {
+            showNotification(idx == -1 ? "Asset deployed successfully!" : "Asset updated successfully!");
+            resetForge();
+        });
+    };
+
+    if(fImg) {
+        const reader = new FileReader();
+        reader.onload = e => saveProduct(e.target.result);
+        reader.readAsDataURL(fImg);
+    } else {
+        let existing = idx != -1 ? products[idx].image : "photo_2023-01-07_03-28-27.jpg";
+        saveProduct(existing);
+    }
+}
+
+function resetForge() {
+    document.getElementById('p-name').value = "";
+    document.getElementById('p-price').value = "";
+    document.getElementById('p-desc').value = "";
+    document.getElementById('p-img').value = "";
+    document.getElementById('edit-index').value = "-1";
+}
+
+function addCoupon() {
+    let code = document.getElementById('c-code').value.trim().toUpperCase();
+    let perc = document.getElementById('c-perc').value;
+    if(!code || !perc) return showNotification("Enter coupon code and discount percentage.", "error");
+    db.ref(`coupons/${code}`).set(perc).then(() => {
+        showNotification(`Coupon ${code} created successfully!`);
+        document.getElementById('c-code').value = "";
+        document.getElementById('c-perc').value = "";
+    });
+}
+
+function banClientIP() {
+    let ip = document.getElementById('ban-ip-input').value.trim();
+    if(!ip) return showNotification("Enter IP address.", "error");
+    db.ref('banned_ips').once('value', snap => {
+        let list = snap.val() || [];
+        if(!list.includes(ip)) list.push(ip);
+        db.ref('banned_ips').set(list).then(() => {
+            showNotification(`IP ${ip} successfully terminated.`);
+            document.getElementById('ban-ip-input').value = "";
+        });
+    });
+}
+
+function syncIntel() {
+    db.ref('intel').on('value', s => {
+        let data = s.val() ? Object.values(s.val()) : [];
+        let listEl = document.getElementById('pay-attempts-list');
+        if(listEl) {
+            listEl.innerHTML = data.reverse().map(item => `<div>[${new Date(item.id).toLocaleTimeString()}] ${item.text}</div>`).join('') || "No live intel recorded.";
         }
-
-        function confirmPurchase() {
-            const item = items.find(i => i.id === currentSelectedItemID);
-            const finalPrice = item.price * (1 - (appliedDiscount / 100));
-            
-            orders.unshift({
-                id: 'SP-ORD-' + Math.floor(100000 + Math.random() * 900000),
-                itemName: item.name,
-                price: finalPrice,
-                date: new Date().toLocaleDateString(),
-                status: 'Completed & Delivered'
-            });
-
-            closeCheckoutModal();
-            renderOrders();
-            alert(`Purchase successful! Your activation license for ${item.name} has been generated.`);
-        }
-
-        // --- Render Orders ---
-        function renderOrders() {
-            const container = document.getElementById('ordersContainer');
-            if (orders.length === 0) {
-                container.innerHTML = `<div class="bg-spartanCard border border-spartanBorder rounded-2xl p-8 text-center text-gray-500 font-orbitron text-xs">No purchase history recorded yet.</div>`;
-                return;
-            }
-
-            container.innerHTML = orders.map(ord => `
-                <div class="bg-spartanCard border border-spartanBorder rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div class="space-y-1">
-                        <span class="text-[10px] font-orbitron text-spartanRed uppercase tracking-wider">${ord.id}</span>
-                        <h4 class="font-orbitron font-bold text-white text-sm">${ord.itemName}</h4>
-                        <p class="text-xs text-gray-400">Purchased on ${ord.date}</p>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <span class="font-orbitron font-bold text-white">$${ord.price.toFixed(2)}</span>
-                        <span class="bg-green-500/20 text-green-400 border border-green-500/40 text-[10px] font-orbitron px-3 py-1 rounded-full uppercase">${ord.status}</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // --- Tabs Navigation ---
-        function switchTab(tabName) {
-            const shopTab = document.getElementById('shopTab');
-            const ordersTab = document.getElementById('ordersTab');
-            
-            if (tabName === 'shop') {
-                shopTab.classList.remove('hidden');
-                ordersTab.classList.add('hidden');
-            } else if (tabName === 'orders') {
-                shopTab.classList.add('hidden');
-                ordersTab.classList.remove('hidden');
-                renderOrders();
-            }
-        }
-
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobileMenu');
-            menu.classList.toggle('hidden');
-        }
-
-        // --- Admin Panel & UI Changer ---
-        function openAdminModal() {
-            renderAdminCoupons();
-            document.getElementById('adminModal').classList.remove('hidden');
-        }
-
-        function closeAdminModal() {
-            document.getElementById('adminModal').classList.add('hidden');
-        }
-
-        function switchAdminTab(tab) {
-            const uiSec = document.getElementById('adminUiSection');
-            const bcastSec = document.getElementById('adminBroadcastSection');
-            const couponsSec = document.getElementById('adminCouponsSection');
-            
-            const btnUi = document.getElementById('adminTabUiBtn');
-            const btnBcast = document.getElementById('adminTabBroadcastBtn');
-            const btnCoupons = document.getElementById('adminTabCouponsBtn');
-
-            uiSec.classList.add('hidden');
-            bcastSec.classList.add('hidden');
-            couponsSec.classList.add('hidden');
-            
-            btnUi.className = "px-4 py-2 border-b-2 border-transparent text-gray-400 hover:text-white font-orbitron text-xs";
-            btnBcast.className = "px-4 py-2 border-b-2 border-transparent text-gray-400 hover:text-white font-orbitron text-xs";
-            btnCoupons.className = "px-4 py-2 border-b-2 border-transparent text-gray-400 hover:text-white font-orbitron text-xs";
-
-            if (tab === 'ui') {
-                uiSec.classList.remove('hidden');
-                btnUi.className = "px-4 py-2 border-b-2 border-spartanRed text-spartanRed font-bold font-orbitron text-xs";
-            } else if (tab === 'broadcast') {
-                bcastSec.classList.remove('hidden');
-                btnBcast.className = "px-4 py-2 border-b-2 border-spartanRed text-spartanRed font-bold font-orbitron text-xs";
-            } else if (tab === 'coupons') {
-                couponsSec.classList.remove('hidden');
-                btnCoupons.className = "px-4 py-2 border-b-2 border-spartanRed text-spartanRed font-bold font-orbitron text-xs";
-            }
-        }
-
-        // UI Changer logic
-        function updatePrimaryColor(color) {
-            document.documentElement.style.setProperty('--spartan-red', color);
-            // Update dynamic elements
-            document.querySelectorAll('.text-spartanRed').forEach(el => el.style.color = color);
-            document.querySelectorAll('.border-spartanRed').forEach(el => el.style.borderColor = color);
-        }
-
-        function updateBgTheme(color) {
-            document.body.style.backgroundColor = color;
-            document.getElementById('navHeader').style.backgroundColor = color + 'f0';
-        }
-
-        // Fixed Live Broadcast
-        function saveBroadcast() {
-            const text = document.getElementById('adminBroadcastInput').value;
-            const isActive = document.getElementById('broadcastActiveToggle').checked;
-            const banner = document.getElementById('broadcastBanner');
-            const broadcastText = document.getElementById('broadcastText');
-
-            broadcastText.innerText = text;
-            if (isActive) {
-                banner.classList.remove('hidden');
-            } else {
-                banner.classList.add('hidden');
-            }
-            alert("Live broadcast updated and deployed successfully to all connected users!");
-        }
-
-        // Coupon Manager
-        function renderAdminCoupons() {
-            const list = document.getElementById('adminCouponsList');
-            list.innerHTML = Object.entries(coupons).map(([code, disc]) => `
-                <div class="flex justify-between items-center bg-spartanDark border border-spartanBorder p-3 rounded-xl font-orbitron text-xs">
-                    <span class="text-white font-bold">${code} <span class="text-spartanRed ml-2">(${disc}% OFF)</span></span>
-                    <button onclick="deleteCoupon('${code}')" class="text-red-400 hover:text-red-300"><i class="fa-solid fa-trash"></i></button>
-                </div>
-            `).join('');
-        }
-
-        function addNewCoupon() {
-            const code = document.getElementById('newCouponCode').value.trim().toUpperCase();
-            const discount = parseFloat(document.getElementById('newCouponDiscount').value);
-
-            if (code && !isNaN(discount)) {
-                coupons[code] = discount;
-                document.getElementById('newCouponCode').value = '';
-                document.getElementById('newCouponDiscount').value = '';
-                renderAdminCoupons();
-                alert(`Coupon ${code} added successfully!`);
-            } else {
-                alert("Please enter a valid coupon code and discount percentage.");
-            }
-        }
-
-        function deleteCoupon(code) {
-            delete coupons[code];
-            renderAdminCoupons();
-        }
-
-        // Initial Load
-        renderItems(items);
-    </script>
+    });
+}
+</script>
 </body>
 </html>
