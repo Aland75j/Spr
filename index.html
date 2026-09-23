@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SPARTAN SHOP | Elite Gaming Arsenal</title>
     
-    <!-- Firebase Legacy Compatibility SDKs -->
+    <!-- Firebase Legacy Compatibility SDKs & FontAwesome -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
@@ -43,13 +43,6 @@
                 } catch(e) { console.log("Shield Active"); }
             };
             checkBans();
-
-            db.ref('settings/paypal_id').once('value', (snap) => {
-                const savedID = snap.val() || "test";
-                const script = document.createElement('script');
-                script.src = `https://www.paypal.com/sdk/js?client-id=${savedID}&currency=USD`;
-                document.head.appendChild(script);
-            });
         })();
     </script>
 
@@ -90,7 +83,6 @@
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
         ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--secondary); }
 
         /* Toast Notifications */
         #toast-container { 
@@ -106,43 +98,40 @@
             animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             backdrop-filter: blur(10px);
         }
-        .toast.error { border-left-color: var(--danger); box-shadow: 0 8px 24px rgba(255, 0, 102, 0.15); }
-        .toast.warning { border-left-color: var(--warning); box-shadow: 0 8px 24px rgba(255, 170, 0, 0.15); }
+        .toast.error { border-left-color: var(--danger); }
+        .toast.warning { border-left-color: var(--warning); }
         @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-        /* Intro Animation */
+        /* Translucent Splash Screen */
         #intro-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #020101 0%, #0a0404 100%);
+            background: rgba(6, 4, 4, 0.88);
+            backdrop-filter: blur(14px);
             z-index: 999999; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
-            transition: opacity 0.8s ease;
+            transition: opacity 0.5s ease;
+            text-align: center; padding: 20px;
         }
         .spartan-logo-intro {
-            width: 130px; height: 130px; 
-            background: radial-gradient(circle at 35% 28%, #3a0808 0%, #0a0303 72%);
-            border-radius: 50%;
-            border: 4px solid var(--primary);
-            box-shadow: 0 0 50px rgba(224, 22, 28, 0.55), inset 0 0 28px rgba(0,0,0,0.7);
+            width: 140px; height: 140px; 
+            object-fit: contain;
+            filter: drop-shadow(0 0 25px rgba(224, 22, 28, 0.7));
+            margin-bottom: 20px;
             animation: pulseLogo 1.6s infinite alternate;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 62px; font-weight: 900; color: #f0f0f0;
-            font-family: Georgia, 'Times New Roman', serif;
         }
         @keyframes pulseLogo { 
-            from { transform: scale(1); box-shadow: 0 0 25px rgba(224, 22, 28, 0.45), inset 0 0 28px rgba(0,0,0,0.7); } 
-            to { transform: scale(1.06); box-shadow: 0 0 60px rgba(224, 22, 28, 0.75), inset 0 0 28px rgba(0,0,0,0.7); } 
+            from { transform: scale(1); filter: drop-shadow(0 0 15px rgba(224, 22, 28, 0.5)); } 
+            to { transform: scale(1.08); filter: drop-shadow(0 0 35px rgba(224, 22, 28, 0.9)); } 
         }
         
-        .typewriter-container {
-            margin-top: 30px; font-family: 'Courier New', monospace; font-size: 24px;
-            font-weight: 800; color: #fff; letter-spacing: 4px; text-transform: uppercase;
-            border-right: 3px solid var(--primary);
-            animation: typing 1.8s steps(20, end) forwards, blink 0.75s step-end infinite;
-            white-space: nowrap; overflow: hidden;
+        .intro-title {
+            font-size: 28px; font-weight: 900; color: #fff; letter-spacing: 4px;
+            text-transform: uppercase; margin-bottom: 8px;
+            font-family: Georgia, serif;
         }
-        @keyframes typing { from { width: 0; } to { width: 260px; } }
-        @keyframes blink { 50% { border-color: transparent; } }
+        .intro-subtitle {
+            font-size: 13px; color: var(--steel); letter-spacing: 2px; margin-bottom: 25px;
+        }
 
         /* Navigation */
         .top-nav { 
@@ -151,8 +140,8 @@
         }
         .ui-btn { 
             padding: 10px 16px; 
-            background: rgba(224, 22, 28, 0.08);
-            color: var(--primary);
+            background: rgba(224, 22, 28, 0.12);
+            color: #ffffff;
             border: 1px solid var(--glass-border);
             font-weight: 600; font-size: 12px;
             border-radius: 6px; cursor: pointer; 
@@ -161,194 +150,143 @@
             backdrop-filter: blur(8px);
         }
         .ui-btn:hover { 
-            background: rgba(224, 22, 28, 0.15);
+            background: rgba(224, 22, 28, 0.25);
             border-color: var(--primary);
-            box-shadow: 0 0 12px rgba(224, 22, 28, 0.3);
-        }
-        .ui-btn.active { 
-            background: var(--primary);
-            color: var(--bg-main);
-            box-shadow: 0 0 16px rgba(224, 22, 28, 0.4);
+            box-shadow: 0 0 12px rgba(224, 22, 28, 0.4);
         }
 
         /* Floating Cart */
         .floating-cart {
             position: fixed; top: 16px; right: 16px;
-            background: rgba(224, 22, 28, 0.1);
+            background: rgba(224, 22, 28, 0.15);
             width: 56px; height: 56px;
             border-radius: 8px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; z-index: 10000; color: var(--primary);
-            box-shadow: 0 4px 12px rgba(224, 22, 28, 0.1);
+            cursor: pointer; z-index: 10000; color: #fff;
+            box-shadow: 0 4px 12px rgba(224, 22, 28, 0.2);
             border: 1px solid var(--glass-border);
             font-size: 20px; transition: all 0.3s ease;
             backdrop-filter: blur(8px);
         }
         .floating-cart:hover { 
-            transform: scale(1.1); 
-            background: rgba(224, 22, 28, 0.2);
-            box-shadow: 0 8px 24px rgba(224, 22, 28, 0.25);
+            transform: scale(1.08); 
+            background: rgba(224, 22, 28, 0.3);
         }
         .cart-count { 
-            position: absolute; top: -8px; right: -8px; 
-            background: var(--secondary); color: #fff;
+            position: absolute; top: -6px; right: -6px; 
+            background: var(--primary); color: #fff;
             font-size: 11px; font-weight: 800; 
-            padding: 4px 7px; border-radius: 10px;
+            padding: 3px 7px; border-radius: 10px;
             border: 2px solid var(--bg-main);
         }
 
         /* Header */
         .header-container { 
-            padding: 100px 20px 40px 20px; 
+            padding: 90px 20px 20px 20px; 
             display: flex; flex-direction: column; align-items: center; gap: 20px;
         }
         .header-brand { 
-            display: flex; align-items: center; gap: 20px;
+            display: flex; align-items: center; gap: 18px;
             background: var(--glass);
-            padding: 24px 40px; border-radius: 12px;
+            padding: 20px 32px; border-radius: 12px;
             border: 1px solid var(--glass-border);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(12px);
             max-width: 600px; width: 100%;
             justify-content: center;
-            animation: slideDown 0.6s ease;
         }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
         
         .header-logo { 
-            width: 64px; height: 64px;
-            flex-shrink: 0;
-            background: radial-gradient(circle at 35% 28%, #3a0808 0%, #0a0303 72%);
-            border-radius: 50%;
-            border: 3px solid var(--primary);
-            box-shadow: 0 0 22px rgba(224, 22, 28, 0.45), inset 0 0 16px rgba(0,0,0,0.7);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 30px; font-weight: 900; color: #f0f0f0;
-            font-family: Georgia, 'Times New Roman', serif;
+            width: 55px; height: 55px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 10px rgba(224,22,28,0.5));
         }
         header { 
-            font-size: 34px; font-weight: 800;
-            color: #f4f4f4;
-            letter-spacing: 4px;
-            margin: 0;
-            font-family: Georgia, 'Times New Roman', serif;
-            text-transform: uppercase;
+            font-size: 30px; font-weight: 800;
+            color: #f4f4f4; letter-spacing: 3px;
+            font-family: Georgia, serif; text-transform: uppercase;
         }
         header span { color: var(--primary); }
 
         /* Faction Label */
         .faction-label {
-            margin: 50px auto 25px;
-            padding: 16px 24px;
-            background: linear-gradient(90deg, rgba(224, 22, 28, 0.1), rgba(224, 22, 28, 0.03));
+            margin: 20px auto 20px;
+            padding: 14px 20px;
+            background: linear-gradient(90deg, rgba(224, 22, 28, 0.15), rgba(224, 22, 28, 0.02));
             border-left: 3px solid var(--primary);
-            max-width: 1200px;
-            font-size: 15px; font-weight: 700;
-            color: #f0f0f0;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            font-family: Georgia, 'Times New Roman', serif;
-            display: flex; align-items: center; gap: 12px;
+            max-width: 1200px; font-size: 14px; font-weight: 700;
+            color: #f0f0f0; letter-spacing: 2px;
+            text-transform: uppercase; font-family: Georgia, serif;
+            display: flex; align-items: center; gap: 10px;
             border-radius: 4px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
-        .faction-label i { color: var(--primary); }
 
         /* Product Grid */
         .product-grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); 
-            gap: 24px; 
-            padding: 20px;
-            max-width: 1200px; 
-            margin: 0 auto;
+            gap: 22px; padding: 20px;
+            max-width: 1200px; margin: 0 auto;
         }
         
         .product { 
             background: var(--glass);
             border: 1px solid var(--glass-border);
-            padding: 18px;
-            border-radius: 10px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 18px; border-radius: 10px;
+            transition: all 0.3s ease;
             position: relative; overflow: hidden;
             backdrop-filter: blur(12px);
             display: flex; flex-direction: column;
             justify-content: space-between;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-        .product::before { 
-            content: ''; position: absolute; top: 0; left: 0;
-            width: 100%; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--primary), transparent);
-            opacity: 0; transition: opacity 0.3s;
+            cursor: pointer;
         }
         .product:hover { 
-            transform: translateY(-6px);
+            transform: translateY(-5px);
             border-color: var(--primary);
-            box-shadow: 0 12px 32px rgba(224, 22, 28, 0.2);
+            box-shadow: 0 10px 28px rgba(224, 22, 28, 0.25);
         }
-        .product:hover::before { opacity: 1; }
         
         .product-image {
             width: 100%; height: 160px;
-            background: linear-gradient(135deg, rgba(224,22,28,0.14), rgba(0,0,0,0.35));
-            border-radius: 8px; cursor: pointer;
+            object-fit: cover;
+            border-radius: 8px; margin-bottom: 12px;
             border: 1px solid var(--glass-border);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 48px; margin-bottom: 12px;
+            background: rgba(0,0,0,0.5);
         }
         
         .product h3 { 
-            margin: 0 0 8px 0;
-            font-size: 16px; font-weight: 700;
-            color: #fff;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            margin: 0 0 6px 0; font-size: 16px; font-weight: 700; color: #fff;
         }
         .product-faction {
-            font-size: 11px;
-            color: var(--primary);
-            font-weight: 600;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-size: 11px; color: var(--primary); font-weight: 600;
+            margin-bottom: 8px; text-transform: uppercase;
         }
         .product-price { 
-            color: var(--price-gold);
-            font-weight: 800;
-            font-size: 18px;
-            margin-bottom: 12px;
+            color: var(--price-gold); font-weight: 800; font-size: 18px; margin-bottom: 12px;
         }
 
         /* Chat Widget */
         #chat-widget { 
-            position: fixed; bottom: 90px; right: 20px;
-            width: 340px; height: 440px;
+            position: fixed; bottom: 85px; right: 20px;
+            width: 330px; height: 420px;
             background: var(--glass);
             border: 1px solid var(--glass-border);
             z-index: 9998; display: none;
             flex-direction: column; border-radius: 10px;
-            overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-            backdrop-filter: blur(15px);
+            overflow: hidden; backdrop-filter: blur(15px);
         }
         #chat-header { 
-            background: rgba(224, 22, 28, 0.1);
-            color: var(--primary);
-            padding: 14px 16px;
-            font-weight: 700;
+            background: rgba(224, 22, 28, 0.2); color: #fff;
+            padding: 12px 16px; font-weight: 700;
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--glass-border);
-            font-size: 12px;
+            border-bottom: 1px solid var(--glass-border); font-size: 12px;
         }
         #chat-msgs { 
             flex: 1; overflow-y: auto; padding: 12px;
-            font-size: 12px; text-align: left;
-            display: flex; flex-direction: column; gap: 8px;
+            font-size: 12px; display: flex; flex-direction: column; gap: 8px;
         }
         .chat-msg {
-            background: rgba(255,255,255,0.05);
-            padding: 8px 12px;
-            border-radius: 6px;
-            border: 1px solid rgba(224,22,28,0.1);
+            background: rgba(255,255,255,0.05); padding: 8px 12px;
+            border-radius: 6px; border: 1px solid rgba(224,22,28,0.1);
         }
         .chat-input-wrap { 
             display: flex; border-top: 1px solid var(--glass-border);
@@ -356,159 +294,116 @@
         }
         #chat-input { 
             flex: 1; border: none; padding: 10px 12px;
-            background: transparent; color: #fff;
-            font-size: 12px; outline: none;
+            background: transparent; color: #fff; font-size: 12px; outline: none;
         }
 
-        /* Checkout Modal */
-        #checkout-modal { 
-            display: none;
-            position: fixed; top: 0; left: 0;
+        /* Modals Generic */
+        .modal-overlay { 
+            display: none; position: fixed; top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(16, 8, 8, 0.95);
+            background: rgba(6, 4, 4, 0.92);
             z-index: 50000; align-items: center; justify-content: center;
             backdrop-filter: blur(8px); padding: 20px;
         }
-        .checkout-box { 
+        .modal-box { 
             background: linear-gradient(180deg, rgba(30, 12, 12, 0.95) 0%, rgba(10, 5, 5, 0.97) 100%);
-            border: 1px solid var(--glass-border);
-            border-top: 3px solid var(--primary);
-            width: 100%; max-width: 500px;
-            border-radius: 12px; padding: 30px;
-            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6), 0 0 40px rgba(224, 22, 28, 0.12);
-            text-align: left;
+            border: 1px solid var(--glass-border); border-top: 3px solid var(--primary);
+            width: 100%; max-width: 520px; border-radius: 12px; padding: 25px;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.7);
             position: relative; max-height: 90vh; overflow-y: auto;
         }
-        .trust-strip {
-            display: flex; align-items: center; justify-content: center; gap: 18px;
-            padding: 10px 0 4px 0; margin-bottom: 4px;
-            font-size: 10px; color: #9a9a9a; letter-spacing: 0.5px;
+
+        /* Item Detail Dialog */
+        .item-detail-img {
+            width: 100%; height: 220px; object-fit: cover;
+            border-radius: 8px; border: 1px solid var(--glass-border);
+            margin-bottom: 15px; background: #000;
         }
-        .trust-strip span { display: flex; align-items: center; gap: 5px; }
-        .trust-strip i { color: var(--success); }
+
+        /* Payment selection */
+        .payment-methods {
+            display: flex; gap: 10px; margin: 15px 0;
+        }
+        .payment-card {
+            flex: 1; padding: 12px; background: rgba(255,255,255,0.03);
+            border: 1px solid var(--glass-border); border-radius: 8px;
+            text-align: center; cursor: pointer; transition: all 0.2s;
+            font-size: 12px; font-weight: 600;
+        }
+        .payment-card.active {
+            border-color: var(--primary); background: rgba(224,22,28,0.15);
+            color: #fff;
+        }
+
         .cart-item-row {
             display: flex; justify-content: space-between; align-items: center;
             padding: 10px 0; border-bottom: 1px solid rgba(224, 22, 28, 0.12);
         }
-        .cart-item-row:last-child { border-bottom: none; }
         .order-total-box {
-            background: rgba(224, 22, 28, 0.07);
-            border: 1px solid var(--glass-border);
-            border-radius: 10px; padding: 16px 18px;
-            margin-bottom: 18px;
+            background: rgba(224, 22, 28, 0.07); border: 1px solid var(--glass-border);
+            border-radius: 10px; padding: 14px; margin-bottom: 15px;
         }
         .order-total-box .row { display: flex; justify-content: space-between; font-size: 12px; color: #999; padding: 3px 0; }
-        .order-total-box .row.final { border-top: 1px dashed rgba(224,22,28,0.25); margin-top: 8px; padding-top: 10px; font-size: 14px; color: #ddd; }
+        .order-total-box .row.final { border-top: 1px dashed rgba(224,22,28,0.25); margin-top: 6px; padding-top: 8px; font-size: 14px; color: #ddd; }
 
         input, select, textarea { 
-            background: rgba(16, 8, 8, 0.8);
-            border: 1px solid var(--glass-border);
-            color: #fff; padding: 11px 14px;
-            margin: 8px 0; width: 100%;
-            border-radius: 6px; font-size: 13px;
-            outline: none; transition: all 0.2s;
+            background: rgba(16, 8, 8, 0.8); border: 1px solid var(--glass-border);
+            color: #fff; padding: 11px 14px; margin: 6px 0 12px 0; width: 100%;
+            border-radius: 6px; font-size: 13px; outline: none; transition: all 0.2s;
         }
         input:focus, select:focus, textarea:focus { 
-            border-color: var(--primary);
-            box-shadow: 0 0 12px rgba(224, 22, 28, 0.2);
-            background: rgba(224, 22, 28, 0.05);
+            border-color: var(--primary); background: rgba(224, 22, 28, 0.05);
         }
 
-        /* Admin Panel */
+        /* Admin Terminal */
         .admin-box { 
-            display: none;
-            position: fixed; top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            background: var(--bg-main);
-            z-index: 20000; padding: 30px;
-            overflow-y: auto; text-align: left;
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100vw; height: 100vh; background: var(--bg-main);
+            z-index: 20000; padding: 25px; overflow-y: auto;
         }
         .admin-layout { 
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-            gap: 25px; margin-top: 20px;
-            max-width: 1600px; margin-left: auto; margin-right: auto;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px; margin-top: 20px; max-width: 1600px; margin: 0 auto;
         }
         .panel-box { 
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            padding: 24px; border-radius: 10px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-            backdrop-filter: blur(12px);
+            background: var(--glass); border: 1px solid var(--glass-border);
+            padding: 20px; border-radius: 10px; backdrop-filter: blur(12px);
         }
         .panel-box h3 { 
-            color: var(--primary);
-            margin-top: 0; border-bottom: 1px solid var(--glass-border);
-            padding-bottom: 12px; font-size: 14px;
-            display: flex; align-items: center; gap: 10px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            color: var(--primary); margin-top: 0; border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 10px; font-size: 13px; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 1px;
+            display: flex; align-items: center; gap: 8px;
         }
 
-        /* Live Map */
-        #live-map {
-            width: 100%; height: 300px;
-            background: rgba(224, 22, 28, 0.05);
-            border: 1px solid var(--glass-border);
-            border-radius: 8px;
-            position: relative;
-            overflow: hidden;
-            margin-top: 12px;
-        }
-        .map-dot {
-            position: absolute;
-            width: 8px; height: 8px;
-            background: var(--primary);
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(224, 22, 28, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(224, 22, 28, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(224, 22, 28, 0); }
-        }
-
-        /* Ticker */
+        /* Intel Ticker */
         .intel-ticker-wrap { 
-            position: fixed; bottom: 0; left: 0;
-            width: 100%; height: 44px;
-            background: rgba(16, 8, 8, 0.98);
-            border-top: 1px solid var(--glass-border);
-            z-index: 9999; display: flex;
-            align-items: center;
-            backdrop-filter: blur(8px);
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 40px;
+            background: rgba(16, 8, 8, 0.98); border-top: 1px solid var(--glass-border);
+            z-index: 9999; display: flex; align-items: center; backdrop-filter: blur(8px);
         }
         .intel-ticker-label { 
-            background: var(--primary);
-            color: var(--bg-main);
-            font-weight: 800; padding: 0 18px;
-            height: 100%; display: flex;
-            align-items: center; font-size: 11px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
+            background: var(--primary); color: #fff; font-weight: 800;
+            padding: 0 16px; height: 100%; display: flex; align-items: center;
+            font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
         }
         #feed-text {
-            color: var(--primary);
-            font-weight: 700;
-            font-size: 12px;
-            flex: 1;
-            padding: 0 15px;
+            color: var(--primary); font-weight: 700; font-size: 12px; flex: 1; padding: 0 15px;
         }
 
-        /* Responsive */
+        /* Responsive adjustments */
         @media (max-width: 768px) {
-            header { font-size: 24px; }
-            .header-brand { padding: 14px 18px; gap: 12px; }
-            .header-logo { width: 50px; height: 50px; font-size: 28px; }
-            .header-container { padding: 70px 10px 20px 10px; }
-            .faction-label { font-size: 13px; padding: 10px; width: 95%; margin: 30px auto 15px; }
-            .top-nav { top: auto; bottom: 55px; left: 8px; right: auto; gap: 4px; }
-            .ui-btn { padding: 8px 10px; font-size: 10px; flex: 1; }
-            .floating-cart { width: 48px; height: 48px; font-size: 16px; top: 8px; right: 8px; }
-            #chat-widget { width: 95%; right: 2.5%; bottom: 110px; }
-            .product-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; padding: 12px; }
-            .admin-layout { grid-template-columns: 1fr; gap: 16px; }
+            header { font-size: 22px; }
+            .header-brand { padding: 12px 18px; gap: 10px; }
+            .header-logo { width: 40px; height: 40px; }
+            .header-container { padding: 75px 12px 15px 12px; }
+            .faction-label { font-size: 12px; padding: 10px; margin: 15px auto; }
+            .top-nav { top: 12px; left: 12px; }
+            .ui-btn { padding: 8px 12px; font-size: 11px; }
+            .floating-cart { width: 46px; height: 46px; font-size: 16px; top: 12px; right: 12px; }
+            #chat-widget { width: 92%; right: 4%; bottom: 100px; }
+            .product-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; padding: 10px; }
+            .admin-layout { grid-template-columns: 1fr; gap: 15px; }
         }
     </style>
 </head>
@@ -516,16 +411,23 @@
 
 <div id="toast-container"></div>
 
-<!-- Intro Overlay -->
+<!-- Background Audio (YouTube MP3 stream) -->
+<audio id="bg-music" loop>
+    <source src="https://www.youtube.com/watch?v=5FbOfjma3T4" type="audio/mp3">
+</audio>
+
+<!-- Translucent Opening Screen -->
 <div id="intro-overlay">
-    <div class="spartan-logo-intro">&Lambda;</div>
-    <div class="typewriter-container" id="typewriter-text">SPARTAN SHOP</div>
+    <img src="https://static.vecteezy.com/system/resources/previews/048/948/754/non_2x/black-and-white-spartan-logo-transparent-background-png.png" alt="Spartan Logo" class="spartan-logo-intro">
+    <div class="intro-title">SPARTAN SHOP</div>
+    <div class="intro-subtitle">ENTER THE ARSENAL</div>
+    <button class="ui-btn" onclick="enterSite()" style="padding: 12px 28px; font-size: 14px; background: var(--primary); color: #fff;"><i class="fa-solid fa-play"></i> ENTER SITE</button>
 </div>
 
 <!-- Navigation -->
 <div class="top-nav">
-    <button class="ui-btn" id="music-btn" onclick="toggleMusic(event)"><i class="fa-solid fa-volume-high"></i> <span class="hide-mobile">AUDIO</span></button>
-    <button class="ui-btn" onclick="toggleChat()"><i class="fa-solid fa-comments"></i> <span class="hide-mobile">CHAT</span></button>
+    <button class="ui-btn" id="music-btn" onclick="toggleMusic(event)"><i class="fa-solid fa-volume-xmark"></i> <span>AUDIO</span></button>
+    <button class="ui-btn" onclick="toggleChat()"><i class="fa-solid fa-comments"></i> <span>CHAT</span></button>
 </div>
 
 <!-- Floating Cart -->
@@ -543,206 +445,209 @@
     <div id="chat-msgs"></div>
     <div class="chat-input-wrap">
         <input type="text" id="chat-input" placeholder="Message..." onkeydown="if(event.key==='Enter') sendChat()">
-        <button onclick="sendChat()" style="background:var(--primary); border:none; padding:0 12px; cursor:pointer; color:var(--bg-main); font-weight:bold;"><i class="fa-solid fa-paper-plane"></i></button>
+        <button onclick="sendChat()" style="background:var(--primary); border:none; padding:0 12px; cursor:pointer; color:#fff;"><i class="fa-solid fa-paper-plane"></i></button>
     </div>
 </div>
 
-<!-- Header -->
+<!-- Main Header -->
 <div class="header-container">
     <div class="header-brand">
-        <div class="header-logo">&Lambda;</div>
+        <img src="https://static.vecteezy.com/system/resources/previews/048/948/754/non_2x/black-and-white-spartan-logo-transparent-background-png.png" alt="Spartan Logo" class="header-logo">
         <header>SPARTAN <span>SHOP</span></header>
     </div>
 </div>
 
-<!-- Shop Content -->
+<!-- Product Grid -->
 <div id="shop-page">
     <div class="faction-label"><i class="fa-solid fa-shield"></i> Faction Arsenal</div>
     <div id="product-grid" class="product-grid"></div>
 </div>
 
+<!-- Item Details Dialog Modal -->
+<div id="item-dialog-modal" class="modal-overlay">
+    <div class="modal-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border); padding-bottom:12px; margin-bottom:15px;">
+            <h3 id="dialog-item-title" style="color:#fff; margin:0; font-size:16px;">Product Details</h3>
+            <i class="fa-solid fa-xmark" onclick="closeItemDialog()" style="cursor:pointer; font-size:18px; color:#aaa;"></i>
+        </div>
+        <img id="dialog-item-img" src="" class="item-detail-img" alt="Item Image">
+        <div id="dialog-item-price" style="font-size:20px; font-weight:800; color:var(--price-gold); margin-bottom:10px;">$0.00</div>
+        <p id="dialog-item-desc" style="font-size:13px; color:#ccc; line-height:1.5; margin-bottom:20px;"></p>
+        <div style="display:flex; gap:10px;">
+            <button onclick="closeItemDialog()" class="ui-btn" style="flex:1; justify-content:center; background:transparent;"><i class="fa-solid fa-arrow-left"></i> Back</button>
+            <button id="dialog-add-btn" class="ui-btn" style="flex:2; justify-content:center; background:var(--primary); color:#fff;"><i class="fa-solid fa-cart-plus"></i> Add To Cart</button>
+        </div>
+    </div>
+</div>
+
 <!-- Checkout Modal -->
-<div id="checkout-modal">
-    <div class="checkout-box">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border); padding-bottom:15px; margin-bottom:2px;">
-            <h2 style="color:#f2f2f2; margin:0; font-size:18px; display:flex; align-items:center; gap:9px;"><i class="fa-solid fa-lock" style="color:var(--primary);"></i> Secure Checkout</h2>
+<div id="checkout-modal" class="modal-overlay">
+    <div class="modal-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border); padding-bottom:12px;">
+            <h3 style="color:#fff; margin:0; font-size:16px;"><i class="fa-solid fa-lock" style="color:var(--primary);"></i> Secure Checkout</h3>
             <i class="fa-solid fa-xmark" onclick="closeCheckoutModal()" style="cursor:pointer; font-size:18px; color:#aaa;"></i>
         </div>
-        <div class="trust-strip">
-            <span><i class="fa-solid fa-shield-halved"></i> Encrypted</span>
-            <span><i class="fa-solid fa-bolt"></i> Instant Delivery</span>
-            <span><i class="fa-solid fa-rotate-left"></i> Buyer Protected</span>
-        </div>
-        <div id="cart-list" style="max-height:200px; overflow-y:auto; margin:14px 0 18px 0; font-size:13px;"></div>
-        <div style="display:flex; gap:8px; margin-bottom:16px;">
+
+        <div id="cart-list" style="max-height:180px; overflow-y:auto; margin:14px 0; font-size:13px;"></div>
+
+        <div style="display:flex; gap:8px; margin-bottom:12px;">
             <input type="text" id="apply-coupon" placeholder="Coupon code..." style="margin:0;">
-            <button onclick="applyCoupon()" class="ui-btn" style="white-space:nowrap; margin:0; padding:10px 14px;"><i class="fa-solid fa-ticket"></i></button>
+            <button onclick="applyCoupon()" class="ui-btn" style="white-space:nowrap; margin:0; padding:10px 14px;"><i class="fa-solid fa-ticket"></i> Apply</button>
         </div>
+
         <div class="order-total-box">
             <div class="row"><span>Subtotal</span><span id="subtotal-usd">$0.00</span></div>
-            <div class="row"><span>Discount</span><span id="discount-usd">&minus;$0.00</span></div>
-            <div class="row final"><span>Total Due</span><span id="total-usd" style="color:var(--price-gold); font-weight:800; font-size:17px;">$0.00</span></div>
+            <div class="row"><span>Discount</span><span id="discount-usd">-$0.00</span></div>
+            <div class="row final"><span>Total Due</span><span id="total-usd" style="color:var(--price-gold); font-weight:800; font-size:16px;">$0.00</span></div>
         </div>
-        <div id="paypal-button-container" style="margin-bottom:14px;"></div>
-        <button onclick="mockCheckout()" style="width:100%; background:var(--primary); border:none; color:#fff; padding:14px; border-radius:8px; font-weight:700; cursor:pointer; font-size:13px; margin-bottom:10px; letter-spacing:0.5px; box-shadow:0 8px 22px rgba(224,22,28,0.35);"><i class="fa-solid fa-lock"></i> Complete Purchase</button>
-        <button onclick="clearCart()" style="width:100%; background:transparent; border:1px solid var(--glass-border); color:#aaa; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px;"><i class="fa-solid fa-trash"></i> Clear Cart</button>
+
+        <label style="font-size:12px; color:#aaa;">Select Payment Method:</label>
+        <div class="payment-methods">
+            <div class="payment-card active" id="pay-paypal" onclick="selectPayment('paypal')"><i class="fa-brands fa-paypal"></i> PayPal</div>
+            <div class="payment-card" id="pay-card" onclick="selectPayment('card')"><i class="fa-solid fa-credit-card"></i> Bank Card</div>
+        </div>
+
+        <div id="card-fields" style="display:none;">
+            <input type="text" placeholder="Cardholder Name">
+            <input type="text" placeholder="Card Number (16 Digits)">
+            <div style="display:flex; gap:8px;">
+                <input type="text" placeholder="MM/YY">
+                <input type="text" placeholder="CVC">
+            </div>
+        </div>
+
+        <button onclick="processDirectCheckout()" class="ui-btn" style="width:100%; justify-content:center; background:var(--primary); color:#fff; padding:12px; margin-bottom:8px;"><i class="fa-solid fa-check"></i> Complete Purchase</button>
+        <button onclick="clearCart()" class="ui-btn" style="width:100%; justify-content:center; background:transparent; color:#aaa;"><i class="fa-solid fa-trash"></i> Clear Cart</button>
     </div>
 </div>
 
 <!-- Admin Terminal -->
 <div class="admin-box" id="admin-terminal">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--glass-border); padding-bottom: 15px;">
-        <h2 style="color:var(--primary); margin:0; font-size:22px;"><i class="fa-solid fa-terminal"></i> Command Suite</h2>
-        <div style="display: flex; gap: 10px;">
-            <button onclick="openUICustomizer()" class="ui-btn" style="background:rgba(224,22,28,0.1); color:var(--primary);"><i class="fa-solid fa-palette"></i> UI Designer</button>
-            <button onclick="closeAdmin()" class="ui-btn" style="background:var(--danger); color:#fff;"><i class="fa-solid fa-power-off"></i> Exit</button>
-        </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 12px;">
+        <h2 style="color:var(--primary); margin:0; font-size:20px;"><i class="fa-solid fa-terminal"></i> Command Suite</h2>
+        <button onclick="closeAdmin()" class="ui-btn" style="background:var(--danger); color:#fff;"><i class="fa-solid fa-power-off"></i> Exit</button>
     </div>
 
-    <div id="login-section" style="text-align:center; padding-top:80px;">
-        <div style="max-width:400px; margin:0 auto; background:var(--glass); padding:35px; border-radius:10px; border:1px solid var(--glass-border); box-shadow:0 20px 50px rgba(0,0,0,0.4);">
-            <i class="fa-solid fa-fingerprint" style="font-size:48px; color:var(--primary); margin-bottom:20px;"></i>
-            <h3 style="color:#fff; margin-bottom:20px; font-size:16px;">Master Access Required</h3>
-            <input type="password" id="admin-pass" placeholder="Password" style="text-align:center; font-size:14px; letter-spacing:2px;">
-            <button onclick="login()" class="ui-btn" style="width:100%; margin-top:15px; justify-content:center; padding:12px; font-size:13px; background:rgba(224,22,28,0.15); border-color:var(--primary); color:var(--primary);"><i class="fa-solid fa-unlock"></i> Authenticate</button>
-            <p style="font-size:11px; color:#aaa; margin-top:15px;"><i class="fa-solid fa-info-circle"></i> Password: <code style="color:var(--primary);">spartan123</code></p>
+    <div id="login-section" style="text-align:center; padding-top:60px;">
+        <div style="max-width:380px; margin:0 auto; background:var(--glass); padding:30px; border-radius:10px; border:1px solid var(--glass-border);">
+            <i class="fa-solid fa-fingerprint" style="font-size:40px; color:var(--primary); margin-bottom:15px;"></i>
+            <h3 style="color:#fff; margin-bottom:15px; font-size:15px;">Master Access</h3>
+            <input type="password" id="admin-pass" placeholder="Password" style="text-align:center;">
+            <button onclick="login()" class="ui-btn" style="width:100%; margin-top:10px; justify-content:center; background:var(--primary); color:#fff;"><i class="fa-solid fa-unlock"></i> Authenticate</button>
+            <p style="font-size:11px; color:#aaa; margin-top:12px;">Password: <code style="color:var(--primary);">spartan123</code></p>
         </div>
     </div>
 
     <div id="admin-controls" style="display:none;" class="admin-layout">
+        <!-- PayPal Link Manager -->
+        <div class="panel-box">
+            <h3><i class="fa-brands fa-paypal"></i> PayPal Connection</h3>
+            <label style="font-size:11px; color:#aaa;">Connect/Change PayPal Account Link:</label>
+            <input type="text" id="admin-paypal-url" placeholder="https://paypal.me/yourusername">
+            <button onclick="savePayPalLink()" class="ui-btn" style="width:100%; justify-content:center;"><i class="fa-solid fa-save"></i> Save Link</button>
+        </div>
+
+        <!-- Add or Update Items -->
+        <div class="panel-box">
+            <h3><i class="fa-solid fa-hammer"></i> Item & Description Manager</h3>
+            <input type="text" id="f-name" placeholder="Item name...">
+            <input type="number" id="f-price" placeholder="Price ($)">
+            <input type="text" id="f-icon" placeholder="Image URL (or leaves default)">
+            <textarea id="f-desc" placeholder="Item description functionality..." style="height:70px;"></textarea>
+            <button onclick="addOrUpdateFaction()" class="ui-btn" style="width:100%; justify-content:center;"><i class="fa-solid fa-plus"></i> Save Item</button>
+            
+            <h3 style="margin-top:20px;"><i class="fa-solid fa-list"></i> Existing Inventory</h3>
+            <div id="inventory-list" style="max-height:200px; overflow-y:auto; font-size:11px; margin-top:10px; display:flex; flex-direction:column; gap:6px;"></div>
+        </div>
+
         <!-- User Management -->
         <div class="panel-box">
-            <h3><i class="fa-solid fa-users"></i> User Management</h3>
-            <div id="users-list" style="max-height:300px; overflow-y:auto; font-size:12px; margin-top:12px; display:flex; flex-direction:column; gap:8px;"></div>
-            <div style="margin-top:15px; padding-top:15px; border-top:1px solid var(--glass-border);">
-                <input type="text" id="block-user-id" placeholder="User IP to block...">
-                <button onclick="blockUser()" class="ui-btn" style="width:100%; margin-top:8px; justify-content:center; background:rgba(255,45,45,0.15); border-color:var(--danger); color:var(--danger);"><i class="fa-solid fa-ban"></i> Block User</button>
-            </div>
+            <h3><i class="fa-solid fa-users"></i> Block Users</h3>
+            <div id="users-list" style="max-height:150px; overflow-y:auto; font-size:11px; margin-bottom:10px; display:flex; flex-direction:column; gap:6px;"></div>
+            <input type="text" id="block-user-id" placeholder="IP to block...">
+            <button onclick="blockUser()" class="ui-btn" style="width:100%; justify-content:center; background:rgba(255,45,45,0.15); color:var(--danger); border-color:var(--danger);"><i class="fa-solid fa-ban"></i> Block IP</button>
         </div>
 
-        <!-- Live Map -->
+        <!-- Broadcast & Coupon -->
         <div class="panel-box">
-            <h3><i class="fa-solid fa-map"></i> Live Activity Map</h3>
-            <div id="live-map"></div>
-            <div id="online-count" style="margin-top:12px; font-size:12px; color:var(--primary); text-align:center;"><i class="fa-solid fa-circle-dot"></i> Online: 0</div>
-        </div>
-
-        <!-- Transaction Monitor -->
-        <div class="panel-box">
-            <h3><i class="fa-solid fa-credit-card"></i> Transactions</h3>
-            <div id="transactions-list" style="max-height:350px; overflow-y:auto; font-size:11px; margin-top:12px; display:flex; flex-direction:column; gap:6px;"></div>
-        </div>
-
-        <!-- Faction Manager -->
-        <div class="panel-box">
-            <h3><i class="fa-solid fa-hammer"></i> Faction Manager</h3>
-            <input type="text" id="f-name" placeholder="Faction name...">
-            <input type="number" id="f-price" placeholder="Price ($)">
-            <textarea id="f-desc" placeholder="Description..." style="height:60px;"></textarea>
-            <input type="text" id="f-icon" placeholder="Emoji icon (e.g., ⚡)">
-            <button onclick="addFaction()" class="ui-btn" style="width:100%; margin-top:10px; justify-content:center;"><i class="fa-solid fa-plus"></i> Create Faction</button>
-            
-            <h3 style="margin-top:20px;"><i class="fa-solid fa-list"></i> Inventory</h3>
-            <div id="inventory-list" style="max-height:250px; overflow-y:auto; font-size:11px; margin-top:10px; display:flex; flex-direction:column; gap:6px;"></div>
-        </div>
-
-        <!-- Coupon System -->
-        <div class="panel-box">
-            <h3><i class="fa-solid fa-ticket"></i> Coupon Forge</h3>
-            <input type="text" id="c-code" placeholder="Code (e.g., SPARTAN20)">
+            <h3><i class="fa-solid fa-ticket"></i> Coupons & Broadcast</h3>
+            <input type="text" id="c-code" placeholder="Coupon Code (e.g. SPARTAN)">
             <input type="number" id="c-perc" placeholder="Discount %">
-            <button onclick="addCoupon()" class="ui-btn" style="width:100%; margin-top:10px; justify-content:center;"><i class="fa-solid fa-plus"></i> Create Coupon</button>
+            <button onclick="addCoupon()" class="ui-btn" style="width:100%; justify-content:center;"><i class="fa-solid fa-plus"></i> Save Coupon</button>
             
-            <h3 style="margin-top:20px;"><i class="fa-solid fa-megaphone"></i> Broadcast</h3>
-            <input type="text" id="broadcast-input" placeholder="Announcement message...">
-            <button onclick="updateBroadcast()" class="ui-btn" style="width:100%; margin-top:8px; justify-content:center;"><i class="fa-solid fa-rss"></i> Broadcast</button>
-        </div>
-
-        <!-- Theme Customizer -->
-        <div class="panel-box">
-            <h3><i class="fa-solid fa-palette"></i> Theme Colors</h3>
-            <label style="font-size:11px; color:#aaa;">Primary Color:</label>
-            <input type="color" id="ui-primary" value="#e0161c" onchange="applyTheme()" style="height:45px; padding:2px; cursor:pointer;">
-            <label style="font-size:11px; color:#aaa; display:block; margin-top:10px;">Secondary:</label>
-            <input type="color" id="ui-secondary" value="#7a0000" onchange="applyTheme()" style="height:45px; padding:2px; cursor:pointer;">
-            <label style="font-size:11px; color:#aaa; display:block; margin-top:10px;">Accent:</label>
-            <input type="color" id="ui-accent" value="#ff4d4d" onchange="applyTheme()" style="height:45px; padding:2px; cursor:pointer;">
-            <button onclick="resetTheme()" class="ui-btn" style="width:100%; margin-top:12px; justify-content:center;"><i class="fa-solid fa-redo"></i> Reset Colors</button>
-        </div>
-
-        <!-- System Info -->
-        <div class="panel-box">
-            <h3><i class="fa-solid fa-info"></i> System Status</h3>
-            <div style="font-size:12px; line-height:1.8;">
-                <div><span style="color:var(--primary);">● Status:</span> Online</div>
-                <div><span style="color:var(--primary);">● Database:</span> Connected</div>
-                <div id="system-time" style="color:var(--primary);"></div>
-                <div id="total-revenue" style="color:var(--price-gold); font-weight:bold;"></div>
-            </div>
+            <input type="text" id="broadcast-input" placeholder="Broadcast ticker text..." style="margin-top:15px;">
+            <button onclick="updateBroadcast()" class="ui-btn" style="width:100%; justify-content:center;"><i class="fa-solid fa-rss"></i> Broadcast</button>
         </div>
     </div>
 </div>
 
-<!-- UI Customizer Dialog -->
-<div id="ui-customizer-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(10,14,22,0.95); z-index:60000; padding:40px; overflow-y:auto;">
-    <div style="max-width:600px; margin:0 auto; background:var(--glass); border:1px solid var(--glass-border); padding:30px; border-radius:12px;">
-        <h2 style="color:var(--primary); margin-bottom:20px;"><i class="fa-solid fa-sliders"></i> Visual Layout Studio</h2>
-        <p style="font-size:13px; color:#ccc; margin-bottom:20px;">Adjust background options and visual density settings.</p>
-        <button onclick="closeUICustomizer()" class="ui-btn" style="background:var(--primary); color:#fff; width:100%; justify-content:center;">Save Changes</button>
-    </div>
-</div>
-
-<!-- Intel Ticker -->
+<!-- Ticker -->
 <div class="intel-ticker-wrap">
     <div class="intel-ticker-label"><i class="fa-solid fa-shield-halved" style="margin-right:6px;"></i> INTEL</div>
     <div id="feed-text">WELCOME TO SPARTAN SHOP // SYSTEM ONLINE</div>
 </div>
 
 <script>
-    // State Management
+    const DEFAULT_LOGO = "https://static.vecteezy.com/system/resources/previews/048/948/754/non_2x/black-and-white-spartan-logo-transparent-background-png.png";
     let cart = [];
     let discountPercent = 0;
     let products = [];
-    let audioCtx = null;
+    let selectedPaymentMethod = 'paypal';
+    let isMusicPlaying = false;
 
-    // Toast Engine
+    // Toast Notifications
     function showToast(msg, type = 'info') {
         const container = document.getElementById('toast-container');
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
-        let icon = type === 'error' ? 'fa-triangle-exclamation' : type === 'warning' ? 'fa-circle-exclamation' : 'fa-circle-check';
+        let icon = type === 'error' ? 'fa-triangle-exclamation' : 'fa-circle-check';
         toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${msg}</span>`;
         container.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
+        setTimeout(() => toast.remove(), 3500);
     }
 
-    // Audio Engine
-    function toggleMusic(e) {
-        if(!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            showToast("Audio Engine Activated", "info");
-            e.currentTarget.classList.add('active');
-        } else {
-            if(audioCtx.state === 'suspended') {
-                audioCtx.resume();
-                e.currentTarget.classList.add('active');
-            } else {
-                audioCtx.suspend();
-                e.currentTarget.classList.remove('active');
-            }
-        }
-    }
-
-    // Intro Overlay Dismissal
-    setTimeout(() => {
+    // Opening Screen Entry
+    function enterSite() {
         const overlay = document.getElementById('intro-overlay');
-        if(overlay) {
-            overlay.style.opacity = '0';
-            setTimeout(() => overlay.style.display = 'none', 800);
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.style.display = 'none', 500);
+        
+        // Start background music stream
+        const music = document.getElementById('bg-music');
+        if (music) {
+            music.play().then(() => {
+                isMusicPlaying = true;
+                updateMusicBtn();
+            }).catch(e => console.log("Audio awaiting user interaction"));
         }
-    }, 2200);
+    }
 
-    // Initial Data Preload & Firebase Synchronization
+    // Audio Engine Toggle
+    function toggleMusic(e) {
+        const music = document.getElementById('bg-music');
+        if(!music) return;
+        if(isMusicPlaying) {
+            music.pause();
+            isMusicPlaying = false;
+        } else {
+            music.play().catch(e => console.log("Audio play error"));
+            isMusicPlaying = true;
+        }
+        updateMusicBtn();
+    }
+
+    function updateMusicBtn() {
+        const btn = document.getElementById('music-btn');
+        if(isMusicPlaying) {
+            btn.innerHTML = `<i class="fa-solid fa-volume-high"></i> <span>AUDIO</span>`;
+            btn.style.color = "var(--primary)";
+        } else {
+            btn.innerHTML = `<i class="fa-solid fa-volume-xmark"></i> <span>AUDIO</span>`;
+            btn.style.color = "#ffffff";
+        }
+    }
+
+    // Firebase Listeners
     db.ref('products').on('value', (snap) => {
         const data = snap.val();
         products = [];
@@ -751,11 +656,9 @@
                 products.push({ id: key, ...data[key] });
             });
         } else {
-            // Default Seed Data if DB Empty
             products = [
-                { id: '1', name: 'Spartan VIP Membership', price: 29.99, icon: '⚔️', faction: 'Spartans', desc: 'Full premium access and tier rewards.' },
-                { id: '2', name: 'Titan Armor Pack', price: 49.99, icon: '🛡️', faction: 'Titans', desc: 'Maximized defense parameters.' },
-                { id: '3', name: 'Cyber Warfare Pass', price: 19.99, icon: '⚡', faction: 'Cyber', desc: 'Tactical tools and dynamic assets.' }
+                { id: '1', name: 'Spartan VIP Membership', price: 29.99, icon: DEFAULT_LOGO, faction: 'Spartans', desc: 'Full premium spartan access and tier rewards.' },
+                { id: '2', name: 'Titan Armor Pack', price: 49.99, icon: DEFAULT_LOGO, faction: 'Titans', desc: 'Maximized defense parameters and spartan gear.' }
             ];
         }
         renderProducts();
@@ -763,8 +666,13 @@
     });
 
     db.ref('broadcast').on('value', (snap) => {
-        const msg = snap.val() || "WELCOME TO SPARTAN SHOP // SYSTEM ONLINE";
-        document.getElementById('feed-text').innerText = msg;
+        document.getElementById('feed-text').innerText = snap.val() || "WELCOME TO SPARTAN SHOP // SYSTEM ONLINE";
+    });
+
+    db.ref('settings/paypal_link').on('value', (snap) => {
+        const link = snap.val() || "";
+        const input = document.getElementById('admin-paypal-url');
+        if(input) input.value = link;
     });
 
     db.ref('chat').on('value', (snap) => {
@@ -772,10 +680,7 @@
         const container = document.getElementById('chat-msgs');
         container.innerHTML = '';
         Object.values(msgs).forEach(m => {
-            const div = document.createElement('div');
-            div.className = 'chat-msg';
-            div.innerHTML = `<strong>${m.sender}:</strong> ${m.text}`;
-            container.appendChild(div);
+            container.innerHTML += `<div class="chat-msg"><strong>${m.sender}:</strong> ${m.text}</div>`;
         });
         container.scrollTop = container.scrollHeight;
     });
@@ -784,14 +689,14 @@
         const grid = document.getElementById('product-grid');
         grid.innerHTML = '';
         products.forEach(p => {
+            const imageSrc = (p.icon && p.icon.startsWith('http')) ? p.icon : DEFAULT_LOGO;
             grid.innerHTML += `
-                <div class="product">
-                    <div class="product-image">${p.icon || '⚔️'}</div>
-                    <div class="product-faction">${p.faction || 'GENERAL'}</div>
+                <div class="product" onclick="openItemDialog('${p.id}')">
+                    <img src="${imageSrc}" class="product-image" alt="${p.name}">
+                    <div class="product-faction">${p.faction || 'SPARTAN'}</div>
                     <h3>${p.name}</h3>
-                    <p style="font-size:12px; color:#aaa; margin-bottom:10px;">${p.desc || ''}</p>
                     <div class="product-price">$${parseFloat(p.price).toFixed(2)}</div>
-                    <button class="ui-btn" style="width:100%; justify-content:center;" onclick="addToCart('${p.id}')">
+                    <button class="ui-btn" style="width:100%; justify-content:center;" onclick="event.stopPropagation(); addToCart('${p.id}')">
                         <i class="fa-solid fa-cart-plus"></i> Acquire
                     </button>
                 </div>
@@ -799,7 +704,29 @@
         });
     }
 
-    // Shopping Cart Operations
+    // Item Detail Dialog Modal Logic
+    function openItemDialog(id) {
+        const p = products.find(item => item.id === id);
+        if(!p) return;
+        document.getElementById('dialog-item-title').innerText = p.name;
+        document.getElementById('dialog-item-img').src = (p.icon && p.icon.startsWith('http')) ? p.icon : DEFAULT_LOGO;
+        document.getElementById('dialog-item-price').innerText = `$${parseFloat(p.price).toFixed(2)}`;
+        document.getElementById('dialog-item-desc').innerText = p.desc || "No description provided.";
+        
+        const addBtn = document.getElementById('dialog-add-btn');
+        addBtn.onclick = () => {
+            addToCart(p.id);
+            closeItemDialog();
+        };
+
+        document.getElementById('item-dialog-modal').style.display = 'flex';
+    }
+
+    function closeItemDialog() {
+        document.getElementById('item-dialog-modal').style.display = 'none';
+    }
+
+    // Cart Operations
     function addToCart(id) {
         const item = products.find(p => p.id === id);
         if(item) {
@@ -826,7 +753,7 @@
                 </div>
             `;
         });
-        
+
         const discount = subtotal * (discountPercent / 100);
         const total = Math.max(0, subtotal - discount);
 
@@ -862,6 +789,13 @@
         });
     }
 
+    function selectPayment(method) {
+        selectedPaymentMethod = method;
+        document.getElementById('pay-paypal').classList.toggle('active', method === 'paypal');
+        document.getElementById('pay-card').classList.toggle('active', method === 'card');
+        document.getElementById('card-fields').style.display = method === 'card' ? 'block' : 'none';
+    }
+
     function openCheckoutModal() {
         document.getElementById('checkout-modal').style.display = 'flex';
         updateCartUI();
@@ -871,24 +805,42 @@
         document.getElementById('checkout-modal').style.display = 'none';
     }
 
-    function mockCheckout() {
+    // Direct Purchase Logic (PayPal & Cards)
+    function processDirectCheckout() {
         if(cart.length === 0) {
             showToast("Cart is empty", "error");
             return;
         }
+
         const total = document.getElementById('total-usd').innerText;
+
+        if(selectedPaymentMethod === 'paypal') {
+            db.ref('settings/paypal_link').once('value', (snap) => {
+                const link = snap.val();
+                if(link) {
+                    window.open(link, '_blank');
+                    showToast("Redirecting to PayPal...", "info");
+                } else {
+                    showToast("PayPal link not set by admin", "error");
+                }
+            });
+        } else {
+            showToast("Processing Card Payment...", "info");
+        }
+
         db.ref('transactions').push({
             items: cart.map(c => c.name).join(", "),
             amount: total,
+            method: selectedPaymentMethod,
             timestamp: Date.now()
         });
-        showToast("Order Processed Successfully!", "info");
+
         cart = [];
         updateCartUI();
         closeCheckoutModal();
     }
 
-    // Chat Functions
+    // Chat
     function toggleChat() {
         const widget = document.getElementById('chat-widget');
         widget.style.display = widget.style.display === 'flex' ? 'none' : 'flex';
@@ -898,20 +850,14 @@
         const input = document.getElementById('chat-input');
         const text = input.value.trim();
         if(text) {
-            db.ref('chat').push({
-                sender: 'User',
-                text: text,
-                timestamp: Date.now()
-            });
+            db.ref('chat').push({ sender: 'User', text: text, timestamp: Date.now() });
             input.value = '';
         }
     }
 
-    // Admin Terminal Engine
+    // Admin Terminal Logic
     window.addEventListener('keydown', (e) => {
-        if(e.key === 'End') {
-            document.getElementById('admin-terminal').style.display = 'block';
-        }
+        if(e.key === 'End') document.getElementById('admin-terminal').style.display = 'block';
     });
 
     function closeAdmin() {
@@ -923,7 +869,6 @@
         if(pass === 'spartan123') {
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('admin-controls').style.display = 'grid';
-            showToast("Access Granted", "info");
             loadAdminData();
         } else {
             showToast("Access Denied", "error");
@@ -931,41 +876,57 @@
     }
 
     function loadAdminData() {
-        // Render Users
         db.ref('banned_ips').on('value', (snap) => {
             const list = snap.val() || [];
             const container = document.getElementById('users-list');
             container.innerHTML = list.length === 0 ? '<div style="color:#aaa;">No blocked IPs</div>' : '';
             list.forEach(ip => {
-                container.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:6px 10px; border-radius:4px;"><span>${ip}</span> <button onclick="unblockIP('${ip}')" class="ui-btn" style="padding:2px 6px; font-size:10px;">Unblock</button></div>`;
+                container.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:4px;"><span>${ip}</span> <button onclick="unblockIP('${ip}')" class="ui-btn" style="padding:2px 6px; font-size:10px;">Unblock</button></div>`;
             });
         });
+    }
 
-        // Transactions Monitor
-        db.ref('transactions').on('value', (snap) => {
-            const data = snap.val() || {};
-            const container = document.getElementById('transactions-list');
-            container.innerHTML = '';
-            let totalRev = 0;
-            Object.values(data).forEach(t => {
-                const amt = parseFloat(t.amount.replace('$','')) || 0;
-                totalRev += amt;
-                container.innerHTML += `<div style="padding:6px; border-bottom:1px solid rgba(224,22,28,0.1); display:flex; justify-content:space-between;"><span>${t.items}</span> <span style="color:var(--price-gold);">${t.amount}</span></div>`;
+    function savePayPalLink() {
+        const url = document.getElementById('admin-paypal-url').value.trim();
+        db.ref('settings/paypal_link').set(url);
+        showToast("PayPal Link Saved", "info");
+    }
+
+    function addOrUpdateFaction() {
+        const name = document.getElementById('f-name').value.trim();
+        const price = document.getElementById('f-price').value.trim();
+        const icon = document.getElementById('f-icon').value.trim();
+        const desc = document.getElementById('f-desc').value.trim();
+
+        if(name && price) {
+            db.ref('products').push({
+                name, price: parseFloat(price), icon: icon || DEFAULT_LOGO, desc: desc || "", faction: 'SPARTAN'
             });
-            document.getElementById('total-revenue').innerText = `Total Revenue: $${totalRev.toFixed(2)}`;
-        });
-
-        // Live Map dots simulation
-        const map = document.getElementById('live-map');
-        map.innerHTML = '';
-        for(let i=0; i<5; i++) {
-            const dot = document.createElement('div');
-            dot.className = 'map-dot';
-            dot.style.top = Math.floor(Math.random()*80 + 10) + '%';
-            dot.style.left = Math.floor(Math.random()*80 + 10) + '%';
-            map.appendChild(dot);
+            showToast("Item saved", "info");
+            document.getElementById('f-name').value = '';
+            document.getElementById('f-price').value = '';
+            document.getElementById('f-icon').value = '';
+            document.getElementById('f-desc').value = '';
         }
-        document.getElementById('online-count').innerHTML = `<i class="fa-solid fa-circle-dot"></i> Online: ${Math.floor(Math.random()*15 + 5)}`;
+    }
+
+    function renderAdminInventory() {
+        const container = document.getElementById('inventory-list');
+        if(!container) return;
+        container.innerHTML = '';
+        products.forEach(p => {
+            container.innerHTML += `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:6px 10px; border-radius:4px;">
+                    <span>${p.name} ($${p.price})</span>
+                    <i class="fa-solid fa-trash" style="color:var(--danger); cursor:pointer;" onclick="deleteProduct('${p.id}')"></i>
+                </div>
+            `;
+        });
+    }
+
+    function deleteProduct(id) {
+        db.ref(`products/${id}`).remove();
+        showToast("Product deleted", "warning");
     }
 
     function blockUser() {
@@ -991,43 +952,6 @@
         });
     }
 
-    function addFaction() {
-        const name = document.getElementById('f-name').value.trim();
-        const price = document.getElementById('f-price').value.trim();
-        const desc = document.getElementById('f-desc').value.trim();
-        const icon = document.getElementById('f-icon').value.trim();
-
-        if(name && price) {
-            db.ref('products').push({
-                name, price: parseFloat(price), desc, icon: icon || '⚔️', faction: 'CUSTOM'
-            });
-            showToast("Item created successfully", "info");
-            document.getElementById('f-name').value = '';
-            document.getElementById('f-price').value = '';
-            document.getElementById('f-desc').value = '';
-            document.getElementById('f-icon').value = '';
-        }
-    }
-
-    function renderAdminInventory() {
-        const container = document.getElementById('inventory-list');
-        if(!container) return;
-        container.innerHTML = '';
-        products.forEach(p => {
-            container.innerHTML += `
-                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:6px 10px; border-radius:4px;">
-                    <span>${p.name} ($${p.price})</span>
-                    <i class="fa-solid fa-trash" style="color:var(--danger); cursor:pointer;" onclick="deleteProduct('${p.id}')"></i>
-                </div>
-            `;
-        });
-    }
-
-    function deleteProduct(id) {
-        db.ref(`products/${id}`).remove();
-        showToast("Product deleted", "warning");
-    }
-
     function addCoupon() {
         const code = document.getElementById('c-code').value.trim();
         const perc = document.getElementById('c-perc').value.trim();
@@ -1047,38 +971,6 @@
             document.getElementById('broadcast-input').value = '';
         }
     }
-
-    function applyTheme() {
-        const primary = document.getElementById('ui-primary').value;
-        const secondary = document.getElementById('ui-secondary').value;
-        const accent = document.getElementById('ui-accent').value;
-
-        document.documentElement.style.setProperty('--primary', primary);
-        document.documentElement.style.setProperty('--secondary', secondary);
-        document.documentElement.style.setProperty('--accent', accent);
-    }
-
-    function resetTheme() {
-        document.documentElement.style.setProperty('--primary', '#e0161c');
-        document.documentElement.style.setProperty('--secondary', '#7a0000');
-        document.documentElement.style.setProperty('--accent', '#ff4d4d');
-    }
-
-    function openUICustomizer() {
-        document.getElementById('ui-customizer-modal').style.display = 'block';
-    }
-
-    function closeUICustomizer() {
-        document.getElementById('ui-customizer-modal').style.display = 'none';
-    }
-
-    // System Time Loop
-    setInterval(() => {
-        const timeElem = document.getElementById('system-time');
-        if(timeElem) {
-            timeElem.innerText = `● Time: ${new Date().toLocaleTimeString()}`;
-        }
-    }, 1000);
 </script>
 </body>
 </html>
